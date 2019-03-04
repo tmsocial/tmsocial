@@ -65,13 +65,12 @@ fn main() {
         ..task_info
     };
 
-    println!("{:?}", task_info);
-
     let conn = tmsocial::establish_connection();
     conn.transaction(|| -> Result<(), diesel::result::Error> {
         let info = diesel::insert_into(tasks)
             .values(&task_info)
             .get_result::<Task>(&conn)?;
+        println!("Adding task with name {} and id {}", info.name, info.id);
         let path = task_dir.join(Path::new(&info.id.to_string()));
         let copy_options = CopyOptions {
             copy_inside: true,
