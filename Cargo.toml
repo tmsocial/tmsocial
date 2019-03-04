@@ -1,5 +1,5 @@
 [package]
-name = "tmsocial-rust"
+name = "tmsocial"
 version = "0.1.0"
 authors = ["Luca Versari <veluca93@gmail.com>"]
 edition = "2018"
@@ -11,3 +11,6 @@ actix = "0.7.9"
 fs_extra = "1.1.0"
 tokio-process = "0.2.3"
 structopt = "0.2.14"
+serde = "1.0.82"
+serde_derive = "1.0.82"
+serde_json = "1.0.33"
