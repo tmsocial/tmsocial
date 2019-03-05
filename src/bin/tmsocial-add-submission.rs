@@ -11,8 +11,7 @@ use std::fs::copy;
 use std::path::Path;
 use std::path::PathBuf;
 use structopt::StructOpt;
-use tmsocial::models::Submission;
-use tmsocial::models::Task;
+use tmsocial::models::*;
 use tmsocial::schema::submissions;
 
 #[derive(StructOpt, Debug)]
