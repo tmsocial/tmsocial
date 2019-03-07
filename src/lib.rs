@@ -51,6 +51,9 @@ pub fn evaluate_submission(
 
     let mut tm = Command::new(task_maker)
         .arg("--ui=json")
+        // unneeded checks for the evaluation
+        .arg("--no-statement")
+        .arg("--no-sanity-checks")
         .arg("--task-dir")
         .arg(&path)
         .arg(&submission_path)
