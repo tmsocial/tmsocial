@@ -1,0 +1,9 @@
+diff --git a/src/schema.rs b/src/schema.rs
+index 9e91ce1..e753906 100644
+--- a/src/schema.rs
++++ b/src/schema.rs
+@@ -1 +1,4 @@
++#![allow(proc_macro_derive_resolution_fallback)]
++#![allow(unused_imports)]
++
+ table! {

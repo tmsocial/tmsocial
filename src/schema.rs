@@ -1,3 +1,6 @@
+#![allow(proc_macro_derive_resolution_fallback)]
+#![allow(unused_imports)]
+
 table! {
     use crate::models::*;
     use diesel::sql_types::*;
