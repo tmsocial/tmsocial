@@ -26,7 +26,7 @@ struct Opt {
     #[structopt(short = "i", long = "task-id")]
     task_id: Option<i32>,
     /// Path of the files of the submission that should be added.
-    #[structopt(name = "FILE", parse(from_os_str))]
+    #[structopt(name = "FILE", parse(from_os_str), required = true)]
     files: Vec<PathBuf>,
 }
 

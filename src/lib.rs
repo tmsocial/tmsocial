@@ -40,7 +40,9 @@ pub fn evaluate_submission(
     let path = task_dir.join(Path::new(&submission.task_id.to_string()));
 
     if submission.files.len() != 1 {
-        panic!("Multi-file submissions are not supported yet!");
+        println!("Multi-file submissions are not supported yet! Marking {} as InternalError", submission.id);
+        mark_internal_error(conn, submission)?;
+        return Ok(()) // TODO maybe this is an Error?
     }
 
     let submission_path = submission_dir
@@ -72,5 +74,16 @@ pub fn evaluate_submission(
 
     tm.wait()?;
 
+    Ok(())
+}
+
+fn mark_internal_error(
+    conn: &PgConnection,
+    submission: &Submission,
+) -> Result<(), Error> {
+    use crate::schema::submissions::dsl::*;
+    diesel::update(submissions.find(submission.id))
+        .set(status.eq(SubmissionStatus::InternalError))
+        .get_result::<Submission>(conn)?;
     Ok(())
 }
