@@ -22,8 +22,20 @@ table! {
     subtask_results (id) {
         id -> Int4,
         submission_id -> Int4,
-        num -> Int4,
         score -> Float8,
+        subtask_id -> Int4,
+    }
+}
+
+table! {
+    use crate::models::*;
+    use diesel::sql_types::*;
+
+    subtasks (id) {
+        id -> Int4,
+        task_id -> Int4,
+        num -> Int4,
+        max_score -> Float8,
     }
 }
 
@@ -58,11 +70,14 @@ table! {
 
 joinable!(submissions -> tasks (task_id));
 joinable!(subtask_results -> submissions (submission_id));
+joinable!(subtask_results -> subtasks (subtask_id));
+joinable!(subtasks -> tasks (task_id));
 joinable!(testcase_results -> subtask_results (subtask_result_id));
 
 allow_tables_to_appear_in_same_query!(
     submissions,
     subtask_results,
+    subtasks,
     tasks,
     testcase_results,
 );

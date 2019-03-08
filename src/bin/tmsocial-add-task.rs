@@ -17,7 +17,7 @@ use structopt::StructOpt;
 
 use tmsocial::models::Task;
 use tmsocial::models::TaskFormat;
-use tmsocial::schema::tasks;
+use tmsocial::schema::{subtasks, tasks};
 use tmsocial::task_maker_ui::TaskInfo;
 
 #[derive(StructOpt, Debug)]
@@ -30,17 +30,27 @@ struct Opt {
 
 #[derive(Insertable, Debug)]
 #[table_name = "tasks"]
-struct NewTask {
-    pub name: String,
-    pub title: String,
+struct NewTask<'a> {
+    pub name: &'a str,
+    pub title: &'a str,
     pub time_limit: f64,
     pub memory_limit: i32,
     pub max_score: f64,
     pub format: TaskFormat,
 }
 
+#[derive(Insertable, Debug)]
+#[table_name = "subtasks"]
+struct NewSubtask {
+    pub task_id: i32,
+    pub num: i32,
+    pub max_score: f64,
+}
+
 fn main() {
+    use tmsocial::schema::subtasks::dsl::*;
     use tmsocial::schema::tasks::dsl::*;
+
     let opt = Opt::from_args();
     dotenv().ok();
 
@@ -63,10 +73,10 @@ fn main() {
     let task_info = String::from_utf8(task_info).unwrap();
     let task_info: TaskInfo = serde_json::from_str(&task_info).unwrap();
 
-    let task_info = match task_info {
+    let task = match &task_info {
         TaskInfo::IOITask(task) => NewTask {
-            name: task.name,
-            title: task.title,
+            name: &task.name,
+            title: &task.title,
             time_limit: task.time_limit.into(),
             memory_limit: task.memory_limit as i32,
             max_score: task
@@ -77,8 +87,8 @@ fn main() {
             format: TaskFormat::IOI,
         },
         TaskInfo::TerryTask(task) => NewTask {
-            name: task.name,
-            title: task.title,
+            name: &task.name,
+            title: &task.title,
             time_limit: 10.0,
             memory_limit: 64 * 1024,
             max_score: task.max_score.into(),
@@ -88,16 +98,48 @@ fn main() {
 
     let conn = tmsocial::establish_connection();
     conn.transaction(|| -> Result<(), diesel::result::Error> {
+        // create the task
         let info = diesel::insert_into(tasks)
-            .values(&task_info)
+            .values(&task)
             .get_result::<Task>(&conn)?;
-        println!("Adding task with name {} and id {}", info.name, info.id);
+        println!("Adding task with name {:?} and id {}", info.name, info.id);
+
+        // build and create the subtasks
+        let subs: Vec<NewSubtask> = match &task_info {
+            TaskInfo::IOITask(task) => task
+                .subtasks
+                .iter()
+                .map(|(st_num, subtask)| NewSubtask {
+                    task_id: info.id,
+                    num: *st_num,
+                    max_score: subtask.max_score.into(),
+                })
+                .collect(),
+            TaskInfo::TerryTask(task) => vec![NewSubtask {
+                task_id: info.id,
+                num: 0,
+                max_score: task.max_score.into(),
+            }],
+        };
+        let subtask_ids = diesel::insert_into(subtasks)
+            .values(&subs)
+            .returning(tmsocial::schema::subtasks::dsl::id)
+            .get_results::<i32>(&conn)?;
+        println!(
+            "Added {} subtasks with ids {:?}",
+            subtask_ids.len(),
+            subtask_ids
+        );
+
+        // copy the task directory
         let path = task_dir.join(Path::new(&info.id.to_string()));
         let copy_options = CopyOptions {
             copy_inside: true,
             ..CopyOptions::new()
         };
         copy(opt.task, path, &copy_options).unwrap();
+
+        // commit the transaction
         Ok(())
     })
     .unwrap();
