@@ -1,7 +1,7 @@
 extern crate serde_json;
 
-use crate::task_maker_ui::*;
 use crate::task_maker_ui::hash_map_serializers::*;
+use crate::task_maker_ui::*;
 use serde_derive::{Deserialize, Serialize};
 use std::collections::HashMap;
 

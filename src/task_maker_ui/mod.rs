@@ -1,8 +1,8 @@
 extern crate serde_json;
 
+pub mod hash_map_serializers;
 pub mod ioi;
 pub mod terry;
-pub mod hash_map_serializers;
 
 use crate::task_maker_ui::ioi::*;
 use crate::task_maker_ui::terry::*;
