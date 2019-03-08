@@ -28,8 +28,6 @@ pub struct IOISubtask {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct IOITask {
-    #[serde(rename = "type")]
-    pub type_: String,
     pub name: String,
     pub title: String,
     pub time_limit: f32,
@@ -309,7 +307,7 @@ pub struct IOISolutionResults {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct IOIResult {
-    pub task: IOITask,
+    pub task: TaskInfo,
     #[serde(with = "serialize_double_hash_map")]
     pub subtasks: HashMap<SubtaskNum, HashMap<TestcaseNum, IOITestCaseData>>,
     pub solutions: HashMap<String, SourceFileCompilation>,

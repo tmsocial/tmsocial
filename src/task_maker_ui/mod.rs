@@ -221,3 +221,12 @@ pub enum TaskMakerMessage {
     #[serde(rename = "error")]
     Error(Error),
 }
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(tag = "type")]
+pub enum TaskInfo {
+    #[serde(rename = "IOI")]
+    IOITask(IOITask),
+    #[serde(rename = "Terry")]
+    TerryTask(TerryTask),
+}

@@ -40,8 +40,6 @@ pub enum TerryTestCaseStatus {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct TerryTask {
-    #[serde(rename = "type")]
-    pub type_: String,
     pub name: String,
     pub title: String,
     pub generator: Option<String>,
@@ -154,7 +152,7 @@ pub struct TerrySolutionResult {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct TerryResult {
-    pub task: TerryTask,
+    pub task: TaskInfo,
     pub solutions: HashMap<String, SourceFileCompilation>,
     pub non_solutions: HashMap<String, SourceFileCompilation>,
     pub testing: HashMap<String, TerrySolutionResult>,

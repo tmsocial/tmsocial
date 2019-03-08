@@ -1,6 +1,15 @@
 #![allow(proc_macro_derive_resolution_fallback)]
 
 use crate::schema::{submissions, tasks};
+use serde_derive::{Deserialize, Serialize};
+
+#[derive(Deserialize, Serialize, DbEnum, Debug, PartialEq)]
+#[PgType = "task_format"]
+#[DieselType = "Task_format"]
+pub enum TaskFormat {
+    IOI,
+    Terry,
+}
 
 #[derive(Queryable, Identifiable, Debug)]
 pub struct Task {
@@ -8,8 +17,9 @@ pub struct Task {
     pub name: String,
     pub title: String,
     pub time_limit: f64,
-    pub memory_limit: f64,
+    pub memory_limit: i32,
     pub max_score: f64,
+    pub format: TaskFormat,
 }
 
 #[derive(DbEnum, Debug, PartialEq)]

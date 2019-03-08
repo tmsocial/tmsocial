@@ -5,17 +5,20 @@ extern crate diesel;
 extern crate serde_json;
 extern crate tmsocial;
 
-use diesel::{Connection, RunQueryDsl};
-use dotenv::dotenv;
-use fs_extra::dir::{copy, create_all, CopyOptions};
-use serde_derive::Deserialize;
 use std::env;
 use std::path::Path;
 use std::path::PathBuf;
 use std::process::Command;
+
+use diesel::{Connection, RunQueryDsl};
+use dotenv::dotenv;
+use fs_extra::dir::{copy, create_all, CopyOptions};
 use structopt::StructOpt;
+
 use tmsocial::models::Task;
+use tmsocial::models::TaskFormat;
 use tmsocial::schema::tasks;
+use tmsocial::task_maker_ui::TaskInfo;
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "tmsocial-add-task")]
@@ -25,28 +28,15 @@ struct Opt {
     task: PathBuf,
 }
 
-// TODO remove this hack
-fn default_time_limit() -> f64 {
-    10.0
-}
-fn default_memory_limit() -> f64 {
-    64.0 * 1024.0
-}
-
-#[derive(Deserialize, Insertable, Debug)]
+#[derive(Insertable, Debug)]
 #[table_name = "tasks"]
 struct NewTask {
     pub name: String,
     pub title: String,
-    // FIXME terry tasks does not have time or memory limits! (and t-m does not
-    // set some neither!)
-    #[serde(default = "default_time_limit")]
     pub time_limit: f64,
-    #[serde(default = "default_memory_limit")]
-    pub memory_limit: f64,
-    // TODO: currently missing from t-m output.
-    #[serde(skip)]
+    pub memory_limit: i32,
     pub max_score: f64,
+    pub format: TaskFormat,
 }
 
 fn main() {
@@ -71,12 +61,29 @@ fn main() {
 
     let task_info = task_info.stdout;
     let task_info = String::from_utf8(task_info).unwrap();
-    let task_info: NewTask = serde_json::from_str(&task_info).unwrap();
+    let task_info: TaskInfo = serde_json::from_str(&task_info).unwrap();
 
-    // TODO: missing from t-m output
-    let task_info = NewTask {
-        max_score: 100.0,
-        ..task_info
+    let task_info = match task_info {
+        TaskInfo::IOITask(task) => NewTask {
+            name: task.name,
+            title: task.title,
+            time_limit: task.time_limit.into(),
+            memory_limit: task.memory_limit as i32,
+            max_score: task
+                .subtasks
+                .iter()
+                .map(|st| st.1.max_score as f64)
+                .sum(),
+            format: TaskFormat::IOI,
+        },
+        TaskInfo::TerryTask(task) => NewTask {
+            name: task.name,
+            title: task.title,
+            time_limit: 10.0,
+            memory_limit: 64 * 1024,
+            max_score: task.max_score.into(),
+            format: TaskFormat::Terry,
+        },
     };
 
     let conn = tmsocial::establish_connection();

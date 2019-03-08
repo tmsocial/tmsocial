@@ -36,8 +36,9 @@ table! {
         name -> Varchar,
         title -> Varchar,
         time_limit -> Float8,
-        memory_limit -> Float8,
+        memory_limit -> Int4,
         max_score -> Float8,
+        format -> Task_format,
     }
 }
 
