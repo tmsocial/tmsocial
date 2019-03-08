@@ -25,12 +25,24 @@ struct Opt {
     task: PathBuf,
 }
 
+// TODO remove this hack
+fn default_time_limit() -> f64 {
+    10.0
+}
+fn default_memory_limit() -> f64 {
+    64.0 * 1024.0
+}
+
 #[derive(Deserialize, Insertable, Debug)]
 #[table_name = "tasks"]
 struct NewTask {
     pub name: String,
     pub title: String,
+    // FIXME terry tasks does not have time or memory limits! (and t-m does not
+    // set some neither!)
+    #[serde(default = "default_time_limit")]
     pub time_limit: f64,
+    #[serde(default = "default_memory_limit")]
     pub memory_limit: f64,
     // TODO: currently missing from t-m output.
     #[serde(skip)]

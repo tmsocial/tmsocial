@@ -6,8 +6,10 @@ extern crate dotenv;
 
 pub mod models;
 pub mod schema;
+pub mod task_maker_ui;
 
 use crate::models::*;
+use crate::task_maker_ui::TaskMakerMessage;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use failure::Error;
@@ -42,7 +44,7 @@ pub fn evaluate_submission(
     if submission.files.len() != 1 {
         println!("Multi-file submissions are not supported yet! Marking {} as InternalError", submission.id);
         mark_internal_error(conn, submission)?;
-        return Ok(()) // TODO maybe this is an Error?
+        return Ok(()); // TODO maybe this is an Error?
     }
 
     let submission_path = submission_dir
@@ -68,7 +70,12 @@ pub fn evaluate_submission(
         let stdout_lines = stdout_reader.lines();
 
         for line in stdout_lines {
-            println!("{}", line?);
+            let line = line?;
+            let message = serde_json::from_str::<TaskMakerMessage>(&line);
+            match message {
+                Ok(message) => println!("{:#?}", message),
+                Err(err) => println!("err: {} {}", err, line),
+            }
         }
     }
 
