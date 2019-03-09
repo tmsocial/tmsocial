@@ -4,6 +4,8 @@ extern crate diesel;
 extern crate diesel_derive_enum;
 extern crate dotenv;
 extern crate itertools;
+#[macro_use]
+extern crate failure;
 
 pub mod evaluation;
 pub mod models;

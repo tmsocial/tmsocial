@@ -17,9 +17,16 @@ use crate::models::*;
 use crate::schema::{subtask_results, testcase_results};
 use crate::task_maker_ui::ioi::IOIResult;
 use crate::task_maker_ui::ioi::IOISolutionTestCaseResult;
+use crate::task_maker_ui::terry::TerryResult;
 use crate::task_maker_ui::SourceFileCompilationStatus;
 use crate::task_maker_ui::SubtaskNum;
 use crate::task_maker_ui::TaskMakerMessage;
+
+#[derive(Debug, Fail)]
+pub enum EvaluationError {
+    #[fail(display = "unsupported number of files: {}", number)]
+    WrongNumberOfFiles { number: usize },
+}
 
 #[derive(Insertable, Debug)]
 #[table_name = "subtask_results"]
@@ -78,9 +85,16 @@ pub fn evaluate_submission(
     let path = task_dir.join(Path::new(&submission.task_id.to_string()));
 
     if submission.files.len() != 1 {
-        println!("Multi-file submissions are not supported yet! Marking {} as InternalError", submission.id);
+        println!(
+            "Multi-file submissions are not supported yet! \
+             Marking {} as InternalError",
+            submission.id
+        );
         mark_internal_error(conn, submission)?;
-        return Ok(()); // TODO maybe this is an Error?
+        return Err(EvaluationError::WrongNumberOfFiles {
+            number: submission.files.len(),
+        }
+        .into());
     }
 
     let submission_path = submission_dir
@@ -110,9 +124,37 @@ pub fn evaluate_submission(
             let message = serde_json::from_str::<TaskMakerMessage>(&line);
             match message {
                 Ok(TaskMakerMessage::IOIResult(result)) => {
-                    populate_ioi_submission_results(&conn, submission, &result)?
+                    populate_ioi_submission_results(&conn, submission, &result)
+                        .map_err(|err| {
+                            println!(
+                                "Failed to store the evaluation results \
+                                 for submission {}, marking as internal error",
+                                submission.id
+                            );
+                            match crate::mark_internal_error(conn, submission) {
+                                Err(e) => return e,
+                                _ => {}
+                            };
+                            err
+                        })?
                 }
-                // TODO populate_terry_submision_results...
+                Ok(TaskMakerMessage::TerryResult(result)) => {
+                    populate_terry_submission_results(
+                        &conn, submission, &result,
+                    )
+                    .map_err(|err| {
+                        println!(
+                            "Failed to store the evaluation results \
+                             for submission {}, marking as internal error",
+                            submission.id
+                        );
+                        match crate::mark_internal_error(conn, submission) {
+                            Err(e) => return e,
+                            _ => {}
+                        };
+                        err
+                    })?
+                }
                 // TODO stream the messages to the frontend
                 Err(err) => println!("err: {} {}", err, line),
                 _ => {}
@@ -239,4 +281,12 @@ fn populate_ioi_submission_results(
     })?;
     println!("Evaluation of submission {} completed", submission.id);
     Ok(())
+}
+
+fn populate_terry_submission_results(
+    _conn: &PgConnection,
+    _submission: &Submission,
+    _result: &TerryResult,
+) -> Result<(), Error> {
+    unimplemented!();
 }
