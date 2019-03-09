@@ -4,8 +4,8 @@ use crate::schema::{
     contests, participations, sites, submissions, subtask_results, subtasks,
     tasks, testcase_results, users,
 };
-use serde_derive::{Deserialize, Serialize};
 use crate::task_maker_ui::ioi::IOISolutionTestCaseResult;
+use serde_derive::{Deserialize, Serialize};
 
 #[derive(Queryable, Identifiable, Debug)]
 pub struct Site {
@@ -13,10 +13,23 @@ pub struct Site {
     pub domain: String,
 }
 
+#[derive(Insertable, Debug)]
+#[table_name = "sites"]
+pub struct NewSite {
+    pub domain: String,
+}
+
 #[derive(Queryable, Identifiable, Associations, Debug)]
 #[belongs_to(Site)]
 pub struct Contest {
     pub id: i32,
+    pub site_id: i32,
+    pub name: String,
+}
+
+#[derive(Insertable, Debug)]
+#[table_name = "contests"]
+pub struct NewContest {
     pub site_id: i32,
     pub name: String,
 }
@@ -29,13 +42,27 @@ pub struct User {
     pub username: String,
 }
 
+#[derive(Insertable, Debug)]
+#[table_name = "users"]
+pub struct NewUser {
+    pub site_id: i32,
+    pub username: String,
+}
+
 #[derive(Queryable, Identifiable, Associations, Debug)]
 #[belongs_to(Contest)]
 #[belongs_to(User)]
 pub struct Participation {
     pub id: i32,
     pub contest_id: i32,
-    pub user_id: String,
+    pub user_id: i32,
+}
+
+#[derive(Insertable, Debug)]
+#[table_name = "participations"]
+pub struct NewParticipation {
+    pub contest_id: i32,
+    pub user_id: i32,
 }
 
 #[derive(Deserialize, Serialize, DbEnum, Debug, PartialEq)]
