@@ -15,6 +15,8 @@ use fs_extra::dir::create_all;
 use structopt::StructOpt;
 
 use tmsocial::models::*;
+use tmsocial::schema::participations::dsl::participations;
+use tmsocial::schema::tasks::dsl::tasks;
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "tmsocial-add-submission")]
@@ -25,13 +27,15 @@ struct Opt {
     /// Task id of the task we should add the submission to.
     #[structopt(short = "i", long = "task-id")]
     task_id: Option<i32>,
+    /// User id of the user we should add the submission to.
+    #[structopt(short = "u", long = "user-id")]
+    user_id: i32,
     /// Path of the files of the submission that should be added.
     #[structopt(name = "FILE", parse(from_os_str), required = true)]
     files: Vec<PathBuf>,
 }
 
 fn main() {
-    use tmsocial::schema::tasks::dsl::*;
     let opt = Opt::from_args();
     dotenv().ok();
 
@@ -52,7 +56,7 @@ fn main() {
         *task_id
     } else if let Some(task_name) = &opt.task {
         let results = tasks
-            .filter(name.eq(&task_name))
+            .filter(tmsocial::schema::tasks::name.eq(&task_name))
             .load::<Task>(&conn)
             .expect("Error loading task");
         if results.len() == 0 {
@@ -66,7 +70,20 @@ fn main() {
         panic!("True is false")
     };
 
-    println!("Task id: {}", task_id);
+    let task = tasks
+        .find(task_id)
+        .first::<Task>(&conn)
+        .expect("No such task");
+
+    let participation = participations
+        .filter(
+            tmsocial::schema::participations::contest_id.eq(task.contest_id),
+        )
+        .filter(tmsocial::schema::participations::user_id.eq(opt.user_id))
+        .first::<Participation>(&conn)
+        .expect("No such participation");
+
+    println!("Task: {:?}", task);
 
     let mut submission_files = vec![];
 
@@ -86,6 +103,7 @@ fn main() {
     let submission_info = NewSubmission {
         task_id: task_id,
         files: submission_files,
+        participation_id: participation.id,
     };
 
     conn.transaction(|| -> Result<(), diesel::result::Error> {

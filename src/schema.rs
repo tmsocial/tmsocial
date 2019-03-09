@@ -44,6 +44,7 @@ table! {
         status -> Submission_status,
         compilation_messages -> Nullable<Text>,
         score -> Nullable<Float8>,
+        participation_id -> Int4,
     }
 }
 
@@ -116,6 +117,7 @@ table! {
 joinable!(contests -> sites (site_id));
 joinable!(participations -> contests (contest_id));
 joinable!(participations -> users (user_id));
+joinable!(submissions -> participations (participation_id));
 joinable!(submissions -> tasks (task_id));
 joinable!(subtask_results -> submissions (submission_id));
 joinable!(subtask_results -> subtasks (subtask_id));

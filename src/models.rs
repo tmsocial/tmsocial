@@ -1,11 +1,12 @@
 #![allow(proc_macro_derive_resolution_fallback)]
 
+use serde_derive::{Deserialize, Serialize};
+
 use crate::schema::{
     contests, participations, sites, submissions, subtask_results, subtasks,
     tasks, testcase_results, users,
 };
 use crate::task_maker_ui::ioi::IOISolutionTestCaseResult;
-use serde_derive::{Deserialize, Serialize};
 
 #[derive(Queryable, Identifiable, Debug)]
 pub struct Site {
@@ -117,6 +118,7 @@ pub struct Submission {
     pub status: SubmissionStatus,
     pub compilation_messages: Option<String>,
     pub score: Option<f64>,
+    pub participation_id: i32,
 }
 
 #[derive(Insertable, Associations)]
@@ -125,6 +127,7 @@ pub struct Submission {
 pub struct NewSubmission {
     pub files: Vec<String>,
     pub task_id: i32,
+    pub participation_id: i32,
 }
 
 #[derive(Queryable, Identifiable, Associations, Debug)]
