@@ -5,6 +5,38 @@ table! {
     use crate::models::*;
     use diesel::sql_types::*;
 
+    contests (id) {
+        id -> Int4,
+        site_id -> Int4,
+        name -> Varchar,
+    }
+}
+
+table! {
+    use crate::models::*;
+    use diesel::sql_types::*;
+
+    participations (id) {
+        id -> Int4,
+        contest_id -> Int4,
+        user_id -> Int4,
+    }
+}
+
+table! {
+    use crate::models::*;
+    use diesel::sql_types::*;
+
+    sites (id) {
+        id -> Int4,
+        domain -> Varchar,
+    }
+}
+
+table! {
+    use crate::models::*;
+    use diesel::sql_types::*;
+
     submissions (id) {
         id -> Int4,
         task_id -> Int4,
@@ -51,6 +83,7 @@ table! {
         memory_limit -> Int4,
         max_score -> Float8,
         format -> Task_format,
+        contest_id -> Int4,
     }
 }
 
@@ -69,16 +102,36 @@ table! {
     }
 }
 
+table! {
+    use crate::models::*;
+    use diesel::sql_types::*;
+
+    users (id) {
+        id -> Int4,
+        site_id -> Int4,
+        username -> Varchar,
+    }
+}
+
+joinable!(contests -> sites (site_id));
+joinable!(participations -> contests (contest_id));
+joinable!(participations -> users (user_id));
 joinable!(submissions -> tasks (task_id));
 joinable!(subtask_results -> submissions (submission_id));
 joinable!(subtask_results -> subtasks (subtask_id));
 joinable!(subtasks -> tasks (task_id));
+joinable!(tasks -> contests (contest_id));
 joinable!(testcase_results -> subtask_results (subtask_result_id));
+joinable!(users -> sites (site_id));
 
 allow_tables_to_appear_in_same_query!(
+    contests,
+    participations,
+    sites,
     submissions,
     subtask_results,
     subtasks,
     tasks,
     testcase_results,
+    users,
 );

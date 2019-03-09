@@ -14,9 +14,7 @@ use itertools::Itertools;
 
 use crate::mark_internal_error;
 use crate::models::*;
-use crate::schema::{subtask_results, testcase_results};
 use crate::task_maker_ui::ioi::IOIResult;
-use crate::task_maker_ui::ioi::IOISolutionTestCaseResult;
 use crate::task_maker_ui::terry::TerryResult;
 use crate::task_maker_ui::SourceFileCompilationStatus;
 use crate::task_maker_ui::SubtaskNum;
@@ -26,49 +24,6 @@ use crate::task_maker_ui::TaskMakerMessage;
 pub enum EvaluationError {
     #[fail(display = "unsupported number of files: {}", number)]
     WrongNumberOfFiles { number: usize },
-}
-
-#[derive(Insertable, Debug)]
-#[table_name = "subtask_results"]
-struct NewSubtaskResult {
-    pub submission_id: i32,
-    pub score: f64,
-    pub subtask_id: i32,
-}
-
-#[derive(Insertable, Debug)]
-#[table_name = "testcase_results"]
-struct NewTestcaseResult<'a> {
-    pub subtask_result_id: i32,
-    pub running_time: f64,
-    pub memory_usage: i32,
-    pub message: &'a str,
-    pub score: f64,
-    pub num: i32,
-}
-
-impl<'a> NewTestcaseResult<'a> {
-    /// Build a NewTestcaseResult from the result of a IOI solution. The running
-    /// time is the sum of user and sys time.
-    fn from_ioi_testcase_result(
-        subtask_result_id: i32,
-        tc_num: i32,
-        testcase: &IOISolutionTestCaseResult,
-    ) -> NewTestcaseResult {
-        let resources = &testcase.result[0]
-            .as_ref()
-            .expect("Constructing NewTestcaseResult with an invalid state")
-            .resources;
-        let running_time = resources.cpu_time + resources.sys_time;
-        NewTestcaseResult {
-            subtask_result_id: subtask_result_id,
-            running_time: running_time as f64,
-            memory_usage: resources.memory as i32,
-            message: &testcase.message,
-            score: testcase.score as f64,
-            num: tc_num,
-        }
-    }
 }
 
 /// Evaluate a submission already present in the DB, will call task-maker and

@@ -1,20 +1,20 @@
 #![allow(proc_macro_derive_resolution_fallback)]
 
-#[macro_use]
 extern crate diesel;
 extern crate serde_json;
 extern crate tmsocial;
 
-use diesel::{Connection, ExpressionMethods, QueryDsl, RunQueryDsl};
-use dotenv::dotenv;
-use fs_extra::dir::create_all;
 use std::env;
 use std::fs::copy;
 use std::path::Path;
 use std::path::PathBuf;
+
+use diesel::{Connection, ExpressionMethods, QueryDsl, RunQueryDsl};
+use dotenv::dotenv;
+use fs_extra::dir::create_all;
 use structopt::StructOpt;
+
 use tmsocial::models::*;
-use tmsocial::schema::submissions;
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "tmsocial-add-submission")]
@@ -28,14 +28,6 @@ struct Opt {
     /// Path of the files of the submission that should be added.
     #[structopt(name = "FILE", parse(from_os_str), required = true)]
     files: Vec<PathBuf>,
-}
-
-#[derive(Insertable, Associations)]
-#[belongs_to(Task)]
-#[table_name = "submissions"]
-struct NewSubmission {
-    files: Vec<String>,
-    task_id: i32,
 }
 
 fn main() {

@@ -1,8 +1,8 @@
-DROP INDEX subtasks_task_num_unique;
-DROP TABLE subtasks;
+ALTER TABLE subtask_results
+ADD COLUMN num INTEGER NOT NULL CHECK(num >= 0);
 
 ALTER TABLE subtask_results
 DROP COLUMN subtask_id;
 
-ALTER TABLE subtask_results
-ADD COLUMN num INTEGER NOT NULL CHECK(num >= 0);
+DROP INDEX subtasks_task_num_unique;
+DROP TABLE subtasks;

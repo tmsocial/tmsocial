@@ -44,8 +44,10 @@ pub fn establish_connection() -> PgConnection {
 /// use tmsocial::models::{Submission, SubmissionStatus};
 /// use diesel::query_dsl::QueryDsl;
 /// use diesel::query_dsl::RunQueryDsl;
+/// use diesel::connection::Connection;
 ///
 /// let conn = establish_connection();
+/// # conn.test_transaction(|| -> Result<(), diesel::result::Error> {
 /// # diesel::sql_query(
 /// #     "INSERT INTO tasks \
 /// #     (id, name, title, time_limit, memory_limit, max_score, format) VALUES \
@@ -54,11 +56,12 @@ pub fn establish_connection() -> PgConnection {
 /// #     "INSERT INTO submissions \
 /// #     (id, files, status, task_id) VALUES \
 /// #     (-1, '{}', 'waiting', -1)").execute(&conn);
-///
 /// let submission = submissions.find(-1).first::<Submission>(&conn).unwrap();
 /// mark_internal_error(&conn, &submission);
 /// let submission = submissions.find(-1).first::<Submission>(&conn).unwrap();
 /// assert_eq!(submission.status, SubmissionStatus::InternalError);
+/// # Ok(())
+/// # });
 /// ```
 pub fn mark_internal_error(
     conn: &PgConnection,

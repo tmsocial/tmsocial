@@ -1,6 +1,5 @@
 #![allow(proc_macro_derive_resolution_fallback)]
 
-#[macro_use]
 extern crate diesel;
 extern crate serde_json;
 extern crate tmsocial;
@@ -10,14 +9,16 @@ use std::path::Path;
 use std::path::PathBuf;
 use std::process::Command;
 
-use diesel::{Connection, RunQueryDsl};
+use diesel::{Connection, QueryDsl, RunQueryDsl};
 use dotenv::dotenv;
+use failure::Error;
 use fs_extra::dir::{copy, create_all, CopyOptions};
 use structopt::StructOpt;
 
-use tmsocial::models::Task;
-use tmsocial::models::TaskFormat;
-use tmsocial::schema::{subtasks, tasks};
+use tmsocial::models::Contest;
+use tmsocial::models::{NewSubtask, NewTask};
+use tmsocial::models::{Task, TaskFormat};
+use tmsocial::schema::contests::dsl::contests;
 use tmsocial::task_maker_ui::TaskInfo;
 
 #[derive(StructOpt, Debug)]
@@ -26,28 +27,12 @@ struct Opt {
     /// Path of the task that should be added.
     #[structopt(name = "DIR", parse(from_os_str))]
     task: PathBuf,
+    /// Contest id of the contest we should add the task to.
+    #[structopt(short = "c", long = "contest-id")]
+    contest_id: Option<i32>,
 }
 
-#[derive(Insertable, Debug)]
-#[table_name = "tasks"]
-struct NewTask<'a> {
-    pub name: &'a str,
-    pub title: &'a str,
-    pub time_limit: f64,
-    pub memory_limit: i32,
-    pub max_score: f64,
-    pub format: TaskFormat,
-}
-
-#[derive(Insertable, Debug)]
-#[table_name = "subtasks"]
-struct NewSubtask {
-    pub task_id: i32,
-    pub num: i32,
-    pub max_score: f64,
-}
-
-fn main() {
+fn main() -> Result<(), Error> {
     use tmsocial::schema::subtasks::dsl::*;
     use tmsocial::schema::tasks::dsl::*;
 
@@ -59,7 +44,7 @@ fn main() {
         &env::var("TASK_STORAGE_DIR").expect("TASK_STORAGE_DIR must be set"),
     ));
 
-    create_all(&task_dir, false).unwrap();
+    create_all(&task_dir, false)?;
 
     let task_info = Command::new(task_maker)
         .arg("--ui=json")
@@ -70,8 +55,21 @@ fn main() {
         .unwrap();
 
     let task_info = task_info.stdout;
-    let task_info = String::from_utf8(task_info).unwrap();
-    let task_info: TaskInfo = serde_json::from_str(&task_info).unwrap();
+    let task_info = String::from_utf8(task_info)?;
+    let task_info: TaskInfo = serde_json::from_str(&task_info)?;
+
+    let conn = tmsocial::establish_connection();
+    let contest = match opt.contest_id {
+        Some(id) => contests.find(id).first::<Contest>(&conn)?,
+        None => {
+            let mut ids = contests.get_results::<Contest>(&conn)?;
+            match ids.len() {
+                0 => panic!("No contests found"),
+                1 => ids.swap_remove(0),
+                _ => panic!("More than a contest present, use -c option"),
+            }
+        }
+    };
 
     let task = match &task_info {
         TaskInfo::IOITask(task) => NewTask {
@@ -85,6 +83,7 @@ fn main() {
                 .map(|st| st.1.max_score as f64)
                 .sum(),
             format: TaskFormat::IOI,
+            contest_id: contest.id,
         },
         TaskInfo::TerryTask(task) => NewTask {
             name: &task.name,
@@ -93,16 +92,19 @@ fn main() {
             memory_limit: 64 * 1024,
             max_score: task.max_score.into(),
             format: TaskFormat::Terry,
+            contest_id: contest.id,
         },
     };
 
-    let conn = tmsocial::establish_connection();
     conn.transaction(|| -> Result<(), diesel::result::Error> {
         // create the task
         let info = diesel::insert_into(tasks)
             .values(&task)
             .get_result::<Task>(&conn)?;
-        println!("Adding task with name {:?} and id {}", info.name, info.id);
+        println!(
+            "Adding task with name {:?} and id {} to contest {} ({})",
+            info.name, info.id, contest.id, contest.name
+        );
 
         // build and create the subtasks
         let subs: Vec<NewSubtask> = match &task_info {
@@ -141,6 +143,6 @@ fn main() {
 
         // commit the transaction
         Ok(())
-    })
-    .unwrap();
+    })?;
+    Ok(())
 }
