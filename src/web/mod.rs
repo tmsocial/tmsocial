@@ -1,5 +1,6 @@
 extern crate listenfd;
 
+use crate::models::*;
 use actix::{Addr, SyncArbiter};
 use actix_web::{fs, http, server, App, Result};
 use failure::Error;
@@ -10,8 +11,19 @@ use std::path::PathBuf;
 mod db;
 mod extractors;
 
-fn hello_site_handler(site: extractors::Site) -> Result<String> {
+fn hello_site_handler(site: Site) -> Result<String> {
     Ok(format!("Welcome to site with id {}", site.id))
+}
+
+fn hello_participation_handler(
+    user: User,
+    contest: Contest,
+    participation: Option<Participation>,
+) -> Result<String> {
+    Ok(format!(
+        "Welcome {:?} {:?} {:?}",
+        user, contest, participation
+    ))
 }
 
 struct State {
@@ -34,6 +46,11 @@ pub fn web_main(
         App::with_state(State {
             db: db_addr.clone(),
         })
+        .route(
+            "/api/contest/{contest_id}/hello",
+            http::Method::GET,
+            hello_participation_handler,
+        )
         .resource("/api/site", |r| {
             r.method(http::Method::GET).with(hello_site_handler)
         })
