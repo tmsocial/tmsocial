@@ -78,7 +78,7 @@ pub struct Execution {
     pub stderr: Option<String>,
     #[serde(default)]
     pub stdout: Option<String>,
-    pub result: Result,
+    pub result: Option<Result>,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
