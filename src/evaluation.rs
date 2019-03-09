@@ -48,6 +48,8 @@ struct NewTestcaseResult<'a> {
 }
 
 impl<'a> NewTestcaseResult<'a> {
+    /// Build a NewTestcaseResult from the result of a IOI solution. The running
+    /// time is the sum of user and sys time.
     fn from_ioi_testcase_result(
         subtask_result_id: i32,
         tc_num: i32,
@@ -69,6 +71,9 @@ impl<'a> NewTestcaseResult<'a> {
     }
 }
 
+/// Evaluate a submission already present in the DB, will call task-maker and
+/// when the evaluation is completed the results are stored in the DB.
+/// If an error condition occurs the submission is flagged as internal_error.
 pub fn evaluate_submission(
     conn: &PgConnection,
     submission: &Submission,

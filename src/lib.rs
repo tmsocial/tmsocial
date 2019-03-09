@@ -18,6 +18,16 @@ use diesel::prelude::*;
 use failure::Error;
 use std::env;
 
+/// Connect to the Postgres database. The DATABASE_URL environment variable must
+/// be set.
+///
+/// # Example
+/// ```
+/// use diesel::query_dsl::RunQueryDsl;
+///
+/// let conn = tmsocial::establish_connection();
+/// diesel::sql_query("SELECT 1;").execute(&conn);
+/// ```
 pub fn establish_connection() -> PgConnection {
     let database_url =
         env::var("DATABASE_URL").expect("DATABASE_URL must be set");
@@ -25,7 +35,32 @@ pub fn establish_connection() -> PgConnection {
         .expect(&format!("Error connecting to {}", database_url))
 }
 
-fn mark_internal_error(
+/// Mark a submission as failed because an internal error.
+///
+/// # Example
+/// ```
+/// use tmsocial::{establish_connection, mark_internal_error};
+/// use tmsocial::schema::submissions::dsl::submissions;
+/// use tmsocial::models::{Submission, SubmissionStatus};
+/// use diesel::query_dsl::QueryDsl;
+/// use diesel::query_dsl::RunQueryDsl;
+///
+/// let conn = establish_connection();
+/// # diesel::sql_query(
+/// #     "INSERT INTO tasks \
+/// #     (id, name, title, time_limit, memory_limit, max_score, format) VALUES \
+/// #     (-1, 'a', 'b', 1, 1, 1, 'ioi')").execute(&conn);
+/// # diesel::sql_query(
+/// #     "INSERT INTO submissions \
+/// #     (id, files, status, task_id) VALUES \
+/// #     (-1, '{}', 'waiting', -1)").execute(&conn);
+///
+/// let submission = submissions.find(-1).first::<Submission>(&conn).unwrap();
+/// mark_internal_error(&conn, &submission);
+/// let submission = submissions.find(-1).first::<Submission>(&conn).unwrap();
+/// assert_eq!(submission.status, SubmissionStatus::InternalError);
+/// ```
+pub fn mark_internal_error(
     conn: &PgConnection,
     submission: &Submission,
 ) -> Result<(), Error> {
