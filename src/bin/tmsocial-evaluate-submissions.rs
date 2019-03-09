@@ -1,5 +1,6 @@
 #![allow(proc_macro_derive_resolution_fallback)]
 
+extern crate pretty_env_logger;
 extern crate serde_json;
 extern crate tmsocial;
 
@@ -11,6 +12,7 @@ use tmsocial::models::*;
 
 fn main() {
     use tmsocial::schema::submissions::dsl::*;
+    pretty_env_logger::init();
     dotenv::dotenv().ok();
 
     let conn = tmsocial::establish_connection();

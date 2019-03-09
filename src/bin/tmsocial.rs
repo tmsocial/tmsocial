@@ -1,3 +1,5 @@
+extern crate pretty_env_logger;
+
 use tmsocial::web::web_main;
 
 use dotenv::dotenv;
@@ -26,6 +28,7 @@ struct Opt {
 }
 
 fn main() -> Result<(), Error> {
+    pretty_env_logger::init();
     let opt = Opt::from_args();
     dotenv().ok();
 

@@ -1,6 +1,7 @@
 #![allow(proc_macro_derive_resolution_fallback)]
 
 extern crate diesel;
+extern crate pretty_env_logger;
 extern crate tmsocial;
 
 use diesel::RunQueryDsl;
@@ -22,6 +23,7 @@ struct Opt {
 fn main() -> Result<(), Error> {
     use tmsocial::schema::sites::dsl::*;
 
+    pretty_env_logger::init();
     let opt = Opt::from_args();
     dotenv().ok();
 

@@ -1,6 +1,7 @@
 #![allow(proc_macro_derive_resolution_fallback)]
 
 extern crate diesel;
+extern crate pretty_env_logger;
 extern crate serde_json;
 extern crate tmsocial;
 
@@ -36,6 +37,7 @@ struct Opt {
 }
 
 fn main() {
+    pretty_env_logger::init();
     let opt = Opt::from_args();
     dotenv().ok();
 
