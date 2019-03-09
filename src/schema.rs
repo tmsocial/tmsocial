@@ -62,9 +62,10 @@ table! {
         id -> Int4,
         subtask_result_id -> Int4,
         running_time -> Float8,
-        memory_usage -> Float8,
+        memory_usage -> Int4,
         message -> Text,
         score -> Float8,
+        num -> Nullable<Int4>,
     }
 }
 

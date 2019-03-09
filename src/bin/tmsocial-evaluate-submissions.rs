@@ -19,6 +19,6 @@ fn main() {
 
     println!("Found {} waiting submissions", results.len());
     for sub in results {
-        tmsocial::evaluate_submission(&conn, &sub).unwrap();
+        tmsocial::evaluation::evaluate_submission(&conn, &sub).unwrap();
     }
 }

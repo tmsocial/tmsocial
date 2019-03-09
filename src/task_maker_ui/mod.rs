@@ -81,7 +81,7 @@ pub struct Execution {
     pub result: Result,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub enum SourceFileCompilationStatus {
     #[serde(rename = "WAITING")]
     Waiting,

@@ -283,7 +283,7 @@ pub struct IOITestCaseData {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct IOISolutionTestCaseResult {
     pub status: IOISolutionTestCaseStatus,
-    pub result: Vec<Result>,
+    pub result: Vec<Option<Result>>,
     pub score: f32,
     pub message: String,
     pub checker_outcome: String,
