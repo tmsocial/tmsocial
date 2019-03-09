@@ -34,13 +34,11 @@ pub fn evaluate_submission(
     submission: &Submission,
 ) -> Result<(), Error> {
     let task_maker = env::var("TASK_MAKER").expect("TASK_MAKER must be set");
-    let submission_dir = PathBuf::new().join(Path::new(
-        &env::var("SUBMISSION_STORAGE_DIR")
-            .expect("SUBMISSION_STORAGE_DIR must be set"),
+    let storage_dir = PathBuf::new().join(Path::new(
+        &env::var("STORAGE_DIR").expect("STORAGE_DIR must be set"),
     ));
-    let task_dir = PathBuf::new().join(Path::new(
-        &env::var("TASK_STORAGE_DIR").expect("TASK_STORAGE_DIR must be set"),
-    ));
+    let submission_dir = storage_dir.join(Path::new("submissions"));
+    let task_dir = storage_dir.join(Path::new("tasks"));
 
     let path = task_dir.join(Path::new(&submission.task_id.to_string()));
 

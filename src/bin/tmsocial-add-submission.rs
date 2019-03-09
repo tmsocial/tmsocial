@@ -35,10 +35,10 @@ fn main() {
     let opt = Opt::from_args();
     dotenv().ok();
 
-    let submission_dir = PathBuf::new().join(Path::new(
-        &env::var("SUBMISSION_STORAGE_DIR")
-            .expect("SUBMISSION_STORAGE_DIR must be set"),
+    let storage_dir = PathBuf::new().join(Path::new(
+        &env::var("STORAGE_DIR").expect("STORAGE_DIR must be set"),
     ));
+    let submission_dir = storage_dir.join(Path::new("submissions"));
 
     create_all(&submission_dir, false).unwrap();
 
