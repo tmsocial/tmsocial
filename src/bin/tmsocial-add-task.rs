@@ -40,9 +40,10 @@ fn main() -> Result<(), Error> {
     dotenv().ok();
 
     let task_maker = env::var("TASK_MAKER").expect("TASK_MAKER must be set");
-    let task_dir = PathBuf::new().join(Path::new(
-        &env::var("TASK_STORAGE_DIR").expect("TASK_STORAGE_DIR must be set"),
+    let storage_dir = PathBuf::new().join(Path::new(
+        &env::var("STORAGE_DIR").expect("STORAGE_DIR must be set"),
     ));
+    let task_dir = storage_dir.join(Path::new("tasks"));
 
     create_all(&task_dir, false)?;
 
