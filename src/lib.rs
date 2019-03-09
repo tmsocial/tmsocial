@@ -7,10 +7,13 @@ extern crate itertools;
 #[macro_use]
 extern crate failure;
 
+extern crate actix_web;
+
 pub mod evaluation;
 pub mod models;
 pub mod schema;
 pub mod task_maker_ui;
+pub mod web;
 
 use crate::models::*;
 use diesel::pg::PgConnection;
