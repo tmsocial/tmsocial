@@ -1,14 +1,17 @@
 extern crate listenfd;
 
-use crate::models::*;
+use std::net::IpAddr;
+use std::path::PathBuf;
+
 use actix::{Addr, SyncArbiter};
 use actix_web::{fs, http, server, App, Result};
 use failure::Error;
 use listenfd::ListenFd;
-use std::net::IpAddr;
-use std::path::PathBuf;
+
+use crate::models::*;
 
 mod db;
+mod endpoints;
 mod extractors;
 
 fn hello_site_handler(site: Site) -> Result<String> {
@@ -26,7 +29,7 @@ fn hello_participation_handler(
     ))
 }
 
-struct State {
+pub struct State {
     db: Addr<db::Executor>,
 }
 
@@ -53,6 +56,9 @@ pub fn web_main(
         )
         .resource("/api/site", |r| {
             r.method(http::Method::GET).with(hello_site_handler)
+        })
+        .resource("/api/user/{username}", |r| {
+            r.method(http::Method::GET).with(endpoints::user::get_user)
         })
         .handler(
             "/",

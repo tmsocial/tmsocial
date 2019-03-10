@@ -35,7 +35,7 @@ pub struct NewContest {
     pub name: String,
 }
 
-#[derive(Queryable, Identifiable, Associations, Debug)]
+#[derive(Queryable, Identifiable, Associations, Debug, Serialize)]
 #[belongs_to(Site)]
 pub struct User {
     pub id: i32,
