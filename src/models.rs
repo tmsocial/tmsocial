@@ -99,7 +99,7 @@ pub struct NewTask<'a> {
     pub contest_id: i32,
 }
 
-#[derive(DbEnum, Debug, PartialEq)]
+#[derive(DbEnum, Debug, PartialEq, Serialize)]
 #[PgType = "submission_status"]
 #[DieselType = "Submission_status"]
 pub enum SubmissionStatus {
@@ -109,7 +109,7 @@ pub enum SubmissionStatus {
     InternalError,
 }
 
-#[derive(Queryable, Identifiable, Associations, Debug)]
+#[derive(Queryable, Identifiable, Associations, Debug, Serialize)]
 #[belongs_to(Task)]
 pub struct Submission {
     pub id: i32,

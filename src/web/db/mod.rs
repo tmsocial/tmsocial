@@ -7,6 +7,7 @@ use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
 
 pub mod contest;
 pub mod participation;
+pub mod submission;
 pub mod task;
 pub mod user;
 

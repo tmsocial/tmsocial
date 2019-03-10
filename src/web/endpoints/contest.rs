@@ -8,6 +8,7 @@ use futures::future::Future;
 use crate::models::*;
 use crate::web::db::contest::GetContests;
 use crate::web::db::contest::JoinContest;
+use crate::web::db::submission::GetSubmissions;
 use crate::web::db::task::GetTask;
 use actix_web::Path;
 
@@ -60,6 +61,23 @@ pub fn get_task(
             .send(GetTask {
                 id: task_id.1,
                 contest_id: contest.id,
+            })
+            .from_err()
+            .and_then(|res| result(res.map(|u| Json(u))).responder()),
+    )
+}
+
+pub fn get_submissions(
+    state: State<crate::web::State>,
+    participation: Participation,
+    task_id: Path<(i32, i32)>,
+) -> Box<Future<Item = Json<Vec<Submission>>, Error = Error>> {
+    Box::new(
+        state
+            .db
+            .send(GetSubmissions {
+                participation_id: participation.id,
+                task_id: task_id.1,
             })
             .from_err()
             .and_then(|res| result(res.map(|u| Json(u))).responder()),

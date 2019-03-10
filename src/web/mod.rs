@@ -77,6 +77,13 @@ pub fn web_main(
             r.method(http::Method::GET)
                 .with(endpoints::contest::get_task)
         })
+        .resource(
+            "/api/contest/{contest_id}/task/{task_id}/submissions",
+            |r| {
+                r.method(http::Method::GET)
+                    .with(endpoints::contest::get_submissions)
+            },
+        )
         .handler(
             "/",
             fs::StaticFiles::new(&web_root)
