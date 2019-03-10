@@ -21,3 +21,9 @@ pub fn get_contests(
             .and_then(|res| result(res.map(|u| Json(u))).responder()),
     )
 }
+
+pub fn get_contest(
+    contest: Contest,
+) -> Box<Future<Item = Json<Contest>, Error = Error>> {
+    Box::new(result(Ok(Json(contest))).responder())
+}

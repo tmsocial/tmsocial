@@ -65,6 +65,10 @@ pub fn web_main(
             r.method(http::Method::GET)
                 .with(endpoints::contest::get_contests)
         })
+        .resource("/api/contest/{contest_id}", |r| {
+            r.method(http::Method::GET)
+                .with(endpoints::contest::get_contest)
+        })
         .handler(
             "/",
             fs::StaticFiles::new(&web_root)
