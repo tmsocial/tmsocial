@@ -33,6 +33,56 @@ pub struct State {
     db: Addr<db::Executor>,
 }
 
+pub fn create_app(web_root: &PathBuf) -> App<State> {
+    let db_addr = SyncArbiter::start(3, || {
+        db::Executor::new(crate::establish_connection())
+    });
+    App::with_state(State {
+        db: db_addr.clone(),
+    })
+    .middleware(middleware::Logger::default())
+    .route(
+        "/api/contest/{contest_id}/hello",
+        http::Method::GET,
+        hello_participation_handler,
+    )
+    .resource("/api/site", |r| {
+        r.method(http::Method::GET).with(hello_site_handler)
+    })
+    .resource("/api/user/{username}", |r| {
+        r.method(http::Method::GET).with(endpoints::user::get_user)
+    })
+    .resource("/api/contests", |r| {
+        r.method(http::Method::GET)
+            .with(endpoints::contest::get_contests)
+    })
+    .resource("/api/contest/{contest_id}", |r| {
+        r.method(http::Method::GET)
+            .with(endpoints::contest::get_contest)
+    })
+    .resource("/api/contest/{contest_id}/join", |r| {
+        r.method(http::Method::POST)
+            .with(endpoints::contest::join_contest)
+    })
+    .resource("/api/contest/{contest_id}/task/{task_id}", |r| {
+        r.method(http::Method::GET)
+            .with(endpoints::contest::get_task)
+    })
+    .resource(
+        "/api/contest/{contest_id}/task/{task_id}/submissions",
+        |r| {
+            r.method(http::Method::GET)
+                .with(endpoints::contest::get_submissions)
+        },
+    )
+    .handler(
+        "/",
+        fs::StaticFiles::new(&web_root)
+            .unwrap()
+            .index_file("index.html"),
+    )
+}
+
 pub fn web_main(
     web_root: PathBuf,
     addr: IpAddr,
@@ -41,57 +91,7 @@ pub fn web_main(
     let mut listenfd = ListenFd::from_env();
     let sys = actix::System::new("tmsocial");
 
-    let db_addr = SyncArbiter::start(3, || {
-        db::Executor::new(crate::establish_connection())
-    });
-
-    let mut server = server::new(move || {
-        App::with_state(State {
-            db: db_addr.clone(),
-        })
-        .middleware(middleware::Logger::default())
-        .route(
-            "/api/contest/{contest_id}/hello",
-            http::Method::GET,
-            hello_participation_handler,
-        )
-        .resource("/api/site", |r| {
-            r.method(http::Method::GET).with(hello_site_handler)
-        })
-        .resource("/api/user/{username}", |r| {
-            r.method(http::Method::GET).with(endpoints::user::get_user)
-        })
-        .resource("/api/contests", |r| {
-            r.method(http::Method::GET)
-                .with(endpoints::contest::get_contests)
-        })
-        .resource("/api/contest/{contest_id}", |r| {
-            r.method(http::Method::GET)
-                .with(endpoints::contest::get_contest)
-        })
-        .resource("/api/contest/{contest_id}/join", |r| {
-            r.method(http::Method::POST)
-                .with(endpoints::contest::join_contest)
-        })
-        .resource("/api/contest/{contest_id}/task/{task_id}", |r| {
-            r.method(http::Method::GET)
-                .with(endpoints::contest::get_task)
-        })
-        .resource(
-            "/api/contest/{contest_id}/task/{task_id}/submissions",
-            |r| {
-                r.method(http::Method::GET)
-                    .with(endpoints::contest::get_submissions)
-            },
-        )
-        .handler(
-            "/",
-            fs::StaticFiles::new(&web_root)
-                .unwrap()
-                .index_file("index.html"),
-        )
-        .finish()
-    });
+    let mut server = server::new(move || create_app(&web_root).finish());
     server = if let Some(lfd) = listenfd.take_tcp_listener(0)? {
         server.listen(lfd)
     } else {

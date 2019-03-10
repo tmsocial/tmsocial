@@ -42,26 +42,18 @@ pub fn establish_connection() -> PgConnection {
 ///
 /// # Example
 /// ```
+/// use diesel::query_dsl::{QueryDsl, RunQueryDsl};
+/// use diesel::connection::Connection;
 /// use tmsocial::{establish_connection, mark_internal_error};
 /// use tmsocial::schema::submissions::dsl::submissions;
 /// use tmsocial::models::{Submission, SubmissionStatus};
-/// use diesel::query_dsl::QueryDsl;
-/// use diesel::query_dsl::RunQueryDsl;
-/// use diesel::connection::Connection;
+/// use tmsocial::test_utils::*;
 ///
 /// let conn = establish_connection();
 /// # conn.test_transaction(|| -> Result<(), diesel::result::Error> {
-/// # diesel::sql_query(
-/// #     "INSERT INTO tasks \
-/// #     (id, name, title, time_limit, memory_limit, max_score, format) VALUES \
-/// #     (-1, 'a', 'b', 1, 1, 1, 'ioi')").execute(&conn);
-/// # diesel::sql_query(
-/// #     "INSERT INTO submissions \
-/// #     (id, files, status, task_id) VALUES \
-/// #     (-1, '{}', 'waiting', -1)").execute(&conn);
-/// let submission = submissions.find(-1).first::<Submission>(&conn).unwrap();
+/// # let (site, contest, user, part, task, submission) = fake_data(&conn);
 /// mark_internal_error(&conn, &submission);
-/// let submission = submissions.find(-1).first::<Submission>(&conn).unwrap();
+/// let submission = submissions.find(submission.id).first::<Submission>(&conn).unwrap();
 /// assert_eq!(submission.status, SubmissionStatus::InternalError);
 /// # Ok(())
 /// # });
@@ -75,4 +67,119 @@ pub fn mark_internal_error(
         .set(status.eq(SubmissionStatus::InternalError))
         .execute(conn)?;
     Ok(())
+}
+
+pub mod test_utils {
+    use crate::models::*;
+    use diesel::pg::PgConnection;
+    use diesel::query_dsl::{QueryDsl, RunQueryDsl};
+
+    pub fn fake_site(conn: &PgConnection) -> Site {
+        use crate::schema::sites::dsl::*;
+        let site_id = diesel::insert_into(sites)
+            .values(NewSite {
+                domain: "domain".to_string(),
+            })
+            .returning(id)
+            .get_results::<i32>(conn)
+            .unwrap();
+        sites.find(site_id[0]).first::<Site>(conn).unwrap()
+    }
+
+    pub fn fake_contest(conn: &PgConnection, site: &Site) -> Contest {
+        use crate::schema::contests::dsl::*;
+        let contest_id = diesel::insert_into(contests)
+            .values(NewContest {
+                site_id: site.id,
+                name: "name".to_string(),
+            })
+            .returning(id)
+            .get_results::<i32>(conn)
+            .unwrap();
+        contests.find(contest_id[0]).first::<Contest>(conn).unwrap()
+    }
+
+    pub fn fake_user(conn: &PgConnection, site: &Site) -> User {
+        use crate::schema::users::dsl::*;
+        let user_id = diesel::insert_into(users)
+            .values(NewUser {
+                site_id: site.id,
+                username: "testuser".to_string(),
+            })
+            .returning(id)
+            .get_results::<i32>(conn)
+            .unwrap();
+        users.find(user_id[0]).first::<User>(conn).unwrap()
+    }
+
+    pub fn fake_participation(
+        conn: &PgConnection,
+        contest: &Contest,
+        user: &User,
+    ) -> Participation {
+        use crate::schema::participations::dsl::*;
+        let participation_id = diesel::insert_into(participations)
+            .values(NewParticipation {
+                contest_id: contest.id,
+                user_id: user.id,
+            })
+            .returning(id)
+            .get_results::<i32>(conn)
+            .unwrap();
+        participations
+            .find(participation_id[0])
+            .first::<Participation>(conn)
+            .unwrap()
+    }
+
+    pub fn fake_task(conn: &PgConnection, contest: &Contest) -> Task {
+        use crate::schema::tasks::dsl::*;
+        let task_id = diesel::insert_into(tasks)
+            .values(NewTask {
+                name: "task",
+                title: "The Task",
+                time_limit: 1.0,
+                memory_limit: 123,
+                contest_id: contest.id,
+                format: TaskFormat::IOI,
+                max_score: 100.0,
+            })
+            .returning(id)
+            .get_results::<i32>(conn)
+            .unwrap();
+        tasks.find(task_id[0]).first::<Task>(conn).unwrap()
+    }
+
+    pub fn fake_submission(
+        conn: &PgConnection,
+        task: &Task,
+        part: &Participation,
+    ) -> Submission {
+        use crate::schema::submissions::dsl::*;
+        let submission_id = diesel::insert_into(submissions)
+            .values(NewSubmission {
+                task_id: task.id,
+                participation_id: part.id,
+                files: vec!["file.cpp".to_string()],
+            })
+            .returning(id)
+            .get_results::<i32>(conn)
+            .unwrap();
+        submissions
+            .find(submission_id[0])
+            .first::<Submission>(conn)
+            .unwrap()
+    }
+
+    pub fn fake_data(
+        conn: &PgConnection,
+    ) -> (Site, Contest, User, Participation, Task, Submission) {
+        let site = fake_site(conn);
+        let contest = fake_contest(conn, &site);
+        let user = fake_user(conn, &site);
+        let part = fake_participation(conn, &contest, &user);
+        let task = fake_task(conn, &contest);
+        let sub = fake_submission(conn, &task, &part);
+        (site, contest, user, part, task, sub)
+    }
 }
