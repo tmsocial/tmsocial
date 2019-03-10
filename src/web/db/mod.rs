@@ -13,6 +13,8 @@ pub mod user;
 
 pub use self::contest::*;
 pub use self::participation::*;
+pub use self::submission::*;
+pub use self::task::*;
 pub use self::user::*;
 
 pub struct Executor(PgConnection);

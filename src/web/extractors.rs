@@ -14,7 +14,7 @@ use url::Url;
 use crate::models::*;
 use crate::web::db::user::GetUserByToken;
 
-use super::db::{GetContest, GetParticipation, GetSite};
+use super::db::{GetContest, GetParticipation, GetSite, GetTask};
 use super::State;
 
 impl FromRequest<State> for Site {
@@ -146,6 +146,37 @@ impl FromRequest<State> for Participation {
                 .and_then(|res| res)
             });
         Box::new(participation)
+    }
+}
+
+#[derive(Deserialize, Debug)]
+struct TaskID {
+    pub task_id: i32,
+}
+
+impl FromRequest<State> for Task {
+    type Config = ();
+    type Result = Box<Future<Item = Self, Error = Error>>;
+    fn from_request(
+        req: &HttpRequest<State>,
+        _cfg: &Self::Config,
+    ) -> Self::Result {
+        let contest_id = Path::<ContestID>::extract(req)
+            .expect("Asking for contest on a path with no contest_id param!")
+            .contest_id;
+        let task_id = Path::<TaskID>::extract(req)
+            .expect("Asking for task on a path with no task_id param!")
+            .task_id;
+        let task = req
+            .state()
+            .db
+            .send(GetTask {
+                id: task_id,
+                contest_id: contest_id,
+            })
+            .from_err()
+            .and_then(|res| res);
+        Box::new(task)
     }
 }
 
