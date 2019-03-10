@@ -13,26 +13,9 @@ use failure::Error;
 use listenfd::ListenFd;
 use serde_derive::Serialize;
 
-use crate::models::*;
-
 mod db;
 mod endpoints;
 mod extractors;
-
-fn hello_site_handler(site: Site) -> Result<String> {
-    Ok(format!("Welcome to site with id {}", site.id))
-}
-
-fn hello_participation_handler(
-    user: User,
-    contest: Contest,
-    participation: Option<Participation>,
-) -> Result<String> {
-    Ok(format!(
-        "Welcome {:?} {:?} {:?}",
-        user, contest, participation
-    ))
-}
 
 #[derive(Serialize)]
 pub struct ErrorResponse {
@@ -81,13 +64,9 @@ pub fn create_app(web_root: &PathBuf) -> App<State> {
         app = app
             .middleware(ErrorHandlers::new().handler(error_code, render_error));
     }
-    app.route(
-        "/api/contest/{contest_id}/hello",
-        http::Method::GET,
-        hello_participation_handler,
-    )
-    .resource("/api/site", |r| {
-        r.method(http::Method::GET).with(hello_site_handler)
+
+    app.resource("/api/login", |r| {
+        r.method(http::Method::POST).with(endpoints::user::login)
     })
     .resource("/api/user/{username}", |r| {
         r.method(http::Method::GET).with(endpoints::user::get_user)

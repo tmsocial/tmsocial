@@ -111,6 +111,7 @@ table! {
         id -> Int4,
         site_id -> Int4,
         username -> Varchar,
+        login_token -> Nullable<Varchar>,
     }
 }
 

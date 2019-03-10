@@ -41,6 +41,8 @@ pub struct User {
     pub id: i32,
     pub site_id: i32,
     pub username: String,
+    #[serde(skip)]
+    pub login_token: Option<String>,
 }
 
 #[derive(Insertable, Debug)]

@@ -1,5 +1,5 @@
-use super::db::{GetContest, GetParticipation, GetSite, GetUser};
-use super::State;
+use std::fmt::Display;
+
 use actix_web::error::{ErrorBadRequest, ErrorForbidden, ResponseError};
 use actix_web::http::header::HOST;
 use actix_web::http::Cookie;
@@ -9,10 +9,13 @@ use failure::Fail;
 use futures::{future, Future};
 use log::warn;
 use serde_derive::Deserialize;
-use std::fmt::Display;
 use url::Url;
 
 use crate::models::*;
+use crate::web::db::user::GetUserByToken;
+
+use super::db::{GetContest, GetParticipation, GetSite};
+use super::State;
 
 impl FromRequest<State> for Site {
     type Config = ();
@@ -21,33 +24,20 @@ impl FromRequest<State> for Site {
         req: &HttpRequest<State>,
         _cfg: &Self::Config,
     ) -> Self::Result {
-        let host = req.headers().get(HOST);
-        let host = match host {
-            Some(host) => host.to_str().unwrap_or("localhost"),
-            None => {
-                warn!("Invalid host header: {:?}", host);
-                return Box::new(future::err(ErrorBadRequest("No host header")));
-            }
-        };
-        let host = Url::parse(host);
-        let host = if let Ok(host) = host {
-            String::from(host.host_str().unwrap_or("localhost"))
-        } else {
-            warn!("Invalid host header: {:?}", host);
-            return Box::new(future::err(ErrorBadRequest("Bad host header")));
-        };
-
-        Box::new(
-            req.state()
-                .db
-                .send(GetSite { host: host })
-                .from_err()
-                .and_then(|res| res),
-        )
+        match get_current_host(req) {
+            Ok(host) => Box::new(
+                req.state()
+                    .db
+                    .send(GetSite { host })
+                    .from_err()
+                    .and_then(|res| res),
+            ),
+            Err(err) => Box::new(future::err(err)),
+        }
     }
 }
 
-const AUTH_COOKIE: &'static str = "auth";
+pub const AUTH_COOKIE: &'static str = "auth";
 
 #[derive(Debug)]
 struct ForbiddenResetCookie;
@@ -77,27 +67,18 @@ impl FromRequest<State> for User {
         req: &HttpRequest<State>,
         _cfg: &Self::Config,
     ) -> Self::Result {
-        let cookie = req.cookie(AUTH_COOKIE);
-        let user_id = match cookie {
-            Some(cookie) => cookie.value().parse::<i32>(),
-            None => return Box::new(future::err(ErrorForbidden("Logged out"))),
-        };
-        let user_id = match user_id {
-            Ok(id) => id,
-            Err(_) => {
-                return Box::new(future::err(Error::from(
-                    ForbiddenResetCookie {},
-                )))
-            }
-        };
-        Box::new(
-            req.state()
-                .db
-                .send(GetUser { id: user_id })
-                .from_err()
-                .and_then(|res| res)
-                .map_err(|_err| Error::from(ForbiddenResetCookie {})),
-        )
+        let token = req.cookie(AUTH_COOKIE).map(|c| c.value().to_string());
+        match token {
+            Some(token) => Box::new(
+                req.state()
+                    .db
+                    .send(GetUserByToken { login_token: token })
+                    .from_err()
+                    .and_then(|res| res)
+                    .map_err(|_err| Error::from(ForbiddenResetCookie {})),
+            ),
+            None => Box::new(future::err(ErrorForbidden("Logged out"))),
+        }
     }
 }
 
@@ -137,21 +118,17 @@ impl FromRequest<State> for Participation {
         let contest_id = Path::<ContestID>::extract(req)
             .expect("Asking for contest on a path with no contest_id param!")
             .contest_id;
-        let cookie = req.cookie(AUTH_COOKIE);
-        let user_id = match cookie {
-            Some(cookie) => cookie.value().parse::<i32>(),
-            None => return Box::new(future::err(ErrorForbidden("Logged out"))),
-        };
-        let user_id = match user_id {
-            Ok(id) => id,
-            Err(_) => {
+        let token = req.cookie(AUTH_COOKIE).map(|c| c.value().to_string());
+        let token = match token {
+            Some(token) => token,
+            None => {
                 return Box::new(future::err(Error::from(
                     ForbiddenResetCookie {},
                 )))
             }
         };
         let db = req.state().db.clone();
-        let user = db.send(GetUser { id: user_id });
+        let user = db.send(GetUserByToken { login_token: token });
         let participation = user
             .map_err(|x| x.into())
             .and_then(|res| match res {
@@ -160,9 +137,9 @@ impl FromRequest<State> for Participation {
                     future::done(Err(Error::from(ForbiddenResetCookie {})))
                 }
             })
-            .and_then(move |_| {
+            .and_then(move |user| {
                 db.send(GetParticipation {
-                    user_id: user_id,
+                    user_id: user.id,
                     contest_id: contest_id,
                 })
                 .from_err()
@@ -170,4 +147,25 @@ impl FromRequest<State> for Participation {
             });
         Box::new(participation)
     }
+}
+
+fn get_current_host(
+    req: &HttpRequest<State>,
+) -> std::result::Result<String, Error> {
+    let host = req.headers().get(HOST);
+    let host = match host {
+        Some(host) => host.to_str().unwrap_or("localhost"),
+        None => {
+            warn!("Invalid host header: {:?}", host);
+            return Err(ErrorBadRequest("No host header"));
+        }
+    };
+    let host = Url::parse(host);
+    let host = if let Ok(host) = host {
+        String::from(host.host_str().unwrap_or("localhost"))
+    } else {
+        warn!("Invalid host header: {:?}", host);
+        return Err(ErrorBadRequest("Bad host header"));
+    };
+    Ok(host)
 }

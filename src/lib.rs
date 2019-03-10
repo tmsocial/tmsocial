@@ -1,25 +1,28 @@
+extern crate actix_web;
 #[macro_use]
 extern crate diesel;
 #[macro_use]
 extern crate diesel_derive_enum;
 extern crate dotenv;
-extern crate itertools;
 #[macro_use]
 extern crate failure;
+extern crate base64;
+extern crate itertools;
+extern crate rand;
 
-extern crate actix_web;
+use std::env;
+
+use diesel::pg::PgConnection;
+use diesel::prelude::*;
+use failure::Error;
+
+use crate::models::*;
 
 pub mod evaluation;
 pub mod models;
 pub mod schema;
 pub mod task_maker_ui;
 pub mod web;
-
-use crate::models::*;
-use diesel::pg::PgConnection;
-use diesel::prelude::*;
-use failure::Error;
-use std::env;
 
 /// Connect to the Postgres database. The DATABASE_URL environment variable must
 /// be set.
@@ -70,9 +73,10 @@ pub fn mark_internal_error(
 }
 
 pub mod test_utils {
-    use crate::models::*;
     use diesel::pg::PgConnection;
     use diesel::query_dsl::{QueryDsl, RunQueryDsl};
+
+    use crate::models::*;
 
     pub fn fake_site(conn: &PgConnection) -> Site {
         use crate::schema::sites::dsl::*;
