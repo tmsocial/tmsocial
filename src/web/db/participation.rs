@@ -24,22 +24,16 @@ impl Handler<GetParticipation> for Executor {
     ) -> Self::Result {
         use crate::schema::participations::dsl::*;
 
-        let participation_or_error = participations
+        let participation = participations
             .filter(user_id.eq(&msg.user_id))
             .filter(contest_id.eq(&msg.contest_id))
-            .load::<Participation>(&self.0);
-
-        match participation_or_error {
-            Ok(mut participation) => {
-                if participation.len() == 0 {
-                    Err(ErrorNotFound("No such participation"))
-                } else if participation.len() == 1 {
-                    Ok(participation.swap_remove(0))
-                } else {
-                    panic!("Broken DB")
-                }
+            .first::<Participation>(&self.0);
+        match participation {
+            Ok(participation) => Ok(participation),
+            Err(diesel::result::Error::NotFound) => {
+                Err(ErrorNotFound(format!("No such participation")))
             }
-            Err(error) => Err(ErrorInternalServerError(error)),
+            Err(err) => Err(ErrorInternalServerError(err)),
         }
     }
 }

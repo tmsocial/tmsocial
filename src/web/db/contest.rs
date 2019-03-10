@@ -36,20 +36,13 @@ impl Handler<GetContest> for Executor {
     ) -> Self::Result {
         use crate::schema::contests::dsl::*;
 
-        let contest_or_error =
-            contests.filter(id.eq(&msg.id)).load::<Contest>(&self.0);
-
-        match contest_or_error {
-            Ok(mut contest) => {
-                if contest.len() == 0 {
-                    Err(ErrorNotFound("No such contest"))
-                } else if contest.len() == 1 {
-                    Ok(contest.swap_remove(0))
-                } else {
-                    panic!("Broken DB")
-                }
+        let contest = contests.find(&msg.id).first::<Contest>(&self.0);
+        match contest {
+            Ok(contest) => Ok(contest),
+            Err(diesel::result::Error::NotFound) => {
+                Err(ErrorNotFound(format!("No such contest")))
             }
-            Err(error) => Err(ErrorInternalServerError(error)),
+            Err(err) => Err(ErrorInternalServerError(err)),
         }
     }
 }
