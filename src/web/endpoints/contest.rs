@@ -8,6 +8,8 @@ use futures::future::Future;
 use crate::models::*;
 use crate::web::db::contest::GetContests;
 use crate::web::db::contest::JoinContest;
+use crate::web::db::task::GetTask;
+use actix_web::Path;
 
 pub fn get_contests(
     state: State<crate::web::State>,
@@ -40,6 +42,24 @@ pub fn join_contest(
             .send(JoinContest {
                 contest_id: contest.id,
                 user_id: user.id,
+            })
+            .from_err()
+            .and_then(|res| result(res.map(|u| Json(u))).responder()),
+    )
+}
+
+pub fn get_task(
+    state: State<crate::web::State>,
+    contest: Contest,
+    _participation: Participation,
+    task_id: Path<(i32, i32)>,
+) -> Box<Future<Item = Json<Task>, Error = Error>> {
+    Box::new(
+        state
+            .db
+            .send(GetTask {
+                id: task_id.1,
+                contest_id: contest.id,
             })
             .from_err()
             .and_then(|res| result(res.map(|u| Json(u))).responder()),
