@@ -5,6 +5,14 @@ use actix_web::Error;
 use diesel::pg::PgConnection;
 use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
 
+pub mod contest;
+pub mod participation;
+pub mod user;
+
+pub use self::contest::*;
+pub use self::participation::*;
+pub use self::user::*;
+
 pub struct Executor(PgConnection);
 
 impl Executor {
