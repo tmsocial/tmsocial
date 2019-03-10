@@ -61,6 +61,10 @@ pub fn web_main(
         .resource("/api/user/{username}", |r| {
             r.method(http::Method::GET).with(endpoints::user::get_user)
         })
+        .resource("/api/contests", |r| {
+            r.method(http::Method::GET)
+                .with(endpoints::contest::get_contests)
+        })
         .handler(
             "/",
             fs::StaticFiles::new(&web_root)

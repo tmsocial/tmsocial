@@ -20,7 +20,7 @@ pub struct NewSite {
     pub domain: String,
 }
 
-#[derive(Queryable, Identifiable, Associations, Debug)]
+#[derive(Queryable, Identifiable, Associations, Debug, Serialize)]
 #[belongs_to(Site)]
 pub struct Contest {
     pub id: i32,
