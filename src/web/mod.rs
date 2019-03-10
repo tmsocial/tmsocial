@@ -4,9 +4,14 @@ use std::net::IpAddr;
 use std::path::PathBuf;
 
 use actix::{Addr, SyncArbiter};
-use actix_web::{fs, http, middleware, server, App, Result};
+use actix_web::http::header::HeaderValue;
+use actix_web::middleware::{ErrorHandlers, Response};
+use actix_web::{
+    fs, http, middleware, server, App, HttpRequest, HttpResponse, Result,
+};
 use failure::Error;
 use listenfd::ListenFd;
+use serde_derive::Serialize;
 
 use crate::models::*;
 
@@ -29,19 +34,54 @@ fn hello_participation_handler(
     ))
 }
 
+#[derive(Serialize)]
+pub struct ErrorResponse {
+    pub error: String,
+}
+
+fn render_error<S>(
+    _: &HttpRequest<S>,
+    mut resp: HttpResponse,
+) -> Result<Response> {
+    let error = resp
+        .error()
+        .map(|e| e.to_string())
+        .unwrap_or("".to_string());
+    resp.headers_mut().insert(
+        http::header::CONTENT_TYPE,
+        HeaderValue::from_static("application/json"),
+    );
+    resp.set_body(serde_json::to_string(&ErrorResponse { error }).unwrap());
+    Ok(Response::Done(resp))
+}
+
 pub struct State {
     db: Addr<db::Executor>,
 }
 
 pub fn create_app(web_root: &PathBuf) -> App<State> {
+    // bind all this error handlers
+    let error_codes = vec![
+        http::StatusCode::BAD_REQUEST,
+        http::StatusCode::UNAUTHORIZED,
+        http::StatusCode::FORBIDDEN,
+        http::StatusCode::NOT_FOUND,
+        http::StatusCode::UNPROCESSABLE_ENTITY,
+        http::StatusCode::INTERNAL_SERVER_ERROR,
+    ];
+
     let db_addr = SyncArbiter::start(3, || {
         db::Executor::new(crate::establish_connection())
     });
-    App::with_state(State {
+    let mut app = App::with_state(State {
         db: db_addr.clone(),
     })
-    .middleware(middleware::Logger::default())
-    .route(
+    .middleware(middleware::Logger::default());
+    for error_code in error_codes {
+        app = app
+            .middleware(ErrorHandlers::new().handler(error_code, render_error));
+    }
+    app.route(
         "/api/contest/{contest_id}/hello",
         http::Method::GET,
         hello_participation_handler,
