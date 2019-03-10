@@ -4,7 +4,7 @@ use std::net::IpAddr;
 use std::path::PathBuf;
 
 use actix::{Addr, SyncArbiter};
-use actix_web::{fs, http, server, App, Result};
+use actix_web::{fs, http, middleware, server, App, Result};
 use failure::Error;
 use listenfd::ListenFd;
 
@@ -49,6 +49,7 @@ pub fn web_main(
         App::with_state(State {
             db: db_addr.clone(),
         })
+        .middleware(middleware::Logger::default())
         .route(
             "/api/contest/{contest_id}/hello",
             http::Method::GET,
