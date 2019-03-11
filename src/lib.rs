@@ -7,8 +7,10 @@ extern crate dotenv;
 #[macro_use]
 extern crate failure;
 extern crate base64;
+extern crate fs_extra;
 extern crate itertools;
 extern crate rand;
+extern crate tempfile;
 
 use std::env;
 
@@ -17,6 +19,9 @@ use diesel::prelude::*;
 use failure::Error;
 
 use crate::models::*;
+use fs_extra::dir::create_all;
+use std::path::Path;
+use std::path::PathBuf;
 
 pub mod evaluation;
 pub mod models;
@@ -70,6 +75,33 @@ pub fn mark_internal_error(
         .set(status.eq(SubmissionStatus::InternalError))
         .execute(conn)?;
     Ok(())
+}
+
+/// Create and returns the path where the files of the provided submission
+/// should be stored. The STORAGE_DIR environment var should be set and that
+/// directory must be writable.
+///
+/// # Example
+/// ```
+/// use tempfile::TempDir;
+/// use std::env;
+/// use tmsocial::create_submission_dir;
+///
+/// # let dir = TempDir::new().unwrap();
+/// # env::set_var("STORAGE_DIR", dir.path().as_os_str());
+/// create_submission_dir(42);
+/// ```
+pub fn create_submission_dir(submission_id: i32) -> PathBuf {
+    let storage_dir = PathBuf::new().join(Path::new(
+        &env::var("STORAGE_DIR").expect("STORAGE_DIR must be set"),
+    ));
+    let submission_dir = storage_dir
+        .join(Path::new("submissions"))
+        .join(Path::new(&submission_id.to_string()));
+
+    create_all(&submission_dir, false).unwrap();
+
+    submission_dir
 }
 
 pub mod test_utils {

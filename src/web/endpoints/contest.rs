@@ -1,12 +1,24 @@
 use std::collections::HashSet;
+use std::fs;
+use std::io::Write;
+use std::path::PathBuf;
+use std::sync::Arc;
 
-use actix_web::error::ErrorNotFound;
-use actix_web::Path;
-use actix_web::{AsyncResponder, Json, State};
-use futures::future::result;
-use futures::future::Future;
+use actix_web::dev;
+use actix_web::error::{
+    ErrorBadRequest, ErrorInternalServerError, ErrorNotFound, MultipartError,
+    PayloadError,
+};
+use actix_web::multipart;
+use actix_web::{
+    AsyncResponder, Error, HttpMessage, HttpRequest, Json, Path, State,
+};
+use futures::future;
+use futures::future::{result, Future};
+use futures::stream::Stream;
 use log::warn;
 use serde_derive::Serialize;
+use tempfile::TempDir;
 
 use crate::models::*;
 use crate::web::db::*;
@@ -122,5 +134,93 @@ pub fn get_submission(
                 }))
                 .responder()
             }),
+    )
+}
+
+pub fn submit(
+    state: State<crate::web::State>,
+    participation: Participation,
+    task: Task,
+    req: HttpRequest<crate::web::State>,
+) -> AsyncJsonResponse<Submission> {
+    let tempdir = TempDir::new();
+    if tempdir.is_err() {
+        return Box::new(future::err(ErrorInternalServerError(
+            tempdir.err().unwrap(),
+        )));
+    }
+    let tempdir = Arc::new(tempdir.unwrap());
+    let tempdir2 = tempdir.clone();
+    Box::new(
+        req.multipart()
+            .map_err(ErrorInternalServerError)
+            .map(move |item| handle_multipart_item(tempdir.clone(), item))
+            .flatten()
+            .collect()
+            .map(move |files| {
+                state
+                    .db
+                    .send(Submit {
+                        task_id: task.id,
+                        participation_id: participation.id,
+                        files: files,
+                        tempdir: tempdir2,
+                    })
+                    .from_err()
+                    .and_then(|sub| result(sub.and_then(|s| Ok(Json(s)))))
+            })
+            .and_then(|x| x),
+    )
+}
+
+fn handle_multipart_item(
+    temp: Arc<TempDir>,
+    item: multipart::MultipartItem<dev::Payload>,
+) -> Box<Stream<Item = PathBuf, Error = Error>> {
+    match item {
+        multipart::MultipartItem::Field(field) => {
+            let filename = field
+                .content_disposition()
+                .map(|f| f.get_filename().map(|f| f.to_string()));
+            let filename = match filename {
+                Some(Some(filename)) => filename,
+                _ => {
+                    return Box::new(
+                        future::err(ErrorBadRequest("Missing file name"))
+                            .into_stream(),
+                    )
+                }
+            };
+            Box::new(save_file(field, temp.clone(), filename).into_stream())
+        }
+        multipart::MultipartItem::Nested(mp) => Box::new(
+            mp.map_err(ErrorInternalServerError)
+                .map(move |item| handle_multipart_item(temp.clone(), item))
+                .flatten(),
+        ),
+    }
+}
+
+fn save_file(
+    field: multipart::Field<dev::Payload>,
+    temp: Arc<TempDir>,
+    filename: String,
+) -> Box<Future<Item = PathBuf, Error = Error>> {
+    let filename = temp.path().join(std::path::Path::new(&filename));
+    let mut file = match fs::File::create(&filename) {
+        Ok(file) => file,
+        Err(e) => return Box::new(future::err(ErrorInternalServerError(e))),
+    };
+    Box::new(
+        field
+            .fold((), move |_, bytes| {
+                future::result(
+                    file.write_all(bytes.as_ref()).map_err(|e| {
+                        MultipartError::Payload(PayloadError::Io(e))
+                    }),
+                )
+            })
+            .map(move |_| filename)
+            .map_err(ErrorInternalServerError),
     )
 }

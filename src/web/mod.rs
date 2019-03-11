@@ -87,6 +87,10 @@ pub fn create_app(web_root: &PathBuf) -> App<State> {
         r.method(http::Method::GET)
             .with(endpoints::contest::get_task)
     })
+    .resource("/api/contest/{contest_id}/task/{task_id}/submit", |r| {
+        r.method(http::Method::POST)
+            .with(endpoints::contest::submit)
+    })
     .resource(
         "/api/contest/{contest_id}/task/{task_id}/submissions",
         |r| {

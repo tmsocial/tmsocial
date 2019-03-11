@@ -1,17 +1,23 @@
 use std::collections::HashMap;
+use std::path::PathBuf;
+use std::sync::Arc;
 
 use actix::{Handler, Message};
-use actix_web::error::ErrorInternalServerError;
+use actix_web::error::{ErrorInternalServerError, ErrorNotFound};
 use actix_web::Error;
 use diesel::BelongingToDsl;
+use diesel::Connection;
 use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
+use fs_extra::dir::CopyOptions;
 use serde_derive::Serialize;
+use tempfile::TempDir;
 
+use crate::create_submission_dir;
 use crate::models::*;
 use crate::task_maker_ui::SubtaskNum;
+use crate::task_maker_ui::TestcaseNum;
 
 use super::Executor;
-use crate::task_maker_ui::TestcaseNum;
 
 pub struct GetSubmissions {
     pub participation_id: i32,
@@ -20,6 +26,13 @@ pub struct GetSubmissions {
 
 pub struct GetSubmission {
     pub submission_id: i32,
+}
+
+pub struct Submit {
+    pub task_id: i32,
+    pub participation_id: i32,
+    pub files: Vec<PathBuf>,
+    pub tempdir: Arc<TempDir>,
 }
 
 #[derive(Serialize)]
@@ -86,6 +99,9 @@ impl Handler<GetSubmission> for Executor {
             .first::<Submission>(&self.0);
         let sub = match sub {
             Ok(sub) => sub,
+            Err(diesel::result::Error::NotFound) => {
+                return Err(ErrorNotFound(format!("No such submission")))
+            }
             Err(err) => return Err(ErrorInternalServerError(err)),
         };
         let (subtask_results, subtasks): (Vec<SubtaskResult>, Vec<Subtask>) =
@@ -146,5 +162,46 @@ impl Handler<GetSubmission> for Executor {
         }
 
         Ok(result)
+    }
+}
+
+impl Message for Submit {
+    type Result = Result<Submission, Error>;
+}
+
+impl Handler<Submit> for Executor {
+    type Result = Result<Submission, Error>;
+
+    fn handle(&mut self, msg: Submit, _: &mut Self::Context) -> Self::Result {
+        use crate::schema::submissions::dsl::*;
+
+        (&self.0)
+            .transaction(|| -> Result<Submission, failure::Error> {
+                let new_sub = NewSubmission {
+                    task_id: msg.task_id,
+                    participation_id: msg.participation_id,
+                    files: msg
+                        .files
+                        .iter()
+                        .map(|p| {
+                            p.file_name()
+                                .and_then(|s| s.to_str())
+                                .map(|s| s.to_string())
+                                .unwrap_or(format!(""))
+                        })
+                        .collect(),
+                };
+                let info = diesel::insert_into(submissions)
+                    .values(&new_sub)
+                    .get_result::<Submission>(&self.0)?;
+                let dest_path = create_submission_dir(info.id);
+                fs_extra::move_items(
+                    &msg.files,
+                    dest_path,
+                    &CopyOptions::new(),
+                )?;
+                Ok(info)
+            })
+            .map_err(ErrorInternalServerError)
     }
 }

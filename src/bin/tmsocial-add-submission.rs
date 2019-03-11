@@ -15,6 +15,7 @@ use dotenv::dotenv;
 use fs_extra::dir::create_all;
 use structopt::StructOpt;
 
+use tmsocial::create_submission_dir;
 use tmsocial::models::*;
 use tmsocial::schema::participations::dsl::participations;
 use tmsocial::schema::tasks::dsl::tasks;
@@ -40,13 +41,6 @@ fn main() {
     pretty_env_logger::init();
     let opt = Opt::from_args();
     dotenv().ok();
-
-    let storage_dir = PathBuf::new().join(Path::new(
-        &env::var("STORAGE_DIR").expect("STORAGE_DIR must be set"),
-    ));
-    let submission_dir = storage_dir.join(Path::new("submissions"));
-
-    create_all(&submission_dir, false).unwrap();
 
     let conn = tmsocial::establish_connection();
 
@@ -114,8 +108,7 @@ fn main() {
             .values(&submission_info)
             .get_result::<Submission>(&conn)?;
         println!("Adding submission with id {}", info.id);
-        let path = submission_dir.join(Path::new(&info.id.to_string()));
-        create_all(&path, true).unwrap();
+        let path = create_submission_dir(info.id);
 
         for file in opt.files {
             copy(&file, path.join(file.file_name().unwrap())).unwrap();
