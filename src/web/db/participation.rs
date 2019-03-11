@@ -10,6 +10,10 @@ pub struct GetParticipation {
     pub contest_id: i32,
 }
 
+pub struct GetParticipationsByUser {
+    pub user_id: i32,
+}
+
 impl Message for GetParticipation {
     type Result = Result<Participation, Error>;
 }
@@ -33,6 +37,30 @@ impl Handler<GetParticipation> for Executor {
             Err(diesel::result::Error::NotFound) => {
                 Err(ErrorNotFound(format!("No such participation")))
             }
+            Err(err) => Err(ErrorInternalServerError(err)),
+        }
+    }
+}
+
+impl Message for GetParticipationsByUser {
+    type Result = Result<Vec<Participation>, Error>;
+}
+
+impl Handler<GetParticipationsByUser> for Executor {
+    type Result = Result<Vec<Participation>, Error>;
+
+    fn handle(
+        &mut self,
+        msg: GetParticipationsByUser,
+        _: &mut Self::Context,
+    ) -> Self::Result {
+        use crate::schema::participations::dsl::*;
+
+        let parts = participations
+            .filter(user_id.eq(&msg.user_id))
+            .load::<Participation>(&self.0);
+        match parts {
+            Ok(parts) => Ok(parts),
             Err(err) => Err(ErrorInternalServerError(err)),
         }
     }

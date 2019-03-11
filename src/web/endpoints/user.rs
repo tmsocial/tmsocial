@@ -12,6 +12,7 @@ use serde_derive::Deserialize;
 use crate::models::*;
 use crate::web::db::user::DoLogin;
 use crate::web::db::user::GetUserByUsername;
+use crate::web::endpoints::AsyncJsonResponse;
 use crate::web::extractors::AUTH_COOKIE;
 
 #[derive(Deserialize)]
@@ -55,7 +56,7 @@ pub fn get_user(
     state: State<crate::web::State>,
     site: Site,
     id: Path<String>,
-) -> Box<Future<Item = Json<User>, Error = Error>> {
+) -> AsyncJsonResponse<User> {
     Box::new(
         state
             .db

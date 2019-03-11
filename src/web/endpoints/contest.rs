@@ -1,34 +1,51 @@
-use actix_web::AsyncResponder;
-use actix_web::Error;
-use actix_web::Json;
-use actix_web::State;
+use std::collections::HashSet;
+
+use actix_web::{AsyncResponder, Json, Path, State};
 use futures::future::result;
 use futures::future::Future;
+use serde_derive::Serialize;
 
 use crate::models::*;
-use crate::web::db::contest::GetContests;
-use crate::web::db::contest::JoinContest;
-use crate::web::db::submission::GetSubmissions;
-use crate::web::db::task::GetTask;
-use actix_web::Path;
+use crate::web::db::*;
+use crate::web::endpoints::AsyncJsonResponse;
+
+#[derive(Serialize)]
+pub struct GetContestsResponseItem {
+    pub contest: Contest,
+    pub participating: bool,
+}
 
 pub fn get_contests(
     state: State<crate::web::State>,
     site: Site,
-) -> Box<Future<Item = Json<Vec<Contest>>, Error = Error>> {
-    // TODO mark somehow the contests the user has joined
-    Box::new(
-        state
-            .db
-            .send(GetContests { site_id: site.id })
-            .from_err()
-            .and_then(|res| result(res.map(|u| Json(u))).responder()),
-    )
+    user: Option<User>,
+) -> AsyncJsonResponse<Vec<GetContestsResponseItem>> {
+    let contests = state.db.send(GetContests { site_id: site.id });
+    let participations = state.db.send(GetParticipationsByUser {
+        // assuming no user has negative id
+        user_id: user.map(|user| user.id).unwrap_or(-1),
+    });
+    let res = contests.join(participations).from_err().map(
+        |(contests, participations)| match (contests, participations) {
+            (Ok(contests), Ok(participations)) => {
+                let participations: HashSet<i32> =
+                    participations.iter().map(|p| p.contest_id).collect();
+                Ok(contests
+                    .into_iter()
+                    .map(|c| GetContestsResponseItem {
+                        participating: participations.contains(&c.id),
+                        contest: c,
+                    })
+                    .collect())
+            }
+            (Err(err), _) => Err(err),
+            (_, Err(err)) => Err(err),
+        },
+    );
+    Box::new(res.and_then(|r| result(r.map(|r| Json(r))).responder()))
 }
 
-pub fn get_contest(
-    contest: Contest,
-) -> Box<Future<Item = Json<Contest>, Error = Error>> {
+pub fn get_contest(contest: Contest) -> AsyncJsonResponse<Contest> {
     Box::new(result(Ok(Json(contest))).responder())
 }
 
@@ -36,7 +53,7 @@ pub fn join_contest(
     state: State<crate::web::State>,
     contest: Contest,
     user: User,
-) -> Box<Future<Item = Json<()>, Error = Error>> {
+) -> AsyncJsonResponse<()> {
     Box::new(
         state
             .db
@@ -54,7 +71,7 @@ pub fn get_task(
     contest: Contest,
     _participation: Participation,
     task_id: Path<(i32, i32)>,
-) -> Box<Future<Item = Json<Task>, Error = Error>> {
+) -> AsyncJsonResponse<Task> {
     Box::new(
         state
             .db
@@ -71,7 +88,7 @@ pub fn get_submissions(
     state: State<crate::web::State>,
     participation: Participation,
     task_id: Path<(i32, i32)>,
-) -> Box<Future<Item = Json<Vec<Submission>>, Error = Error>> {
+) -> AsyncJsonResponse<Vec<Submission>> {
     Box::new(
         state
             .db
