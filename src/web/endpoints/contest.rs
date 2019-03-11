@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use actix_web::{AsyncResponder, Json, Path, State};
+use actix_web::{AsyncResponder, Json, State};
 use futures::future::result;
 use futures::future::Future;
 use serde_derive::Serialize;
@@ -67,34 +67,23 @@ pub fn join_contest(
 }
 
 pub fn get_task(
-    state: State<crate::web::State>,
-    contest: Contest,
+    task: Task,
     _participation: Participation,
-    task_id: Path<(i32, i32)>,
 ) -> AsyncJsonResponse<Task> {
-    Box::new(
-        state
-            .db
-            .send(GetTask {
-                id: task_id.1,
-                contest_id: contest.id,
-            })
-            .from_err()
-            .and_then(|res| result(res.map(|u| Json(u))).responder()),
-    )
+    Box::new(futures::future::done(Ok(Json(task))))
 }
 
 pub fn get_submissions(
     state: State<crate::web::State>,
     participation: Participation,
-    task_id: Path<(i32, i32)>,
+    task: Task,
 ) -> AsyncJsonResponse<Vec<Submission>> {
     Box::new(
         state
             .db
             .send(GetSubmissions {
                 participation_id: participation.id,
-                task_id: task_id.1,
+                task_id: task.id,
             })
             .from_err()
             .and_then(|res| result(res.map(|u| Json(u))).responder()),
