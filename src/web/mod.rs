@@ -94,6 +94,13 @@ pub fn create_app(web_root: &PathBuf) -> App<State> {
                 .with(endpoints::contest::get_submissions)
         },
     )
+    .resource(
+        "/api/contest/{contest_id}/task/{task_id}/submission/{submission_id}",
+        |r| {
+            r.method(http::Method::GET)
+                .with(endpoints::contest::get_submission)
+        },
+    )
     .handler(
         "/",
         fs::StaticFiles::new(&web_root)

@@ -1,8 +1,11 @@
 use std::collections::HashSet;
 
+use actix_web::error::ErrorNotFound;
+use actix_web::Path;
 use actix_web::{AsyncResponder, Json, State};
 use futures::future::result;
 use futures::future::Future;
+use log::warn;
 use serde_derive::Serialize;
 
 use crate::models::*;
@@ -87,5 +90,37 @@ pub fn get_submissions(
             })
             .from_err()
             .and_then(|res| result(res.map(|u| Json(u))).responder()),
+    )
+}
+
+pub fn get_submission(
+    state: State<crate::web::State>,
+    participation: Participation,
+    task: Task,
+    submission_id: Path<(i32, i32, i32)>,
+) -> AsyncJsonResponse<GetSubmissionResult> {
+    Box::new(
+        state
+            .db
+            .send(GetSubmission {
+                submission_id: submission_id.2,
+            })
+            .from_err()
+            .and_then(move |res| {
+                result(res.and_then(|u| {
+                    if u.submission.task_id != task.id {
+                        return Err(ErrorNotFound("No such submission"));
+                    }
+                    if u.submission.participation_id != participation.id {
+                        warn!(
+                            "User {} tried to access submission {}",
+                            participation.user_id, submission_id.2
+                        );
+                        return Err(ErrorNotFound("No such submission"));
+                    }
+                    Ok(Json(u))
+                }))
+                .responder()
+            }),
     )
 }

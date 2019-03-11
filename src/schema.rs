@@ -99,7 +99,7 @@ table! {
         memory_usage -> Int4,
         message -> Text,
         score -> Float8,
-        num -> Nullable<Int4>,
+        num -> Int4,
     }
 }
 
