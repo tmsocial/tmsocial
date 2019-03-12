@@ -5,14 +5,12 @@ extern crate pretty_env_logger;
 extern crate serde_json;
 extern crate tmsocial;
 
-use std::env;
 use std::fs::copy;
 use std::path::Path;
 use std::path::PathBuf;
 
 use diesel::{Connection, ExpressionMethods, QueryDsl, RunQueryDsl};
 use dotenv::dotenv;
-use fs_extra::dir::create_all;
 use structopt::StructOpt;
 
 use tmsocial::create_submission_dir;
