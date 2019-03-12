@@ -6,17 +6,13 @@ use std::sync::Arc;
 
 use actix_web::dev;
 use actix_web::error::{
-    ErrorBadRequest, ErrorInternalServerError, ErrorNotFound, MultipartError,
-    PayloadError,
+    ErrorBadRequest, ErrorInternalServerError, MultipartError, PayloadError,
 };
 use actix_web::multipart;
-use actix_web::{
-    AsyncResponder, Error, HttpMessage, HttpRequest, Json, Path, State,
-};
+use actix_web::{AsyncResponder, Error, HttpMessage, HttpRequest, Json, State};
 use futures::future;
 use futures::future::{result, Future};
 use futures::stream::Stream;
-use log::warn;
 use serde_derive::Serialize;
 use tempfile::TempDir;
 
@@ -106,35 +102,9 @@ pub fn get_submissions(
 }
 
 pub fn get_submission(
-    state: State<crate::web::State>,
-    participation: Participation,
-    task: Task,
-    submission_id: Path<(i32, i32, i32)>,
+    submission: GetSubmissionResult,
 ) -> AsyncJsonResponse<GetSubmissionResult> {
-    Box::new(
-        state
-            .db
-            .send(GetSubmission {
-                submission_id: submission_id.2,
-            })
-            .from_err()
-            .and_then(move |res| {
-                result(res.and_then(|u| {
-                    if u.submission.task_id != task.id {
-                        return Err(ErrorNotFound("No such submission"));
-                    }
-                    if u.submission.participation_id != participation.id {
-                        warn!(
-                            "User {} tried to access submission {}",
-                            participation.user_id, submission_id.2
-                        );
-                        return Err(ErrorNotFound("No such submission"));
-                    }
-                    Ok(Json(u))
-                }))
-                .responder()
-            }),
-    )
+    Box::new(future::done(Ok(Json(submission))))
 }
 
 pub fn submit(

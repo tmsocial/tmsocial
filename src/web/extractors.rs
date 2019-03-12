@@ -16,6 +16,9 @@ use crate::web::db::user::GetUserByToken;
 
 use super::db::{GetContest, GetParticipation, GetSite, GetTask};
 use super::State;
+use crate::web::db::submission::GetSubmission;
+use crate::web::db::submission::GetSubmissionResult;
+use actix_web::error::ErrorNotFound;
 
 impl FromRequest<State> for Site {
     type Config = ();
@@ -175,6 +178,54 @@ impl FromRequest<State> for Task {
             .from_err()
             .and_then(|res| res);
         Box::new(task)
+    }
+}
+
+#[derive(Deserialize, Debug)]
+struct SubmissionID {
+    pub submission_id: i32,
+}
+
+impl FromRequest<State> for GetSubmissionResult {
+    type Config = ();
+    type Result = Box<Future<Item = Self, Error = Error>>;
+    fn from_request(
+        req: &HttpRequest<State>,
+        _cfg: &Self::Config,
+    ) -> Self::Result {
+        let task_id = Path::<TaskID>::extract(req)
+            .expect("Asking for submission on a path with no task_id param!")
+            .task_id;
+        let submission_id = Path::<SubmissionID>::extract(req)
+            .expect(
+                "Asking for submission on a path with no submission_id param!",
+            )
+            .submission_id;
+        let participation = Participation::extract(req);
+        let db = req.state().db.clone();
+        let submission = participation.from_err().and_then(move |p| {
+            db.send(GetSubmission {
+                submission_id: submission_id,
+            })
+            .from_err()
+            .and_then(move |res| match res {
+                Ok(res) => {
+                    if res.submission.task_id != task_id {
+                        return Err(ErrorNotFound("No such submission"));
+                    }
+                    if res.submission.participation_id != p.id {
+                        warn!(
+                            "User {} has tried to access submission {}",
+                            p.user_id, res.submission.id
+                        );
+                        return Err(ErrorNotFound("No such submission"));
+                    }
+                    Ok(res)
+                }
+                Err(res) => Err(res),
+            })
+        });
+        Box::new(submission)
     }
 }
 
