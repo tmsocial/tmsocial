@@ -67,8 +67,7 @@ impl FromRequest<State> for User {
         req: &HttpRequest<State>,
         _cfg: &Self::Config,
     ) -> Self::Result {
-        let token = req.cookie(AUTH_COOKIE).map(|c| c.value().to_string());
-        match token {
+        match get_auth_token(req) {
             Some(token) => Box::new(
                 req.state()
                     .db
@@ -118,8 +117,7 @@ impl FromRequest<State> for Participation {
         let contest_id = Path::<ContestID>::extract(req)
             .expect("Asking for contest on a path with no contest_id param!")
             .contest_id;
-        let token = req.cookie(AUTH_COOKIE).map(|c| c.value().to_string());
-        let token = match token {
+        let token = match get_auth_token(req) {
             Some(token) => token,
             None => {
                 return Box::new(future::err(Error::from(
@@ -180,6 +178,8 @@ impl FromRequest<State> for Task {
     }
 }
 
+/// Extract the current host from the request, will fail if no Host is given
+/// or if it's invalid.
 fn get_current_host(
     req: &HttpRequest<State>,
 ) -> std::result::Result<String, Error> {
@@ -199,4 +199,9 @@ fn get_current_host(
         return Err(ErrorBadRequest("Bad host header"));
     };
     Ok(host)
+}
+
+/// Extract the auth token from the cookies of the request.
+fn get_auth_token(req: &HttpRequest<State>) -> Option<String> {
+    req.cookie(AUTH_COOKIE).map(|c| c.value().to_string())
 }
