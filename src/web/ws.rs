@@ -1,5 +1,5 @@
-use super::events::*;
 use super::State;
+use crate::events::*;
 use actix::prelude::*;
 use actix_web::{ws, Error, HttpRequest, HttpResponse};
 use log::{error, warn};
@@ -64,10 +64,10 @@ impl Actor for UserEventSession {
     }
 }
 
-impl Handler<super::events::Event> for UserEventSession {
+impl Handler<Event> for UserEventSession {
     type Result = ();
 
-    fn handle(&mut self, msg: super::events::Event, ctx: &mut Self::Context) {
+    fn handle(&mut self, msg: Event, ctx: &mut Self::Context) {
         let json = serde_json::to_string(&msg);
         match json {
             Ok(js) => ctx.text(js),

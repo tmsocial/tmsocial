@@ -24,6 +24,7 @@ use std::path::Path;
 use std::path::PathBuf;
 
 pub mod evaluation;
+mod events;
 pub mod models;
 pub mod schema;
 pub mod task_maker_ui;

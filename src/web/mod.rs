@@ -15,13 +15,12 @@ use serde_derive::Serialize;
 
 mod db;
 mod endpoints;
-mod events;
 mod extractors;
 mod ws;
 
 pub struct State {
     db: Addr<db::Executor>,
-    event_manager: Addr<events::EventManager>,
+    event_manager: Addr<super::events::EventManager>,
 }
 
 #[derive(Serialize)]
@@ -59,7 +58,7 @@ pub fn create_app(web_root: &PathBuf) -> App<State> {
     let db_addr = SyncArbiter::start(3, || {
         db::Executor::new(crate::establish_connection())
     });
-    let event_manager = Arbiter::start(|_| events::EventManager::new());
+    let event_manager = Arbiter::start(|_| super::events::EventManager::new());
     let mut app = App::with_state(State {
         db: db_addr.clone(),
         event_manager: event_manager.clone(),
