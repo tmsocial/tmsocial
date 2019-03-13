@@ -9,7 +9,6 @@ use failure::Fail;
 use futures::{future, Future};
 use log::warn;
 use serde_derive::Deserialize;
-use url::Url;
 
 use crate::models::*;
 use crate::web::db::user::GetUserByToken;
@@ -242,14 +241,7 @@ fn get_current_host(
             return Err(ErrorBadRequest("No host header"));
         }
     };
-    let host = Url::parse(host);
-    let host = if let Ok(host) = host {
-        String::from(host.host_str().unwrap_or("localhost"))
-    } else {
-        warn!("Invalid host header: {:?}", host);
-        return Err(ErrorBadRequest("Bad host header"));
-    };
-    Ok(host)
+    Ok(host.to_string())
 }
 
 /// Extract the auth token from the cookies of the request.

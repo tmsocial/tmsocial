@@ -137,3 +137,71 @@ pub fn web_main(
     let _ = sys.run();
     Ok(())
 }
+
+pub mod test_utils {
+    use std::path::PathBuf;
+
+    use actix_web::client::{
+        ClientRequest, ClientRequestBuilder, ClientResponse,
+    };
+    use actix_web::test::TestServer;
+    use actix_web::{http, HttpMessage};
+    use futures::future::Future;
+
+    use crate::test_utils::FakeSite;
+
+    use super::create_app;
+
+    pub fn get_test_server() -> TestServer {
+        TestServer::with_factory(|| create_app(&PathBuf::new().join("/tmp")))
+    }
+
+    pub fn fake_request(
+        srv: &TestServer,
+        site: &FakeSite,
+        method: http::Method,
+        path: &str,
+    ) -> ClientRequestBuilder {
+        let mut client = srv.client(method, path);
+        client.set_header(
+            "Host",
+            http::header::HeaderValue::from_str(&site.site.domain)
+                .expect("The domain is not valid"),
+        );
+        client
+    }
+
+    pub fn fake_response(
+        srv: &mut TestServer,
+        request: ClientRequest,
+    ) -> ClientResponse {
+        srv.execute(request.send()).unwrap()
+    }
+
+    pub fn get_json_body<T>(response: &ClientResponse) -> T
+    where
+        T: serde::de::DeserializeOwned,
+    {
+        let buf = response
+            .body()
+            .limit(1024 * 1024)
+            .wait()
+            .expect("Missing response body");
+        let data = std::str::from_utf8(&buf[..]).expect("Non UTF8 response");
+
+        serde_json::from_str(data).expect("Failed to extract json body")
+    }
+
+    pub fn json_request<T>(site: &FakeSite, path: &str) -> T
+    where
+        T: serde::de::DeserializeOwned,
+    {
+        let mut srv = get_test_server();
+        let request = fake_request(&srv, site, http::Method::GET, path)
+            .finish()
+            .unwrap();
+        let response = fake_response(&mut srv, request);
+        assert!(response.status().is_success());
+        get_json_body(&response)
+    }
+}

@@ -13,14 +13,14 @@ use actix_web::{AsyncResponder, Error, HttpMessage, HttpRequest, Json, State};
 use futures::future;
 use futures::future::{result, Future};
 use futures::stream::Stream;
-use serde_derive::Serialize;
+use serde_derive::{Deserialize, Serialize};
 use tempfile::TempDir;
 
 use crate::models::*;
 use crate::web::db::*;
 use crate::web::endpoints::AsyncJsonResponse;
 
-#[derive(Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct GetContestsResponseItem {
     pub contest: Contest,
     pub participating: bool,
@@ -193,4 +193,31 @@ fn save_file(
             .map(move |_| filename)
             .map_err(ErrorInternalServerError),
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::GetContestsResponseItem;
+    use crate::models::*;
+    use crate::test_utils::*;
+    use crate::web::test_utils::*;
+    use std::collections::HashMap;
+
+    #[test]
+    fn get_contests() {
+        let site = FakeSite::new();
+        let contests: HashMap<i32, Contest> =
+            vec![site.contest("contest_a"), site.contest("contest_b")]
+                .into_iter()
+                .map(|c| (c.id, c))
+                .collect();
+        let res: Vec<GetContestsResponseItem> =
+            json_request(&site, "/api/contests");
+        for contest in res {
+            assert_eq!(
+                contest.contest.name,
+                contests.get(&contest.contest.id).expect("wrong data").name
+            );
+        }
+    }
 }
