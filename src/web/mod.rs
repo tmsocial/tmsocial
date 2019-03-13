@@ -3,7 +3,7 @@ extern crate listenfd;
 use std::net::IpAddr;
 use std::path::PathBuf;
 
-use actix::{Addr, SyncArbiter};
+use actix::{Addr, Arbiter, SyncArbiter};
 use actix_web::http::header::HeaderValue;
 use actix_web::middleware::{ErrorHandlers, Response};
 use actix_web::{
@@ -16,6 +16,12 @@ use serde_derive::Serialize;
 mod db;
 mod endpoints;
 mod extractors;
+mod ws;
+
+pub struct State {
+    db: Addr<db::Executor>,
+    event_manager: Addr<super::events::EventManager>,
+}
 
 #[derive(Serialize)]
 pub struct ErrorResponse {
@@ -38,10 +44,6 @@ fn render_error<S>(
     Ok(Response::Done(resp))
 }
 
-pub struct State {
-    db: Addr<db::Executor>,
-}
-
 pub fn create_app(web_root: &PathBuf) -> App<State> {
     // bind all this error handlers
     let error_codes = vec![
@@ -56,8 +58,10 @@ pub fn create_app(web_root: &PathBuf) -> App<State> {
     let db_addr = SyncArbiter::start(3, || {
         db::Executor::new(crate::establish_connection())
     });
+    let event_manager = Arbiter::start(|_| super::events::EventManager::new());
     let mut app = App::with_state(State {
         db: db_addr.clone(),
+        event_manager: event_manager.clone(),
     })
     .middleware(middleware::Logger::default());
     for error_code in error_codes {
@@ -71,6 +75,7 @@ pub fn create_app(web_root: &PathBuf) -> App<State> {
     .resource("/api/user/{username}", |r| {
         r.method(http::Method::GET).with(endpoints::user::get_user)
     })
+    .resource("/api/events", |r| r.with(ws::events_handler))
     .resource("/api/contests", |r| {
         r.method(http::Method::GET)
             .with(endpoints::contest::get_contests)
