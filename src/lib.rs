@@ -59,7 +59,8 @@ pub fn establish_connection() -> PgConnection {
 /// use tmsocial::models::{Submission, SubmissionStatus};
 /// use tmsocial::test_utils::*;
 ///
-/// # let (site, contest, user, part, task, (submission, _, _)) = fake_data();
+/// # let site = FakeSite::new();
+/// # let submission = site.make_submission();
 /// # let conn = &site.conn;
 /// mark_internal_error(conn, &submission);
 /// let submission = submissions.find(submission.id).first::<Submission>(conn).unwrap();
