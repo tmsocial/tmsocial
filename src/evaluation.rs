@@ -1,38 +1,46 @@
 #![allow(proc_macro_derive_resolution_fallback)]
 
 use std::collections::HashMap;
+use std::collections::HashSet;
 use std::env;
 use std::io::{BufRead, BufReader};
 use std::path::Path;
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
+use std::sync::{Arc, Mutex};
 
+use actix::prelude::*;
+use actix_derive::Message;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use failure::Error;
 use itertools::Itertools;
+use log::{debug, error};
+use scopeguard::defer;
 
+use crate::events::{Event, SubmissionUpdate};
 use crate::mark_internal_error;
 use crate::models::*;
 use crate::task_maker_ui::ioi::IOIResult;
 use crate::task_maker_ui::terry::TerryResult;
-use crate::task_maker_ui::SourceFileCompilationStatus;
-use crate::task_maker_ui::SubtaskNum;
-use crate::task_maker_ui::TaskMakerMessage;
+use crate::task_maker_ui::{
+    SourceFileCompilationStatus, State, SubtaskNum, TaskMakerMessage,
+};
 
 #[derive(Debug, Fail)]
 pub enum EvaluationError {
     #[fail(display = "unsupported number of files: {}", number)]
     WrongNumberOfFiles { number: usize },
+    #[fail(display = "submission is already being evaluated")]
+    AlreadyEvaluating,
 }
 
-/// Evaluate a submission already present in the DB, will call task-maker and
-/// when the evaluation is completed the results are stored in the DB.
-/// If an error condition occurs the submission is flagged as internal_error.
-pub fn evaluate_submission(
+fn evaluate_submission(
     conn: &PgConnection,
     submission: &Submission,
-) -> Result<(), Error> {
+    notify: &Recipient<SubmissionUpdate>,
+    user_id: i32,
+) -> Result<f64, Error> {
     let task_maker = env::var("TASK_MAKER").expect("TASK_MAKER must be set");
     let storage_dir = PathBuf::new().join(Path::new(
         &env::var("STORAGE_DIR").expect("STORAGE_DIR must be set"),
@@ -42,8 +50,24 @@ pub fn evaluate_submission(
 
     let path = task_dir.join(Path::new(&submission.task_id.to_string()));
 
+    let mut event_count = 0;
+    let mut update_status = |status| {
+        let err = notify.do_send(SubmissionUpdate {
+            event: Event {
+                status: status,
+                update_id: event_count,
+                submission_id: submission.id,
+            },
+            user_id: user_id,
+        });
+        if let Err(e) = err {
+            error!("Error sending update: {}", e);
+        }
+        event_count += 1;
+    };
+
     if submission.files.len() != 1 {
-        println!(
+        error!(
             "Multi-file submissions are not supported yet! \
              Marking {} as InternalError",
             submission.id
@@ -72,6 +96,10 @@ pub fn evaluate_submission(
         .stdout(Stdio::piped())
         .spawn()?;
 
+    update_status(crate::events::SubmissionStatus::Started);
+
+    let mut score = 0.0;
+
     {
         let stdout = tm.stdout.as_mut().unwrap();
         let stdout_reader = BufReader::new(stdout);
@@ -81,27 +109,37 @@ pub fn evaluate_submission(
             let line = line?;
             let message = serde_json::from_str::<TaskMakerMessage>(&line);
             match message {
-                Ok(TaskMakerMessage::IOIResult(result)) => {
-                    populate_ioi_submission_results(&conn, submission, &result)
-                        .map_err(|err| {
-                            println!(
-                                "Failed to store the evaluation results \
-                                 for submission {}, marking as internal error",
-                                submission.id
+                Ok(TaskMakerMessage::Compilation(comp)) => {
+                    // TODO: compilation stderr
+                    if comp.data.path == submission_path.to_str().unwrap_or("")
+                    {
+                        if comp.state == State::Skipped
+                            || comp.state == State::Failure
+                        {
+                            update_status(
+                                crate::events::SubmissionStatus::Compiled {
+                                    compiler_stderr: "".to_owned(),
+                                    success: false,
+                                },
                             );
-                            match crate::mark_internal_error(conn, submission) {
-                                Err(e) => return e,
-                                _ => {}
-                            };
-                            err
-                        })?
+                        }
+                        if comp.state == State::Success {
+                            update_status(
+                                crate::events::SubmissionStatus::Compiled {
+                                    compiler_stderr: "".to_owned(),
+                                    success: true,
+                                },
+                            );
+                        }
+                    }
                 }
-                Ok(TaskMakerMessage::TerryResult(result)) => {
-                    populate_terry_submission_results(
+                // TODO: other events (TestcaseScored, SubtaskScored)
+                Ok(TaskMakerMessage::IOIResult(result)) => {
+                    score = populate_ioi_submission_results(
                         &conn, submission, &result,
                     )
                     .map_err(|err| {
-                        println!(
+                        error!(
                             "Failed to store the evaluation results \
                              for submission {}, marking as internal error",
                             submission.id
@@ -111,10 +149,31 @@ pub fn evaluate_submission(
                             _ => {}
                         };
                         err
-                    })?
+                    })?;
                 }
-                // TODO stream the messages to the frontend
-                Err(err) => println!("err: {} {}", err, line),
+                Ok(TaskMakerMessage::TerryResult(result)) => {
+                    score = populate_terry_submission_results(
+                        &conn, submission, &result,
+                    )
+                    .map_err(|err| {
+                        error!(
+                            "Failed to store the evaluation results \
+                             for submission {}, marking as internal error",
+                            submission.id
+                        );
+                        match crate::mark_internal_error(conn, submission) {
+                            Err(e) => return e,
+                            _ => {}
+                        };
+                        err
+                    })?;
+                }
+                Err(err) => {
+                    error!("err: {} {}", err, line);
+                    update_status(crate::events::SubmissionStatus::Error {
+                        message: err.to_string(),
+                    });
+                }
                 _ => {}
             }
         }
@@ -122,14 +181,14 @@ pub fn evaluate_submission(
 
     tm.wait()?;
 
-    Ok(())
+    Ok(score)
 }
 
 fn populate_ioi_submission_results(
     conn: &PgConnection,
     submission: &Submission,
     result: &IOIResult,
-) -> Result<(), Error> {
+) -> Result<f64, Error> {
     use crate::schema::tasks::dsl::*;
     let compilation = result
         .solutions
@@ -157,8 +216,8 @@ fn populate_ioi_submission_results(
                 compilation_messages.eq(compilation_stderr),
             ))
             .execute(conn)?;
-        println!("Evaluation of submission {} completed", submission.id);
-        return Ok(());
+        debug!("Evaluation of submission {} completed", submission.id);
+        return Ok(0.0);
     }
 
     let task = tasks.find(submission.task_id).get_result::<Task>(conn)?;
@@ -237,14 +296,105 @@ fn populate_ioi_submission_results(
         // commit the transaction
         Ok(())
     })?;
-    println!("Evaluation of submission {} completed", submission.id);
-    Ok(())
+    debug!("Evaluation of submission {} completed", submission.id);
+    Ok(solution_result.score as f64)
 }
 
 fn populate_terry_submission_results(
     _conn: &PgConnection,
     _submission: &Submission,
     _result: &TerryResult,
-) -> Result<(), Error> {
+) -> Result<f64, Error> {
     unimplemented!();
+}
+
+/// Evaluate a submission already present in the DB, will call task-maker and
+/// when the evaluation is completed the results are stored in the DB.
+/// If an error condition occurs the submission is flagged as internal_error.
+pub struct Evaluator {
+    conn: PgConnection,
+    in_evaluation: Arc<Mutex<HashSet<i32>>>,
+}
+
+#[derive(Message)]
+#[rtype(result = "Result<(), Error>")]
+pub struct Evaluate {
+    pub submission: Submission,
+    pub user_id: i32,
+    pub notify: Recipient<SubmissionUpdate>,
+}
+
+impl Evaluator {
+    pub fn new(
+        conn: PgConnection,
+        in_eval: &Arc<Mutex<HashSet<i32>>>,
+    ) -> Evaluator {
+        Evaluator {
+            conn: conn,
+            in_evaluation: in_eval.clone(),
+        }
+    }
+}
+
+impl Actor for Evaluator {
+    type Context = SyncContext<Self>;
+}
+
+impl Handler<Evaluate> for Evaluator {
+    type Result = Result<(), Error>;
+    fn handle(&mut self, msg: Evaluate, _: &mut Self::Context) -> Self::Result {
+        let send_status = |status| {
+            let err = msg.notify.do_send(SubmissionUpdate {
+                event: Event {
+                    status: status,
+                    update_id: 0,
+                    submission_id: msg.submission.id,
+                },
+                user_id: msg.user_id,
+            });
+            if let Err(e) = err {
+                error!("Error sending update: {}", e);
+            }
+        };
+        let is_evaluating = self
+            .in_evaluation
+            .lock()
+            .unwrap()
+            .contains(&msg.submission.id);
+        if is_evaluating {
+            error!(
+                "Submission {} is already being evaluated!",
+                msg.submission.id
+            );
+            let err: Error = EvaluationError::AlreadyEvaluating.into();
+            send_status(crate::events::SubmissionStatus::Error {
+                message: err.to_string(),
+            });
+            return Err(err);
+        }
+        self.in_evaluation.lock().unwrap().insert(msg.submission.id);
+        defer! {{
+            self.in_evaluation.lock().unwrap().remove(&msg.submission.id);
+        }};
+        let result = evaluate_submission(
+            &self.conn,
+            &msg.submission,
+            &msg.notify,
+            msg.user_id,
+        );
+        match result {
+            Err(e) => {
+                send_status(crate::events::SubmissionStatus::Error {
+                    message: e.to_string(),
+                });
+                Err(e)
+            }
+            Ok(score) => {
+                send_status(crate::events::SubmissionStatus::Done {
+                    score: score,
+                });
+                Ok(())
+            }
+        }
+    }
 }

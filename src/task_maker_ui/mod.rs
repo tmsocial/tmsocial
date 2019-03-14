@@ -13,7 +13,7 @@ use serde_derive::{Deserialize, Serialize};
 pub type TestcaseNum = i32;
 pub type SubtaskNum = i32;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub enum State {
     #[serde(rename = "WAITING")]
     Waiting,

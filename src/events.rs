@@ -11,8 +11,6 @@ use std::time::{Duration, Instant};
 const HISTORY_DURATION: Duration = Duration::from_secs(300);
 
 #[derive(Serialize, Debug, Clone)]
-#[allow(dead_code)]
-// TODO: remove allow dead_code once we actually use this type.
 pub enum SubmissionStatus {
     Started,
     Compiled {
