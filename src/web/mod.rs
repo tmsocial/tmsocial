@@ -11,7 +11,7 @@ use actix_web::{
 };
 use failure::Error;
 use listenfd::ListenFd;
-use serde_derive::Serialize;
+use serde_derive::{Deserialize, Serialize};
 
 mod db;
 mod endpoints;
@@ -23,7 +23,7 @@ pub struct State {
     event_manager: Addr<super::events::EventManager>,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct ErrorResponse {
     pub error: String,
 }
@@ -223,7 +223,6 @@ pub mod test_utils {
         }
         let request = request.finish().unwrap();
         let response = fake_response(&mut srv, request);
-        assert!(response.status().is_success());
         get_json_body(&response)
     }
 }

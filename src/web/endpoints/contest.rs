@@ -201,16 +201,19 @@ mod tests {
     use crate::models::*;
     use crate::test_utils::*;
     use crate::web::test_utils::*;
+    use crate::web::ErrorResponse;
     use std::collections::HashMap;
 
     #[test]
     fn get_contests() {
         let site = FakeSite::new();
+        let other_site = FakeSite::new();
         let contests: HashMap<i32, Contest> =
             vec![site.contest("contest_a"), site.contest("contest_b")]
                 .into_iter()
                 .map(|c| (c.id, c))
                 .collect();
+        other_site.contest("nothing to see here");
         let res: Vec<GetContestsResponseItem> =
             json_request(&site, "/api/contests");
         for contest in res {
@@ -244,5 +247,23 @@ mod tests {
                 contest.participating
             );
         }
+    }
+
+    #[test]
+    fn get_contest() {
+        let site = FakeSite::new();
+        let contest = site.contest("contest");
+        let res: Contest =
+            json_request(&site, &format!("/api/contest/{}", contest.id));
+        assert_eq!(res.id, contest.id);
+        assert_eq!(res.name, contest.name);
+    }
+
+    #[test]
+    fn get_contest_not_found() {
+        let site = FakeSite::new();
+        let res: ErrorResponse =
+            json_request(&site, &format!("/api/contest/{}", 10000000));
+        assert_eq!(res.error, "No such contest");
     }
 }
