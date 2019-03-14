@@ -204,6 +204,7 @@ mod tests {
 
     use crate::models::*;
     use crate::test_utils::*;
+    use crate::web::db::submission::GetSubmissionResult;
     use crate::web::test_utils::*;
     use crate::web::ErrorResponse;
 
@@ -216,7 +217,7 @@ mod tests {
     fn get_contests() {
         let site = FakeSite::new();
         let other_site = FakeSite::new();
-        let contests: HashMap<i32, Contest> =
+        let mut contests: HashMap<i32, Contest> =
             vec![site.contest("contest_a"), site.contest("contest_b")]
                 .into_iter()
                 .map(|c| (c.id, c))
@@ -230,7 +231,9 @@ mod tests {
                 contests.get(&contest.contest.id).expect("wrong data").name
             );
             assert_eq!(false, contest.participating);
+            contests.remove(&contest.contest.id);
         }
+        assert!(contests.is_empty());
     }
 
     #[test]
@@ -434,6 +437,206 @@ mod tests {
         TestRequestBuilder::new(
             &site,
             &format!("/api/contest/{}/task/{}", FAKE_ID, FAKE_ID),
+        )
+        .auth(&user)
+        .status(StatusCode::NOT_FOUND)
+        .finish::<ErrorResponse>();
+    }
+
+    #[test]
+    fn get_submissions() {
+        let site = FakeSite::new();
+        let user = site.user("username");
+        let contest = site.contest("contest");
+        let task = site.task(&contest, "task");
+        let part = site.participation(&contest, &user);
+        let mut submissions: HashMap<i32, Submission> =
+            vec![site.submission(&task, &part), site.submission(&task, &part)]
+                .into_iter()
+                .map(|s| (s.id, s))
+                .collect();
+        let res: Vec<Submission> = TestRequestBuilder::new(
+            &site,
+            &format!(
+                "/api/contest/{}/task/{}/submissions",
+                contest.id, task.id
+            ),
+        )
+        .auth(&user)
+        .finish();
+        for sub in res {
+            assert!(submissions.contains_key(&sub.id));
+            submissions.remove(&sub.id);
+        }
+        assert!(submissions.is_empty());
+    }
+
+    #[test]
+    fn get_submissions_no_auth() {
+        let site = FakeSite::new();
+        let contest = site.contest("contest");
+        let task = site.task(&contest, "task");
+        TestRequestBuilder::new(
+            &site,
+            &format!(
+                "/api/contest/{}/task/{}/submissions",
+                contest.id, task.id
+            ),
+        )
+        .status(StatusCode::FORBIDDEN)
+        .finish::<ErrorResponse>();
+    }
+
+    #[test]
+    fn get_submissions_no_part() {
+        let site = FakeSite::new();
+        let user = site.user("username");
+        let contest = site.contest("contest");
+        let task = site.task(&contest, "task");
+        TestRequestBuilder::new(
+            &site,
+            &format!(
+                "/api/contest/{}/task/{}/submissions",
+                contest.id, task.id
+            ),
+        )
+        .auth(&user)
+        .status(StatusCode::NOT_FOUND)
+        .finish::<ErrorResponse>();
+    }
+
+    #[test]
+    fn get_submissions_no_task() {
+        let site = FakeSite::new();
+        let user = site.user("username");
+        let contest = site.contest("contest");
+        site.participation(&contest, &user);
+        TestRequestBuilder::new(
+            &site,
+            &format!(
+                "/api/contest/{}/task/{}/submissions",
+                contest.id, FAKE_ID
+            ),
+        )
+        .auth(&user)
+        .status(StatusCode::NOT_FOUND)
+        .finish::<ErrorResponse>();
+    }
+
+    #[test]
+    fn get_submissions_wrong_contest() {
+        let site = FakeSite::new();
+        let user = site.user("username");
+        let contest = site.contest("contest");
+        let contest2 = site.contest("contest2");
+        let task = site.task(&contest2, "task");
+        site.participation(&contest, &user);
+        TestRequestBuilder::new(
+            &site,
+            &format!(
+                "/api/contest/{}/task/{}/submissions",
+                contest.id, task.id
+            ),
+        )
+        .auth(&user)
+        .status(StatusCode::NOT_FOUND)
+        .finish::<ErrorResponse>();
+    }
+
+    #[test]
+    fn get_submission() {
+        let site = FakeSite::new();
+        let user = site.user("username");
+        let contest = site.contest("contest");
+        let task = site.task(&contest, "task");
+        let part = site.participation(&contest, &user);
+        let sub = site.submission(&task, &part);
+        let res: GetSubmissionResult = TestRequestBuilder::new(
+            &site,
+            &format!(
+                "/api/contest/{}/task/{}/submission/{}",
+                contest.id, task.id, sub.id
+            ),
+        )
+        .auth(&user)
+        .finish();
+        assert_eq!(res.submission.id, sub.id);
+    }
+
+    #[test]
+    fn get_submission_no_auth() {
+        let site = FakeSite::new();
+        let user = site.user("username");
+        let contest = site.contest("contest");
+        let task = site.task(&contest, "task");
+        let part = site.participation(&contest, &user);
+        let sub = site.submission(&task, &part);
+        TestRequestBuilder::new(
+            &site,
+            &format!(
+                "/api/contest/{}/task/{}/submission/{}",
+                contest.id, task.id, sub.id
+            ),
+        )
+        .status(StatusCode::FORBIDDEN)
+        .finish::<ErrorResponse>();
+    }
+
+    #[test]
+    fn get_submission_not_found() {
+        let site = FakeSite::new();
+        let user = site.user("username");
+        let contest = site.contest("contest");
+        let task = site.task(&contest, "task");
+        site.participation(&contest, &user);
+        TestRequestBuilder::new(
+            &site,
+            &format!(
+                "/api/contest/{}/task/{}/submission/{}",
+                contest.id, task.id, FAKE_ID
+            ),
+        )
+        .auth(&user)
+        .status(StatusCode::NOT_FOUND)
+        .finish::<ErrorResponse>();
+    }
+
+    #[test]
+    fn get_submission_wrong_task() {
+        let site = FakeSite::new();
+        let user = site.user("username");
+        let contest = site.contest("contest");
+        let task = site.task(&contest, "task");
+        let task2 = site.task(&contest, "task2");
+        let part = site.participation(&contest, &user);
+        let sub = site.submission(&task2, &part);
+        TestRequestBuilder::new(
+            &site,
+            &format!(
+                "/api/contest/{}/task/{}/submission/{}",
+                contest.id, task.id, sub.id
+            ),
+        )
+        .auth(&user)
+        .status(StatusCode::NOT_FOUND)
+        .finish::<ErrorResponse>();
+    }
+
+    #[test]
+    fn get_submission_wrong_user() {
+        let site = FakeSite::new();
+        let user = site.user("username");
+        let user2 = site.user("username2");
+        let contest = site.contest("contest");
+        let task = site.task(&contest, "task");
+        let part = site.participation(&contest, &user2);
+        let sub = site.submission(&task, &part);
+        TestRequestBuilder::new(
+            &site,
+            &format!(
+                "/api/contest/{}/task/{}/submission/{}",
+                contest.id, task.id, sub.id
+            ),
         )
         .auth(&user)
         .status(StatusCode::NOT_FOUND)

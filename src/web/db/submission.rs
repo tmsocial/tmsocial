@@ -9,7 +9,7 @@ use diesel::BelongingToDsl;
 use diesel::Connection;
 use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
 use fs_extra::dir::CopyOptions;
-use serde_derive::Serialize;
+use serde_derive::{Deserialize, Serialize};
 use tempfile::TempDir;
 
 use crate::create_submission_dir;
@@ -35,7 +35,7 @@ pub struct Submit {
     pub tempdir: Arc<TempDir>,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct GetSubmissionResultTestcase {
     pub running_time: f64,
     pub memory_usage: i32,
@@ -43,13 +43,13 @@ pub struct GetSubmissionResultTestcase {
     pub score: f64,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct GetSubmissionResultSubtask {
     pub score: f64,
     pub testcases: HashMap<TestcaseNum, GetSubmissionResultTestcase>,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct GetSubmissionResult {
     pub submission: Submission,
     pub results: HashMap<SubtaskNum, GetSubmissionResultSubtask>,
