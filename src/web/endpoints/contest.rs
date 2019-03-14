@@ -202,6 +202,7 @@ mod tests {
     use crate::test_utils::*;
     use crate::web::test_utils::*;
     use crate::web::ErrorResponse;
+    use actix_web::http::StatusCode;
     use std::collections::HashMap;
 
     #[test]
@@ -215,7 +216,7 @@ mod tests {
                 .collect();
         other_site.contest("nothing to see here");
         let res: Vec<GetContestsResponseItem> =
-            json_request(&site, "/api/contests");
+            TestRequestBuilder::new(&site, "/api/contests").finish();
         for contest in res {
             assert_eq!(
                 contest.contest.name,
@@ -236,7 +237,9 @@ mod tests {
         let user = site.user("user");
         let part = site.participation(contests.values().next().unwrap(), &user);
         let res: Vec<GetContestsResponseItem> =
-            json_request_auth(&site, "/api/contests", Some(&user));
+            TestRequestBuilder::new(&site, "/api/contests")
+                .auth(&user)
+                .finish();
         for contest in res {
             assert_eq!(
                 contest.contest.name,
@@ -253,8 +256,11 @@ mod tests {
     fn get_contest() {
         let site = FakeSite::new();
         let contest = site.contest("contest");
-        let res: Contest =
-            json_request(&site, &format!("/api/contest/{}", contest.id));
+        let res: Contest = TestRequestBuilder::new(
+            &site,
+            &format!("/api/contest/{}", contest.id),
+        )
+        .finish();
         assert_eq!(res.id, contest.id);
         assert_eq!(res.name, contest.name);
     }
@@ -262,8 +268,12 @@ mod tests {
     #[test]
     fn get_contest_not_found() {
         let site = FakeSite::new();
-        let res: ErrorResponse =
-            json_request(&site, &format!("/api/contest/{}", 10000000));
+        let res: ErrorResponse = TestRequestBuilder::new(
+            &site,
+            &format!("/api/contest/{}", 10000000),
+        )
+        .status(StatusCode::NOT_FOUND)
+        .finish();
         assert_eq!(res.error, "No such contest");
     }
 }

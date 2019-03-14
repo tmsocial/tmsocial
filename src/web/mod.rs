@@ -155,11 +155,71 @@ pub mod test_utils {
     use crate::web::extractors::AUTH_COOKIE;
     use actix_web::http::Cookie;
 
-    pub fn get_test_server() -> TestServer {
+    pub struct TestRequestBuilder<'a, 'b> {
+        pub site: &'a FakeSite,
+        pub path: &'b str,
+        pub method: http::Method,
+        pub status: http::StatusCode,
+        pub login_token: Option<String>,
+    }
+
+    impl<'a, 'b> TestRequestBuilder<'a, 'b> {
+        pub fn new(
+            site: &'a FakeSite,
+            path: &'b str,
+        ) -> TestRequestBuilder<'a, 'b> {
+            TestRequestBuilder {
+                site,
+                path,
+                method: http::Method::GET,
+                status: http::StatusCode::OK,
+                login_token: None,
+            }
+        }
+
+        pub fn method(self: Self, method: http::Method) -> Self {
+            TestRequestBuilder { method, ..self }
+        }
+
+        pub fn auth(self: Self, user: &User) -> Self {
+            TestRequestBuilder {
+                login_token: Some(
+                    user.login_token.clone().expect("User without login token"),
+                ),
+                ..self
+            }
+        }
+
+        pub fn status(self: Self, status: http::StatusCode) -> Self {
+            TestRequestBuilder { status, ..self }
+        }
+
+        pub fn finish<T>(self: Self) -> T
+        where
+            T: serde::de::DeserializeOwned,
+        {
+            let mut srv = get_test_server();
+            let mut request =
+                fake_request(&srv, self.site, self.method, self.path);
+            if self.login_token.is_some() {
+                request.cookie(
+                    Cookie::build(AUTH_COOKIE, self.login_token.unwrap())
+                        .path("/")
+                        .finish(),
+                );
+            }
+            let request = request.finish().unwrap();
+            let response = fake_response(&mut srv, request);
+            assert_eq!(response.status(), self.status);
+            get_json_body(&response)
+        }
+    }
+
+    fn get_test_server() -> TestServer {
         TestServer::with_factory(|| create_app(&PathBuf::new().join("/tmp")))
     }
 
-    pub fn fake_request(
+    fn fake_request(
         srv: &TestServer,
         site: &FakeSite,
         method: http::Method,
@@ -174,7 +234,7 @@ pub mod test_utils {
         client
     }
 
-    pub fn fake_response(
+    fn fake_response(
         srv: &mut TestServer,
         request: ClientRequest,
     ) -> ClientResponse {
@@ -193,36 +253,5 @@ pub mod test_utils {
         let data = std::str::from_utf8(&buf[..]).expect("Non UTF8 response");
 
         serde_json::from_str(data).expect("Failed to extract json body")
-    }
-
-    pub fn json_request<T>(site: &FakeSite, path: &str) -> T
-    where
-        T: serde::de::DeserializeOwned,
-    {
-        json_request_auth(site, path, None)
-    }
-
-    pub fn json_request_auth<T>(
-        site: &FakeSite,
-        path: &str,
-        user: Option<&User>,
-    ) -> T
-    where
-        T: serde::de::DeserializeOwned,
-    {
-        let mut srv = get_test_server();
-        let mut request = fake_request(&srv, site, http::Method::GET, path);
-        if user.is_some() {
-            let token = user
-                .unwrap()
-                .login_token
-                .clone()
-                .expect("Login token not present");
-            request
-                .cookie(Cookie::build(AUTH_COOKIE, token).path("/").finish());
-        }
-        let request = request.finish().unwrap();
-        let response = fake_response(&mut srv, request);
-        get_json_body(&response)
     }
 }
