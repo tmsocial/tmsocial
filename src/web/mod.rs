@@ -198,22 +198,59 @@ pub mod test_utils {
         where
             T: serde::de::DeserializeOwned,
         {
+            self.finish_with_response().0
+        }
+
+        pub fn finish_with_response<T>(self: Self) -> (T, ClientResponse)
+        where
+            T: serde::de::DeserializeOwned,
+        {
             let mut srv = get_test_server();
-            let mut request =
-                fake_request(&srv, self.site, self.method, self.path);
-            if self.login_token.is_some() {
-                request.cookie(
-                    Cookie::build(AUTH_COOKIE, self.login_token.unwrap())
-                        .path("/")
-                        .finish(),
-                );
-            }
+            let mut request = fake_request(
+                &srv,
+                self.site,
+                self.method,
+                self.path,
+                self.login_token,
+            );
             let request = request.finish().unwrap();
             let response = fake_response(&mut srv, request);
             // will be printed only on errors
             println!("The response was: {:?}", response);
             assert_eq!(response.status(), self.status);
-            get_json_body(&response)
+            (get_json_body(&response), response)
+        }
+
+        pub fn form<F, T>(self: Self, form: F) -> T
+        where
+            T: serde::de::DeserializeOwned,
+            F: serde::Serialize,
+        {
+            self.form_with_response(form).0
+        }
+
+        pub fn form_with_response<F, T>(
+            self: Self,
+            form: F,
+        ) -> (T, ClientResponse)
+        where
+            T: serde::de::DeserializeOwned,
+            F: serde::Serialize,
+        {
+            let mut srv = get_test_server();
+            let mut request = fake_request(
+                &srv,
+                self.site,
+                self.method,
+                self.path,
+                self.login_token,
+            );
+            let request = request.form(form).unwrap();
+            let response = fake_response(&mut srv, request);
+            // will be printed only on errors
+            println!("The response was: {:?}", response);
+            assert_eq!(response.status(), self.status);
+            (get_json_body(&response), response)
         }
     }
 
@@ -226,6 +263,7 @@ pub mod test_utils {
         site: &FakeSite,
         method: http::Method,
         path: &str,
+        login_token: Option<String>,
     ) -> ClientRequestBuilder {
         let mut client = srv.client(method, path);
         client.set_header(
@@ -233,6 +271,13 @@ pub mod test_utils {
             http::header::HeaderValue::from_str(&site.site.domain)
                 .expect("The domain is not valid"),
         );
+        if login_token.is_some() {
+            client.cookie(
+                Cookie::build(AUTH_COOKIE, login_token.unwrap())
+                    .path("/")
+                    .finish(),
+            );
+        }
         client
     }
 
