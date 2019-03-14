@@ -59,10 +59,11 @@ impl FakeSite {
     /// Create a fake user in this site
     pub fn user(self: &Self, username: &str) -> User {
         diesel::insert_into(crate::schema::users::dsl::users)
-            .values(NewUser {
-                site_id: self.site.id,
-                username: username.to_string(),
-            })
+            .values((
+                crate::schema::users::dsl::username.eq(username),
+                crate::schema::users::dsl::site_id.eq(self.site.id),
+                crate::schema::users::dsl::login_token.eq(random_string()),
+            ))
             .get_result::<User>(&self.conn)
             .unwrap()
     }

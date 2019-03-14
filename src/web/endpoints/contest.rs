@@ -218,6 +218,31 @@ mod tests {
                 contest.contest.name,
                 contests.get(&contest.contest.id).expect("wrong data").name
             );
+            assert_eq!(false, contest.participating);
+        }
+    }
+
+    #[test]
+    fn get_contests_auth() {
+        let site = FakeSite::new();
+        let contests: HashMap<i32, Contest> =
+            vec![site.contest("contest_a"), site.contest("contest_b")]
+                .into_iter()
+                .map(|c| (c.id, c))
+                .collect();
+        let user = site.user("user");
+        let part = site.participation(contests.values().next().unwrap(), &user);
+        let res: Vec<GetContestsResponseItem> =
+            json_request_auth(&site, "/api/contests", Some(&user));
+        for contest in res {
+            assert_eq!(
+                contest.contest.name,
+                contests.get(&contest.contest.id).expect("wrong data").name
+            );
+            assert_eq!(
+                part.contest_id == contest.contest.id,
+                contest.participating
+            );
         }
     }
 }

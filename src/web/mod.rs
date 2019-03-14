@@ -148,9 +148,12 @@ pub mod test_utils {
     use actix_web::{http, HttpMessage};
     use futures::future::Future;
 
+    use crate::models::User;
     use crate::test_utils::FakeSite;
 
     use super::create_app;
+    use crate::web::extractors::AUTH_COOKIE;
+    use actix_web::http::Cookie;
 
     pub fn get_test_server() -> TestServer {
         TestServer::with_factory(|| create_app(&PathBuf::new().join("/tmp")))
@@ -196,10 +199,29 @@ pub mod test_utils {
     where
         T: serde::de::DeserializeOwned,
     {
+        json_request_auth(site, path, None)
+    }
+
+    pub fn json_request_auth<T>(
+        site: &FakeSite,
+        path: &str,
+        user: Option<&User>,
+    ) -> T
+    where
+        T: serde::de::DeserializeOwned,
+    {
         let mut srv = get_test_server();
-        let request = fake_request(&srv, site, http::Method::GET, path)
-            .finish()
-            .unwrap();
+        let mut request = fake_request(&srv, site, http::Method::GET, path);
+        if user.is_some() {
+            let token = user
+                .unwrap()
+                .login_token
+                .clone()
+                .expect("Login token not present");
+            request
+                .cookie(Cookie::build(AUTH_COOKIE, token).path("/").finish());
+        }
+        let request = request.finish().unwrap();
         let response = fake_response(&mut srv, request);
         assert!(response.status().is_success());
         get_json_body(&response)
