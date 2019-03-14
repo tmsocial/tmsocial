@@ -78,7 +78,9 @@ pub enum TaskFormat {
     Terry,
 }
 
-#[derive(Queryable, Identifiable, Associations, Debug, Serialize)]
+#[derive(
+    Queryable, Identifiable, Associations, Debug, Serialize, Deserialize,
+)]
 #[belongs_to(Contest)]
 pub struct Task {
     pub id: i32,

@@ -197,13 +197,20 @@ fn save_file(
 
 #[cfg(test)]
 mod tests {
-    use super::GetContestsResponseItem;
+    use std::collections::HashMap;
+
+    use actix_web::http::{Method, StatusCode};
+    use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
+
     use crate::models::*;
     use crate::test_utils::*;
     use crate::web::test_utils::*;
     use crate::web::ErrorResponse;
-    use actix_web::http::StatusCode;
-    use std::collections::HashMap;
+
+    use super::GetContestsResponseItem;
+
+    /// Number that should not be a valid id ever.
+    const FAKE_ID: i32 = 10000000;
 
     #[test]
     fn get_contests() {
@@ -270,10 +277,166 @@ mod tests {
         let site = FakeSite::new();
         let res: ErrorResponse = TestRequestBuilder::new(
             &site,
-            &format!("/api/contest/{}", 10000000),
+            &format!("/api/contest/{}", FAKE_ID),
         )
         .status(StatusCode::NOT_FOUND)
         .finish();
         assert_eq!(res.error, "No such contest");
+    }
+
+    #[test]
+    fn join_contest() {
+        use crate::schema::participations::dsl::*;
+        let site = FakeSite::new();
+        let user = site.user("username");
+        let contest = site.contest("contest");
+        TestRequestBuilder::new(
+            &site,
+            &format!("/api/contest/{}/join", contest.id),
+        )
+        .auth(&user)
+        .method(Method::POST)
+        .finish::<()>();
+
+        let part = participations
+            .filter(user_id.eq(user.id))
+            .filter(contest_id.eq(contest.id))
+            .first::<Participation>(&site.conn)
+            .expect("No participation created");
+        assert_eq!(part.user_id, user.id);
+        assert_eq!(part.contest_id, contest.id);
+    }
+
+    #[test]
+    fn join_contest_no_contest() {
+        let site = FakeSite::new();
+        let user = site.user("username");
+        let error: ErrorResponse = TestRequestBuilder::new(
+            &site,
+            &format!("/api/contest/{}/join", FAKE_ID),
+        )
+        .auth(&user)
+        .method(Method::POST)
+        .status(StatusCode::NOT_FOUND)
+        .finish();
+        assert_eq!(error.error, "No such contest");
+    }
+
+    #[test]
+    fn join_contest_no_user() {
+        let site = FakeSite::new();
+        let contest = site.contest("contest");
+        TestRequestBuilder::new(
+            &site,
+            &format!("/api/contest/{}/join", contest.id),
+        )
+        .method(Method::POST)
+        .status(StatusCode::FORBIDDEN)
+        .finish::<ErrorResponse>();
+    }
+
+    #[test]
+    fn join_contest_already_in() {
+        let site = FakeSite::new();
+        let user = site.user("username");
+        let contest = site.contest("contest");
+        site.participation(&contest, &user);
+        TestRequestBuilder::new(
+            &site,
+            &format!("/api/contest/{}/join", contest.id),
+        )
+        .auth(&user)
+        .method(Method::POST)
+        .status(StatusCode::UNPROCESSABLE_ENTITY)
+        .finish::<ErrorResponse>();
+    }
+
+    #[test]
+    fn get_task() {
+        let site = FakeSite::new();
+        let user = site.user("username");
+        let contest = site.contest("contest");
+        let task = site.task(&contest, "task");
+        site.participation(&contest, &user);
+        let res: Task = TestRequestBuilder::new(
+            &site,
+            &format!("/api/contest/{}/task/{}", contest.id, task.id),
+        )
+        .auth(&user)
+        .finish();
+        assert_eq!(res.name, task.name);
+    }
+
+    #[test]
+    fn get_task_no_auth() {
+        let site = FakeSite::new();
+        let contest = site.contest("contest");
+        let task = site.task(&contest, "task");
+        TestRequestBuilder::new(
+            &site,
+            &format!("/api/contest/{}/task/{}", contest.id, task.id),
+        )
+        .status(StatusCode::FORBIDDEN)
+        .finish::<ErrorResponse>();
+    }
+
+    #[test]
+    fn get_task_no_part() {
+        let site = FakeSite::new();
+        let user = site.user("username");
+        let contest = site.contest("contest");
+        let task = site.task(&contest, "task");
+        TestRequestBuilder::new(
+            &site,
+            &format!("/api/contest/{}/task/{}", contest.id, task.id),
+        )
+        .auth(&user)
+        .status(StatusCode::NOT_FOUND)
+        .finish::<ErrorResponse>();
+    }
+
+    #[test]
+    fn get_task_not_found() {
+        let site = FakeSite::new();
+        let user = site.user("username");
+        let contest = site.contest("contest");
+        site.participation(&contest, &user);
+        TestRequestBuilder::new(
+            &site,
+            &format!("/api/contest/{}/task/{}", contest.id, FAKE_ID),
+        )
+        .auth(&user)
+        .status(StatusCode::NOT_FOUND)
+        .finish::<ErrorResponse>();
+    }
+
+    #[test]
+    fn get_task_wrong_contest() {
+        let site = FakeSite::new();
+        let user = site.user("username");
+        let contest = site.contest("contest");
+        site.participation(&contest, &user);
+        let contest2 = site.contest("contest2");
+        let task = site.task(&contest2, "task");
+        TestRequestBuilder::new(
+            &site,
+            &format!("/api/contest/{}/task/{}", contest.id, task.id),
+        )
+        .auth(&user)
+        .status(StatusCode::NOT_FOUND)
+        .finish::<ErrorResponse>();
+    }
+
+    #[test]
+    fn get_task_no_contest() {
+        let site = FakeSite::new();
+        let user = site.user("username");
+        TestRequestBuilder::new(
+            &site,
+            &format!("/api/contest/{}/task/{}", FAKE_ID, FAKE_ID),
+        )
+        .auth(&user)
+        .status(StatusCode::NOT_FOUND)
+        .finish::<ErrorResponse>();
     }
 }

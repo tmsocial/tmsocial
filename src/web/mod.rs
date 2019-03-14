@@ -210,6 +210,8 @@ pub mod test_utils {
             }
             let request = request.finish().unwrap();
             let response = fake_response(&mut srv, request);
+            // will be printed only on errors
+            println!("The response was: {:?}", response);
             assert_eq!(response.status(), self.status);
             get_json_body(&response)
         }
@@ -251,6 +253,8 @@ pub mod test_utils {
             .wait()
             .expect("Missing response body");
         let data = std::str::from_utf8(&buf[..]).expect("Non UTF8 response");
+        // will be printed only on errors
+        println!("The body was: '{}'", data);
 
         serde_json::from_str(data).expect("Failed to extract json body")
     }
