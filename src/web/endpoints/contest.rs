@@ -26,6 +26,12 @@ pub struct GetContestsResponseItem {
     pub participating: bool,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct GetContestResponse {
+    pub contest: Contest,
+    pub tasks: Option<Vec<Task>>,
+}
+
 pub fn get_contests(
     state: State<crate::web::State>,
     site: Site,
@@ -56,8 +62,37 @@ pub fn get_contests(
     Box::new(res.and_then(|r| result(r.map(|r| Json(r))).responder()))
 }
 
-pub fn get_contest(contest: Contest) -> AsyncJsonResponse<Contest> {
-    Box::new(result(Ok(Json(contest))).responder())
+pub fn get_contest(
+    state: State<crate::web::State>,
+    contest: Contest,
+    participation: Option<Participation>,
+) -> AsyncJsonResponse<GetContestResponse> {
+    match participation {
+        Some(_) => Box::new(
+            state
+                .db
+                .send(GetTaskByContest {
+                    contest_id: contest.id,
+                })
+                .from_err()
+                .and_then(|res| {
+                    result(res.map(|tasks| {
+                        Json(GetContestResponse {
+                            contest,
+                            tasks: Some(tasks),
+                        })
+                    }))
+                    .responder()
+                }),
+        ),
+        None => Box::new(
+            result(Ok(Json(GetContestResponse {
+                contest,
+                tasks: None,
+            })))
+            .responder(),
+        ),
+    }
 }
 
 pub fn join_contest(
@@ -202,13 +237,12 @@ mod tests {
     use actix_web::http::{Method, StatusCode};
     use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
 
-    use crate::models::*;
     use crate::test_utils::*;
     use crate::web::db::submission::GetSubmissionResult;
     use crate::web::test_utils::*;
     use crate::web::ErrorResponse;
 
-    use super::GetContestsResponseItem;
+    use super::*;
 
     /// Number that should not be a valid id ever.
     const FAKE_ID: i32 = 10000000;
@@ -266,13 +300,34 @@ mod tests {
     fn get_contest() {
         let site = FakeSite::new();
         let contest = site.contest("contest");
-        let res: Contest = TestRequestBuilder::new(
+        let res: GetContestResponse = TestRequestBuilder::new(
             &site,
             &format!("/api/contest/{}", contest.id),
         )
         .finish();
-        assert_eq!(res.id, contest.id);
-        assert_eq!(res.name, contest.name);
+        assert_eq!(res.contest.id, contest.id);
+        assert_eq!(res.contest.name, contest.name);
+        assert!(res.tasks.is_none());
+    }
+
+    #[test]
+    fn get_contest_with_part() {
+        let site = FakeSite::new();
+        let contest = site.contest("contest");
+        let task = site.task(&contest, "task");
+        let user = site.user("username");
+        site.participation(&contest, &user);
+        let res: GetContestResponse = TestRequestBuilder::new(
+            &site,
+            &format!("/api/contest/{}", contest.id),
+        )
+        .auth(&user)
+        .finish();
+        assert_eq!(res.contest.id, contest.id);
+        assert_eq!(res.contest.name, contest.name);
+        let res_task = &res.tasks.expect("Tasks were not sent")[0];
+        assert_eq!(res_task.id, task.id);
+        assert_eq!(res_task.name, task.name);
     }
 
     #[test]
