@@ -110,6 +110,7 @@ pub fn create_app(web_root: &PathBuf) -> App<State> {
                 .with(endpoints::contest::get_submission)
         },
     )
+    .handler("/api/assets", endpoints::site::handle_site_assets)
     .handler(
         "/",
         fs::StaticFiles::new(&web_root)
