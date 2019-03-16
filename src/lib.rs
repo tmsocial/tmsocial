@@ -6,6 +6,7 @@ extern crate diesel_derive_enum;
 extern crate dotenv;
 #[macro_use]
 extern crate failure;
+extern crate accept_language;
 extern crate base64;
 extern crate fs_extra;
 extern crate itertools;

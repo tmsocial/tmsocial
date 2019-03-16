@@ -1,4 +1,9 @@
 [[package]]
+name = "accept-language"
+version = "1.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
 name = "actix"
 version = "0.7.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1459,6 +1464,7 @@ dependencies = [
 name = "tmsocial"
 version = "0.1.0"
 dependencies = [
+ "accept-language 1.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "actix 0.7.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "actix-web 0.7.17 (registry+https://github.com/rust-lang/crates.io-index)",
  "actix_derive 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1938,6 +1944,7 @@ dependencies = [
 ]
 
 [metadata]
+"checksum accept-language 1.2.2 (registry+https://github.com/rust-lang/crates.io-index)" = "87fc76696d76ef1746fef04d6a63490afb39fdfb27c01c21c9a59e08bb2d8cb9"
 "checksum actix 0.7.9 (registry+https://github.com/rust-lang/crates.io-index)" = "6c616db5fa4b0c40702fb75201c2af7f8aa8f3a2e2c1dda3b0655772aa949666"
 "checksum actix-net 0.2.6 (registry+https://github.com/rust-lang/crates.io-index)" = "8bebfbe6629e0131730746718c9e032b58f02c6ce06ed7c982b9fef6c8545acd"
 "checksum actix-web 0.7.17 (registry+https://github.com/rust-lang/crates.io-index)" = "ed4d8a167b9e2f20e6d6d4bd92cd81839d5a551096e700f70a9fefe078583e56"
