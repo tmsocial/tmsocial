@@ -88,6 +88,10 @@ pub fn create_app(web_root: &PathBuf) -> App<State> {
         r.method(http::Method::POST)
             .with(endpoints::contest::join_contest)
     })
+    .handler(
+        "/api/contest/{contest_id}/assets",
+        endpoints::contest::handle_contest_assets,
+    )
     .resource("/api/contest/{contest_id}/task/{task_id}", |r| {
         r.method(http::Method::GET)
             .with(endpoints::contest::get_task)
@@ -96,6 +100,10 @@ pub fn create_app(web_root: &PathBuf) -> App<State> {
         r.method(http::Method::POST)
             .with(endpoints::contest::submit)
     })
+    .handler(
+        "/api/contest/{contest_id}/task/{task_id}/assets",
+        endpoints::contest::handle_task_assets,
+    )
     .resource(
         "/api/contest/{contest_id}/task/{task_id}/submissions",
         |r| {

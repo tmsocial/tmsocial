@@ -1,15 +1,20 @@
 use std::collections::HashSet;
+use std::env;
 use std::fs;
 use std::io::Write;
+use std::path::Path;
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use actix_web::dev;
+use actix_web::error::ErrorNotFound;
 use actix_web::error::{
     ErrorBadRequest, ErrorInternalServerError, MultipartError, PayloadError,
 };
-use actix_web::multipart;
-use actix_web::{AsyncResponder, Error, HttpMessage, HttpRequest, Json, State};
+use actix_web::fs::NamedFile;
+use actix_web::{
+    dev, multipart, AsyncResponder, Error, FromRequest, HttpMessage,
+    HttpRequest, Json, State,
+};
 use futures::future;
 use futures::future::{result, Future};
 use futures::stream::Stream;
@@ -18,7 +23,9 @@ use tempfile::TempDir;
 
 use crate::models::*;
 use crate::web::db::*;
-use crate::web::endpoints::AsyncJsonResponse;
+use crate::web::endpoints::{
+    get_accept_languages, get_path_tail, match_file, AsyncJsonResponse,
+};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GetContestsResponseItem {
@@ -230,6 +237,59 @@ fn save_file(
     )
 }
 
+pub fn handle_contest_assets(
+    req: &HttpRequest<crate::web::State>,
+) -> Box<Future<Item = NamedFile, Error = Error>> {
+    // TODO test if this works inter-site
+    let contest = Contest::extract(req);
+    let path = match get_path_tail(req) {
+        Ok(path) => path,
+        Err(e) => return Box::new(future::err(e)),
+    };
+    let languages = get_accept_languages(req);
+    Box::new(contest.and_then(move |contest| {
+        let storage_dir = PathBuf::new().join(Path::new(
+            &env::var("STORAGE_DIR").expect("STORAGE_DIR must be set"),
+        ));
+        let path = storage_dir
+            .join(Path::new("contests"))
+            .join(Path::new(&contest.id.to_string()))
+            .join(&path);
+        match match_file(path, &languages) {
+            Some(path) => Ok(NamedFile::open(path)
+                .map_err(|_e| ErrorNotFound("No such asset"))?),
+            _ => Err(ErrorNotFound("No such asset")),
+        }
+    }))
+}
+
+pub fn handle_task_assets(
+    req: &HttpRequest<crate::web::State>,
+) -> Box<Future<Item = NamedFile, Error = Error>> {
+    // TODO test if this works inter-contest
+    let task = Task::extract(req);
+    let path = match get_path_tail(req) {
+        Ok(path) => path,
+        Err(e) => return Box::new(future::err(e)),
+    };
+    let languages = get_accept_languages(req);
+    Box::new(task.and_then(move |task| {
+        let storage_dir = PathBuf::new().join(Path::new(
+            &env::var("STORAGE_DIR").expect("STORAGE_DIR must be set"),
+        ));
+        let path = storage_dir
+            .join(Path::new("tasks"))
+            .join(Path::new(&task.id.to_string()))
+            .join(Path::new("assets"))
+            .join(&path);
+        match match_file(path, &languages) {
+            Some(path) => Ok(NamedFile::open(path)
+                .map_err(|_e| ErrorNotFound("No such asset"))?),
+            _ => Err(ErrorNotFound("No such asset")),
+        }
+    }))
+}
+
 #[cfg(test)]
 mod tests {
     use std::collections::HashMap;
@@ -341,6 +401,8 @@ mod tests {
         .finish();
         assert_eq!(res.error, "No such contest");
     }
+
+    // TODO get_contest_wrong_site()
 
     #[test]
     fn join_contest() {
