@@ -14,8 +14,9 @@ use actix_derive::Message;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use failure::Error;
+use futures::future::{join_all, ok, Future};
 use itertools::Itertools;
-use log::{debug, error};
+use log::{debug, error, info};
 use scopeguard::defer;
 
 use crate::events::{Event, SubmissionUpdate};
@@ -327,11 +328,11 @@ pub struct Evaluate {
 impl Evaluator {
     pub fn new(
         conn: PgConnection,
-        in_eval: &Arc<Mutex<HashSet<i32>>>,
+        in_eval: Arc<Mutex<HashSet<i32>>>,
     ) -> Evaluator {
         Evaluator {
             conn: conn,
-            in_evaluation: in_eval.clone(),
+            in_evaluation: in_eval,
         }
     }
 }
@@ -396,5 +397,76 @@ impl Handler<Evaluate> for Evaluator {
                 Ok(())
             }
         }
+    }
+}
+
+/// Actor that will look for pending submissions and evaluate them when it receives the
+/// EvaluatePending message.
+pub struct CheckPending(pub Addr<Evaluator>);
+
+impl Actor for CheckPending {
+    type Context = Context<Self>;
+}
+
+pub struct EvaluatePending(pub Recipient<crate::events::SubmissionUpdate>);
+
+impl Message for EvaluatePending {
+    type Result = Result<(), Error>;
+}
+
+impl Handler<EvaluatePending> for CheckPending {
+    type Result = ResponseActFuture<Self, (), failure::Error>;
+
+    fn handle(
+        &mut self,
+        msg: EvaluatePending,
+        _ctx: &mut Context<Self>,
+    ) -> Self::Result {
+        use crate::schema::participations::dsl::*;
+        use crate::schema::submissions::dsl::*;
+
+        // TODO: remove blocking
+
+        let conn = crate::establish_connection();
+
+        let results = submissions
+            .filter(status.eq(SubmissionStatus::Waiting))
+            .load::<Submission>(&conn);
+
+        let results = match results {
+            Ok(r) => r,
+            Err(e) => return Box::new(actix::fut::err(e.into())),
+        };
+
+        info!("Found {} waiting submissions", results.len());
+        let mut futs = vec![];
+        for sub in results {
+            let participation = participations
+                .filter(
+                    crate::schema::participations::dsl::id
+                        .eq(sub.participation_id),
+                )
+                .load::<Participation>(&conn)
+                .expect("Error loading participation");
+            assert!(participation.len() == 1);
+            let participation = &participation[0];
+            futs.push(self.0.send(crate::evaluation::Evaluate {
+                user_id: participation.user_id,
+                submission: sub,
+                notify: msg.0.clone(),
+            }));
+        }
+
+        let fut = join_all(futs)
+            .and_then(|results| {
+                for res in results {
+                    if let Err(err) = res {
+                        error!("{}", err);
+                    }
+                }
+                ok(())
+            })
+            .map_err(|e| panic!("{}", e));
+        Box::new(actix::fut::wrap_future::<_, Self>(fut))
     }
 }

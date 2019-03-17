@@ -8,52 +8,16 @@ use std::collections::HashSet;
 use std::sync::{Arc, Mutex};
 
 use actix::prelude::*;
-use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
-use futures::future::{join_all, ok, Future};
-use log::{error, info};
+use futures::future::Future;
+use log::info;
 
-use tmsocial::models::*;
+struct PrintMessageHandler;
 
-struct Eval(Addr<tmsocial::evaluation::Evaluator>);
-
-impl Actor for Eval {
+impl Actor for PrintMessageHandler {
     type Context = Context<Self>;
-
-    fn started(&mut self, ctx: &mut Context<Self>) {
-        use tmsocial::schema::submissions::dsl::*;
-        let conn = tmsocial::establish_connection();
-
-        let results = submissions
-            .filter(status.eq(SubmissionStatus::Waiting))
-            .load::<Submission>(&conn)
-            .expect("Error loading submissions");
-
-        info!("Found {} waiting submissions", results.len());
-        let mut futs = vec![];
-        for sub in results {
-            futs.push(self.0.send(tmsocial::evaluation::Evaluate {
-                user_id: 0,
-                submission: sub,
-                notify: ctx.address().recipient(),
-            }));
-        }
-
-        let fut = join_all(futs)
-            .and_then(|results| {
-                for res in results {
-                    if let Err(err) = res {
-                        error!("{}", err);
-                    }
-                }
-                System::current().stop();
-                ok(())
-            })
-            .map_err(|e| panic!("{}", e));
-        actix::spawn(fut);
-    }
 }
 
-impl Handler<tmsocial::events::SubmissionUpdate> for Eval {
+impl Handler<tmsocial::events::SubmissionUpdate> for PrintMessageHandler {
     type Result = ();
 
     fn handle(
@@ -74,10 +38,23 @@ fn main() {
     let evaluator_addr = SyncArbiter::start(3, move || {
         tmsocial::evaluation::Evaluator::new(
             tmsocial::establish_connection(),
-            &in_evaluation,
+            Arc::clone(&in_evaluation),
         )
     });
-    let _eval = Eval(evaluator_addr).start();
+    let check_pending =
+        tmsocial::evaluation::CheckPending(evaluator_addr).start();
+    let print_message_handler = PrintMessageHandler {}.start();
+
+    actix::spawn(
+        check_pending
+            .send(tmsocial::evaluation::EvaluatePending(
+                print_message_handler.recipient(),
+            ))
+            .then(|_| {
+                actix::System::current().stop();
+                futures::future::ok(())
+            }),
+    );
 
     sys.run();
 }
