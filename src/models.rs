@@ -107,7 +107,7 @@ pub struct NewTask<'a> {
     pub contest_id: i32,
 }
 
-#[derive(DbEnum, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(DbEnum, Debug, PartialEq, Serialize, Deserialize, Clone)]
 #[PgType = "submission_status"]
 #[DieselType = "Submission_status"]
 pub enum SubmissionStatus {
@@ -118,7 +118,7 @@ pub enum SubmissionStatus {
 }
 
 #[derive(
-    Queryable, Identifiable, Associations, Debug, Serialize, Deserialize,
+    Queryable, Identifiable, Associations, Debug, Serialize, Deserialize, Clone,
 )]
 #[belongs_to(Task)]
 pub struct Submission {

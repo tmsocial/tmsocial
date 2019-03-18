@@ -1,9 +1,12 @@
 extern crate listenfd;
 
+use std::collections::HashSet;
 use std::net::IpAddr;
 use std::path::PathBuf;
+use std::sync::{Arc, Mutex};
+use std::time::Duration;
 
-use actix::{Addr, Arbiter, SyncArbiter};
+use actix::{Actor, Addr, Arbiter, AsyncContext, Recipient, SyncArbiter};
 use actix_web::http::header::HeaderValue;
 use actix_web::middleware::{ErrorHandlers, Response};
 use actix_web::{
@@ -18,9 +21,61 @@ mod endpoints;
 mod extractors;
 mod ws;
 
+#[derive(Clone)]
 pub struct State {
     db: Addr<db::Executor>,
     event_manager: Addr<super::events::EventManager>,
+    evaluator: Addr<crate::evaluation::Evaluator>,
+}
+
+impl State {
+    pub fn new() -> State {
+        let db_addr = SyncArbiter::start(3, || {
+            db::Executor::new(crate::establish_connection())
+        });
+        let event_manager =
+            Arbiter::start(|_| super::events::EventManager::new());
+        let in_evaluation = Arc::new(Mutex::new(HashSet::<i32>::new()));
+        let evaluator_addr = SyncArbiter::start(3, move || {
+            crate::evaluation::Evaluator::new(
+                crate::establish_connection(),
+                Arc::clone(&in_evaluation),
+            )
+        });
+        let check_pending =
+            crate::evaluation::CheckPending(evaluator_addr.clone()).start();
+        let periodic_evaluator = PeriodicEvaluator {
+            check_pending: check_pending,
+            event_manager: event_manager.clone().recipient(),
+        };
+        periodic_evaluator.start();
+        State {
+            db: db_addr.clone(),
+            event_manager: event_manager.clone(),
+            evaluator: evaluator_addr.clone(),
+        }
+    }
+}
+
+struct PeriodicEvaluator {
+    check_pending: Addr<crate::evaluation::CheckPending>,
+    event_manager: Recipient<super::events::SubmissionUpdate>,
+}
+
+const EVALUATION_CHECK_INTERVAL: Duration = Duration::from_secs(20);
+
+impl Actor for PeriodicEvaluator {
+    type Context = actix::Context<Self>;
+
+    fn started(&mut self, ctx: &mut Self::Context) {
+        let check_pending = self.check_pending.clone();
+        let event_manager = self.event_manager.clone();
+        ctx.run_interval(EVALUATION_CHECK_INTERVAL, move |_, _| {
+            check_pending.do_send(crate::evaluation::EvaluatePending(
+                event_manager.clone(),
+            ))
+        });
+    }
 }
 
 #[derive(Serialize, Deserialize)]
@@ -44,7 +99,7 @@ fn render_error<S>(
     Ok(Response::Done(resp))
 }
 
-pub fn create_app(web_root: &PathBuf) -> App<State> {
+fn create_app(web_root: &PathBuf, state: State) -> App<State> {
     // bind all this error handlers
     let error_codes = vec![
         http::StatusCode::BAD_REQUEST,
@@ -55,15 +110,8 @@ pub fn create_app(web_root: &PathBuf) -> App<State> {
         http::StatusCode::INTERNAL_SERVER_ERROR,
     ];
 
-    let db_addr = SyncArbiter::start(3, || {
-        db::Executor::new(crate::establish_connection())
-    });
-    let event_manager = Arbiter::start(|_| super::events::EventManager::new());
-    let mut app = App::with_state(State {
-        db: db_addr.clone(),
-        event_manager: event_manager.clone(),
-    })
-    .middleware(middleware::Logger::default());
+    let mut app =
+        App::with_state(state).middleware(middleware::Logger::default());
     for error_code in error_codes {
         app = app
             .middleware(ErrorHandlers::new().handler(error_code, render_error));
@@ -135,7 +183,10 @@ pub fn web_main(
     let mut listenfd = ListenFd::from_env();
     let sys = actix::System::new("tmsocial");
 
-    let mut server = server::new(move || create_app(&web_root).finish());
+    let state = State::new();
+    let mut server =
+        server::new(move || create_app(&web_root, state.clone()).finish());
+
     server = if let Some(lfd) = listenfd.take_tcp_listener(0)? {
         server.listen(lfd)
     } else {
@@ -264,7 +315,10 @@ pub mod test_utils {
     }
 
     fn get_test_server() -> TestServer {
-        TestServer::with_factory(|| create_app(&PathBuf::new().join("/tmp")))
+        let state = super::State::new();
+        TestServer::with_factory(move || {
+            create_app(&PathBuf::new().join("/tmp"), state.clone())
+        })
     }
 
     fn fake_request(

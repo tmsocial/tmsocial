@@ -163,25 +163,35 @@ pub fn submit(
     }
     let tempdir = Arc::new(tempdir.unwrap());
     let tempdir2 = tempdir.clone();
+    let user_id = participation.user_id;
+    let event_manager = state.event_manager.clone().recipient();
+    let evaluator = state.evaluator.clone();
+    let db = state.db.clone();
     Box::new(
         req.multipart()
             .map_err(ErrorInternalServerError)
             .map(move |item| handle_multipart_item(tempdir.clone(), item))
             .flatten()
             .collect()
-            .map(move |files| {
-                state
-                    .db
-                    .send(Submit {
-                        task_id: task.id,
-                        participation_id: participation.id,
-                        files: files,
-                        tempdir: tempdir2,
-                    })
-                    .from_err()
-                    .and_then(|sub| result(sub.and_then(|s| Ok(Json(s)))))
+            .and_then(move |files| {
+                db.send(Submit {
+                    task_id: task.id,
+                    participation_id: participation.id,
+                    files: files,
+                    tempdir: tempdir2,
+                })
+                .from_err()
             })
-            .and_then(|x| x),
+            .and_then(|sub| sub)
+            .and_then(move |sub| {
+                evaluator.do_send(crate::evaluation::Evaluate {
+                    submission: sub.clone(),
+                    user_id: user_id,
+                    notify: event_manager,
+                });
+                Ok(sub)
+            })
+            .and_then(|sub| result(Ok(Json(sub)))),
     )
 }
 
