@@ -1,43 +1,39 @@
-interface EvaluationEvent {
-    type: string;
-}
+export type OutcomeValue = "done" | "success" | "fail" | "partial" | "skip";
 
-interface FieldValue<T extends FieldValue<T>> {
-    type: string;
-}
-
-type OutcomeValue = "done" | "success" | "fail" | "partial" | "skip";
-
-export interface Outcome extends FieldValue<Outcome> {
+export interface Outcome {
     type: "outcome";
     outcome: OutcomeValue;
 }
 
-export interface Score extends FieldValue<Score> {
+export interface Score {
     type: "score";
     score: number;
 }
 
-export interface Fraction extends FieldValue<Fraction> {
+export interface Fraction {
     type: "fraction";
     fraction: number;
 }
 
-export interface TimeUsage extends FieldValue<TimeUsage> {
+export interface TimeUsage {
     type: "time_usage";
     time_usage_seconds: number;
 }
 
-export interface MemoryUsage extends FieldValue<MemoryUsage> {
+export interface MemoryUsage {
     type: "memory_usage";
     memory_usage_bytes: number;
 }
 
-export interface SetFieldEvent<T extends FieldValue<T>> extends EvaluationEvent {
+type FieldValue = Outcome | Score | Fraction | TimeUsage | MemoryUsage;
+
+export interface SetFieldEvent<T extends FieldValue> {
     type: "set_field";
     name: string;
     value: T;
 }
+
+export type EvaluationEvent = SetFieldEvent<any>;
 
 export interface EventReducer<T> {
     onEvent(event: EvaluationEvent): void;
@@ -45,19 +41,21 @@ export interface EventReducer<T> {
 }
 
 export interface FieldSet {
-    readonly [name: string]: FieldValue<any>
+    readonly [name: string]: FieldValue;
 }
 
 export class FieldReducer implements EventReducer<FieldSet> {
-    readonly value: { [name: string]: FieldValue<any> } = {};
+    readonly value: { [name: string]: FieldValue } = {};
 
-    onEvent<T extends FieldValue<T>>(event) {
-        if (event.type == "set_field") {
-            this.value[event.name] = event.value;
+    onEvent(event: EvaluationEvent) {
+        switch (event.type) {
+            case "set_field":
+                this.value[event.name] = event.value;
+                break;
         }
     }
 }
 
 export interface EvaluationSummary {
-    readonly [name: string]: any;
+    readonly fields: FieldSet;
 }

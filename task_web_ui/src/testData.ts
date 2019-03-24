@@ -1,3 +1,5 @@
+import { SetFieldEvent, Score } from "./evaluation";
+
 export const testMetadata: TaskMetadata = {
     title: {
         en: "Test task",
