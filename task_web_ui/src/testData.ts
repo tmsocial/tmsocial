@@ -1,4 +1,5 @@
-import { SetFieldEvent, Score } from "./evaluation";
+import { SetFieldEvent, Score, EvaluationEvent } from "./evaluation";
+import { TaskMetadata } from "./metadata";
 
 export const testMetadata: TaskMetadata = {
     title: {
@@ -25,12 +26,22 @@ export const testMetadata: TaskMetadata = {
         }
     },
     evaluation_model: {
-        type: "score_view",
-        name: "my_score_field",
-    },
+        type: "list_view",
+        items: [
+            {
+                type: "score_view",
+                name: "my_score_field",
+            },
+            {
+                type: "percentage_view",
+                name: "my_percentage_field",
+                precision: 1,
+            }
+        ]
+    }
 };
 
-export const testEvaluation: SetFieldEvent<Score>[] = [
+export const testEvaluation: EvaluationEvent[] = [
     {
         type: "set_field",
         name: "my_score_field",
@@ -38,5 +49,13 @@ export const testEvaluation: SetFieldEvent<Score>[] = [
             type: "score",
             score: 42.0,
         }
-    }
+    },
+    {
+        type: "set_field",
+        name: "my_percentage_field",
+        value: {
+            type: "fraction",
+            fraction: 0.7,
+        },
+    },
 ]
