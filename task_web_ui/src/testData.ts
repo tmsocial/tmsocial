@@ -26,33 +26,63 @@ export const testMetadata: TaskMetadata = {
         }
     },
     evaluation_model: {
-        type: "list",
+        type: "record",
         items: [
             {
-                type: "score",
-                name: "my_score_field",
+                type: "scope",
+                key: "compilation",
+                child: {
+                    type: "record",
+                    items: [
+                        {
+                            type: "time_usage",
+                            name: "time_usage",
+                        },
+                    ]
+                },
             },
             {
-                type: "percentage",
-                name: "my_percentage_field",
-                precision: 1,
+                type: "array",
+                keys: ["case_1", "case_2"],
+                child_model: {
+                    type: "record",
+                    items: [
+                        {
+                            type: "score",
+                            name: "my_score_field",
+                        },
+                        {
+                            type: "percentage",
+                            name: "my_percentage_field",
+                            precision: 1,
+                        },
+                        {
+                            type: "time_usage",
+                            name: "my_time_usage_field",
+                        },
+                        {
+                            type: "memory_usage",
+                            name: "my_memory_usage_field",
+                        },
+                    ]
+                },
             },
-            {
-                type: "time_usage",
-                name: "my_time_usage_field",
-            },
-            {
-                type: "memory_usage",
-                name: "my_memory_usage_field",
-            },
-        ]
+        ],
     }
 };
 
 export const testEvaluation: EvaluationEvent[] = [
     {
         type: "set_field",
-        name: "my_score_field",
+        name: "compilation:time_usage",
+        value: {
+            type: "time_usage",
+            time_usage_seconds: 2.4,
+        },
+    },
+    {
+        type: "set_field",
+        name: "case_1:my_score_field",
         value: {
             type: "score",
             score: 42.0,
@@ -60,7 +90,7 @@ export const testEvaluation: EvaluationEvent[] = [
     },
     {
         type: "set_field",
-        name: "my_percentage_field",
+        name: "case_1:my_percentage_field",
         value: {
             type: "fraction",
             fraction: 0.7,
@@ -68,7 +98,15 @@ export const testEvaluation: EvaluationEvent[] = [
     },
     {
         type: "set_field",
-        name: "my_time_usage_field",
+        name: "case_2:my_percentage_field",
+        value: {
+            type: "fraction",
+            fraction: 0.2,
+        },
+    },
+    {
+        type: "set_field",
+        name: "case_2:my_time_usage_field",
         value: {
             type: "time_usage",
             time_usage_seconds: 0.1234,
@@ -76,7 +114,7 @@ export const testEvaluation: EvaluationEvent[] = [
     },
     {
         type: "set_field",
-        name: "my_memory_usage_field",
+        name: "case_2:my_memory_usage_field",
         value: {
             type: "memory_usage",
             memory_usage_bytes: 123456,

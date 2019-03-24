@@ -69,13 +69,25 @@ export interface MemoryUsageViewModel extends FieldModelBase<MemoryUsage> {
     type: "memory_usage";
 }
 
-export interface ListViewModel {
-    type: "list";
+export interface RecordModel {
+    type: "record";
     items: EvaluationModel[];
 }
 
+export interface ScopeModel {
+    type: "scope";
+    key: string;
+    child: EvaluationModel;
+}
+
+export interface ArrayModel {
+    type: "array";
+    keys: string[];
+    child_model: EvaluationModel;
+}
+
 export type FieldViewModel = ScoreViewModel | PercentageViewModel | TimeUsageViewModel | MemoryUsageViewModel;
-export type EvaluationModel = FieldViewModel | ListViewModel;
+export type EvaluationModel = FieldViewModel | ScopeModel | ArrayModel | RecordModel;
 
 export interface TaskMetadata {
     title: Localized<string>;
