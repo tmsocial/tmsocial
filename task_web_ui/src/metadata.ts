@@ -1,7 +1,12 @@
-interface Localized<T> {
-    default: T;
+interface AwareLocalized<T> {
     [language: string]: T;
 }
+
+interface UnawareLocalized<T> {
+    default: T;
+}
+
+type Localized<T> = AwareLocalized<T> | UnawareLocalized<T>;
 
 interface PdfStatement {
     type: "pdf";
@@ -36,12 +41,20 @@ interface SubmissionFileField {
 }
 
 interface SubmissionForm {
-    [name: string]: SubmissionFileField;
+    fields: {
+        [name: string]: SubmissionFileField;
+    };
 }
 
-interface EvaluationModel {
-    // TODO
+interface FieldModel {
+    name: string;
 }
+
+interface ScoreViewModel extends FieldModel {
+    type: "score_view";
+}
+
+type EvaluationModel = ScoreViewModel;
 
 interface TaskMetadata {
     title: Localized<string>;
