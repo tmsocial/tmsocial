@@ -26,17 +26,25 @@ export const testMetadata: TaskMetadata = {
         }
     },
     evaluation_model: {
-        type: "list_view",
+        type: "list",
         items: [
             {
-                type: "score_view",
+                type: "score",
                 name: "my_score_field",
             },
             {
-                type: "percentage_view",
+                type: "percentage",
                 name: "my_percentage_field",
                 precision: 1,
-            }
+            },
+            {
+                type: "time_usage",
+                name: "my_time_usage_field",
+            },
+            {
+                type: "memory_usage",
+                name: "my_memory_usage_field",
+            },
         ]
     }
 };
@@ -48,7 +56,7 @@ export const testEvaluation: EvaluationEvent[] = [
         value: {
             type: "score",
             score: 42.0,
-        }
+        },
     },
     {
         type: "set_field",
@@ -56,6 +64,22 @@ export const testEvaluation: EvaluationEvent[] = [
         value: {
             type: "fraction",
             fraction: 0.7,
+        },
+    },
+    {
+        type: "set_field",
+        name: "my_time_usage_field",
+        value: {
+            type: "time_usage",
+            time_usage_seconds: 0.1234,
+        },
+    },
+    {
+        type: "set_field",
+        name: "my_memory_usage_field",
+        value: {
+            type: "memory_usage",
+            memory_usage_bytes: 123456,
         },
     },
 ]

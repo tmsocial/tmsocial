@@ -1,4 +1,4 @@
-import { FieldValue, Fraction, Score } from "./evaluation";
+import { FieldValue, Fraction, Score, TimeUsage, MemoryUsage } from "./evaluation";
 
 interface AwareLocalized<T> {
     [language: string]: T;
@@ -53,20 +53,28 @@ export interface FieldModelBase<T extends FieldValue> {
 }
 
 export interface ScoreViewModel extends FieldModelBase<Score> {
-    type: "score_view";
+    type: "score";
 }
 
 export interface PercentageViewModel extends FieldModelBase<Fraction> {
-    type: "percentage_view";
+    type: "percentage";
     precision?: number;
 }
 
+export interface TimeUsageViewModel extends FieldModelBase<TimeUsage> {
+    type: "time_usage";
+}
+
+export interface MemoryUsageViewModel extends FieldModelBase<MemoryUsage> {
+    type: "memory_usage";
+}
+
 export interface ListViewModel {
-    type: "list_view";
+    type: "list";
     items: EvaluationModel[];
 }
 
-export type FieldViewModel = ScoreViewModel | PercentageViewModel;
+export type FieldViewModel = ScoreViewModel | PercentageViewModel | TimeUsageViewModel | MemoryUsageViewModel;
 export type EvaluationModel = FieldViewModel | ListViewModel;
 
 export interface TaskMetadata {
