@@ -1,0 +1,6 @@
+target
+**/*.rs.bk
+.env
+
+# JetBrains stuff
+.idea/

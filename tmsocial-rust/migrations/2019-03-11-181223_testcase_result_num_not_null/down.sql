@@ -1,0 +1,2 @@
+ALTER TABLE testcase_results
+ALTER COLUMN num DROP NOT NULL;
