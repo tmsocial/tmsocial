@@ -1,9 +1,10 @@
 import * as React from "react";
-import { EvaluationSummary, Score } from "./evaluation";
+import { EvaluationSummary, FieldValue, Score } from "./evaluation";
+import { EvaluationModel, FieldModelBase } from "./metadata";
 
-abstract class FieldView<T> extends React.PureComponent<{model: FieldModel, summary: EvaluationSummary}>{
-    get value(): T {
-        return this.props.summary.fields[this.props.model.name] || null;
+abstract class FieldView<T extends FieldValue> extends React.PureComponent<{ model: FieldModelBase<T>, summary: EvaluationSummary }>{
+    get value(): T | null {
+        return this.props.summary.fields[this.props.model.name] as T || null;
     }
 }
 
@@ -20,7 +21,7 @@ const views = {
     "score_view": ScoreFieldView,
 };
 
-export class EvaluationView extends React.PureComponent<{model: EvaluationModel, summary: EvaluationSummary}> {
+export class EvaluationView extends React.PureComponent<{ model: EvaluationModel, summary: EvaluationSummary }> {
     render() {
         return React.createElement(views[this.props.model.type], this.props);
     }

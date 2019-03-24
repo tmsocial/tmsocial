@@ -1,3 +1,5 @@
+import { FieldValue, Score, Fraction } from "./evaluation";
+
 interface AwareLocalized<T> {
     [language: string]: T;
 }
@@ -46,17 +48,22 @@ interface SubmissionForm {
     };
 }
 
-interface FieldModel {
+export interface FieldModelBase<T extends FieldValue> {
     name: string;
 }
 
-interface ScoreViewModel extends FieldModel {
+export interface ScoreViewModel extends FieldModelBase<Score> {
     type: "score_view";
 }
 
-type EvaluationModel = ScoreViewModel;
+export interface PercentageViewModel extends FieldModelBase<Fraction> {
+    type: "percentage_view";
+}
 
-interface TaskMetadata {
+export type FieldModel = ScoreViewModel | PercentageViewModel;
+export type EvaluationModel = FieldModel;
+
+export interface TaskMetadata {
     title: Localized<string>;
     statement: Statement;
     attachments: Localized<Attachment>[];

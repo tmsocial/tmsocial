@@ -25,7 +25,7 @@ export interface MemoryUsage {
     memory_usage_bytes: number;
 }
 
-type FieldValue = Outcome | Score | Fraction | TimeUsage | MemoryUsage;
+export type FieldValue = Outcome | Score | Fraction | TimeUsage | MemoryUsage;
 
 export interface SetFieldEvent<T extends FieldValue> {
     type: "set_field";
