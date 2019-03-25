@@ -30,7 +30,10 @@ export const testMetadata: TaskMetadata = {
         items: [
             {
                 type: "time_usage",
-                name: "compilation.time_usage",
+                value: {
+                    type: "ref",
+                    ref: "compilation.time_usage",
+                },
             },
             {
                 type: "table",
@@ -59,16 +62,25 @@ export const testMetadata: TaskMetadata = {
                         cells: {
                             total_score: {
                                 type: "score",
-                                name: "test_case.1.total_score",
+                                value: {
+                                    type: "ref",
+                                    ref: "test_case.1.total_score",
+                                },
                                 max_score: 60,
                             },
                             alice_time_usage: {
                                 type: "time_usage",
-                                name: "test_case.1.alice_time_usage",
+                                value: {
+                                    type: "ref",
+                                    ref: "test_case.1.alice_time_usage",
+                                },
                             },
                             bob_time_usage: {
                                 type: "time_usage",
-                                name: "test_case.1.bob_time_usage",
+                                value: {
+                                    type: "ref",
+                                    ref: "test_case.1.bob_time_usage",
+                                },
                             },
                         },
                     },
@@ -76,16 +88,25 @@ export const testMetadata: TaskMetadata = {
                         cells: {
                             total_score: {
                                 type: "score",
-                                name: "test_case.2.total_score",
+                                value: {
+                                    type: "ref",
+                                    ref: "test_case.2.total_score",
+                                },
                                 max_score: 20,
                             },
                             alice_time_usage: {
                                 type: "time_usage",
-                                name: "test_case.2.alice_time_usage",
+                                value: {
+                                    type: "ref",
+                                    ref: "test_case.2.alice_time_usage",
+                                },
                             },
                             bob_time_usage: {
                                 type: "time_usage",
-                                name: "test_case.2.bob_time_usage",
+                                value: {
+                                    type: "ref",
+                                    ref: "test_case.2.bob_time_usage",
+                                },
                             },
                         },
                     },
@@ -93,39 +114,63 @@ export const testMetadata: TaskMetadata = {
             },
             {
                 type: "score",
-                name: "test_case.1.my_score",
+                value: {
+                    type: "ref",
+                    ref: "test_case.1.my_score",
+                },
                 max_score: 60,
             },
             {
                 type: "percentage",
-                name: "test_case.1.my_percentage",
+                value: {
+                    type: "ref",
+                    ref: "test_case.1.my_percentage",
+                },
                 precision: 1,
             },
             {
                 type: "time_usage",
-                name: "test_case.1.my_time_usage",
+                value: {
+                    type: "ref",
+                    ref: "test_case.1.my_time_usage",
+                },
             },
             {
                 type: "memory_usage",
-                name: "test_case.1.my_memory_usage",
+                value: {
+                    type: "ref",
+                    ref: "test_case.1.my_memory_usage",
+                },
             },
             {
                 type: "score",
-                name: "test_case.2.my_score",
+                value: {
+                    type: "ref",
+                    ref: "test_case.2.my_score",
+                },
                 max_score: 40,
             },
             {
                 type: "percentage",
-                name: "test_case.2.my_percentage",
+                value: {
+                    type: "ref",
+                    ref: "test_case.2.my_percentage",
+                },
                 precision: 1,
             },
             {
                 type: "time_usage",
-                name: "test_case.2.my_time_usage",
+                value: {
+                    type: "ref",
+                    ref: "test_case.2.my_time_usage",
+                },
             },
             {
                 type: "memory_usage",
-                name: "test_case.2.my_memory_usage",
+                value: {
+                    type: "ref",
+                    ref: "test_case.2.my_memory_usage",
+                },
             },
         ],
     }

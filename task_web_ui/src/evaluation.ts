@@ -33,4 +33,4 @@ export interface ValueEvent<T extends EvaluationValue> {
     value: T;
 }
 
-export type EvaluationEvent = ValueEvent<any>;
+export type EvaluationEvent = ValueEvent<EvaluationValue>;
