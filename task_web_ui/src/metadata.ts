@@ -82,7 +82,7 @@ export interface ScopeModel {
 
 export interface ArrayModel {
     type: "array";
-    keys: string[];
+    keys: (string | number)[];
     child_model: EvaluationModel;
 }
 

@@ -13,7 +13,7 @@ abstract class FieldView<T extends FieldModelBase<U>, U extends FieldValue> exte
 
 export class ScoreFieldView extends FieldView<ScoreViewModel, Score> {
     render() {
-        if(!this.value) return null; // TODO: use a wrapper component for fields
+        if (!this.value) return null; // TODO: use a wrapper component for fields
         return (
             <span className="score">{this.value.score}</span>
         )
@@ -22,7 +22,7 @@ export class ScoreFieldView extends FieldView<ScoreViewModel, Score> {
 
 export class PercentageFieldView extends FieldView<PercentageViewModel, Fraction> {
     render() {
-        if(!this.value) return null;
+        if (!this.value) return null;
         return (
             <span className="percentage">{(this.value.fraction * 100).toFixed(this.props.model.precision || 0)}%</span>
         )
@@ -31,7 +31,7 @@ export class PercentageFieldView extends FieldView<PercentageViewModel, Fraction
 
 export class TimeUsageFieldView extends FieldView<TimeUsageViewModel, TimeUsage> {
     render() {
-        if(!this.value) return null;
+        if (!this.value) return null;
         return (
             <span className="time_usage">{this.value.time_usage_seconds.toFixed(3)} s</span>
         )
@@ -40,7 +40,7 @@ export class TimeUsageFieldView extends FieldView<TimeUsageViewModel, TimeUsage>
 
 export class MemoryUsageFieldView extends FieldView<MemoryUsageViewModel, MemoryUsage> {
     render() {
-        if(!this.value) return null;
+        if (!this.value) return null;
         return (
             // TODO: use a proper visualization of byte sizes
             <span className="memory_usage">{(this.value.memory_usage_bytes / 1e3).toFixed()} KB</span>
@@ -50,34 +50,23 @@ export class MemoryUsageFieldView extends FieldView<MemoryUsageViewModel, Memory
 
 export class ScopeView extends EvaluationModelView<ScopeModel> {
     render() {
-        const outerFields = this.props.summary.fields;
-        const innerFields = {};
-        for (const name of Object.keys(outerFields)) {
-            const [key, ...rest] = name.split(":");
-            const innerName = rest.join(":");
-            if (key === this.props.model.key) {
-                innerFields[innerName] = outerFields[name];
-            }
-        }
         return (
-            <EvaluationView model={this.props.model.child} summary={{ fields: innerFields }} />
+            <EvaluationView
+                model={this.props.model.child}
+                summary={{ fields: this.props.summary.fields[this.props.model.key] || {} }}
+            />
         );
     }
 }
 
 export class ArrayView extends EvaluationModelView<ArrayModel> {
     render() {
-        const outerFields = this.props.summary.fields;
-        const innerFieldsByKey = {};
-
-        for (const name of Object.keys(outerFields)) {
-            const [key, ...rest] = name.split(":");
-            const innerName = rest.join(":");
-            innerFieldsByKey[key] = innerFieldsByKey[key] || {};
-            innerFieldsByKey[key][innerName] = outerFields[name];
-        }
         return this.props.model.keys.map((key) => (
-            <EvaluationView key={key} model={this.props.model.child_model} summary={{ fields: innerFieldsByKey[key] || {} }} />
+            <EvaluationView
+                key={key}
+                model={this.props.model.child_model}
+                summary={{ fields: this.props.summary.fields[key] || {} }}
+            />
         ))
     }
 }
@@ -86,7 +75,7 @@ export class RecordView extends EvaluationModelView<RecordModel> {
     render() {
         return (
             <ul>
-                {this.props.model.items.map((item, i) => <li><EvaluationView model={item} summary={this.props.summary} /></li>)}
+                {this.props.model.items.map((item, i) => <li key={i}><EvaluationView model={item} summary={this.props.summary} /></li>)}
             </ul>
         );
     }

@@ -29,7 +29,7 @@ export type FieldValue = Outcome | Score | Fraction | TimeUsage | MemoryUsage;
 
 export interface SetFieldEvent<T extends FieldValue> {
     type: "set_field";
-    name: string;
+    path: (string | number)[];
     value: T;
 }
 
@@ -40,17 +40,22 @@ export interface EventReducer<T> {
     readonly value: T;
 }
 
-export interface FieldSet {
-    readonly [name: string]: FieldValue;
+export type FieldSet = FieldValue | {
+    readonly [name: string]: FieldSet;
 }
 
 export class FieldReducer implements EventReducer<FieldSet> {
-    readonly value: { [name: string]: FieldValue } = {};
+    readonly value: FieldSet = {};
 
     onEvent(event: EvaluationEvent) {
         switch (event.type) {
             case "set_field":
-                this.value[event.name] = event.value;
+                let value = this.value;
+                for (let i = 0; i < event.path.length - 1; i++) {
+                    const key = event.path[i];
+                    value = value[key] = value[key] || {};
+                }
+                value[event.path[event.path.length - 1]] = event.value;
                 break;
         }
     }
