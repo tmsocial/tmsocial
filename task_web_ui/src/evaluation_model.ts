@@ -63,7 +63,11 @@ export interface RowModel {
 
 export interface TableModel {
     type: "table";
-    columns: { key: string, model: ColumnModel }[];
+    columns: {
+        key: string,
+        model: ColumnModel,
+        header: EvaluationModel,
+     }[];
     rows: RowModel[];
 }
 

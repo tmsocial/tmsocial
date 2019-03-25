@@ -79,7 +79,7 @@ const TableView = ({ model, summary }: EvaluationModelViewProps<TableModel>) => 
             <thead>
                 <tr>
                     {model.columns.map((column, j) => (
-                        <th key={j}><code>{column.key} (for debug)</code></th>
+                        <th key={j}><EvaluationNodeView model={column.header} summary={summary} /></th>
                     ))}
                 </tr>
             </thead>

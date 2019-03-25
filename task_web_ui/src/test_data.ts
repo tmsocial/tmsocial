@@ -40,45 +40,88 @@ export const testMetadata: TaskMetadata = {
                 columns: [
                     {
                         key: "name",
+                        header: {
+                            type: "name",
+                            name: {
+                                en: "Test Case",
+                                it: "Caso di prova",
+                            },
+                        },
                         model: {
                             type: "name",
-                        }
+                        },
                     },
                     {
                         key: "outcome",
+                        header: {
+                            type: "name",
+                            name: {
+                                default: "Result",
+                            },
+                        },
                         model: {
                             type: "outcome",
-                        }
+                        },
                     },
                     {
                         key: "total_score",
+                        header: {
+                            type: "name",
+                            name: {
+                                default: "Total score",
+                            },
+                        },
                         model: {
                             type: "score",
-                        }
+                        },
                     },
                     {
                         key: "total_percentage",
+                        header: {
+                            type: "name",
+                            name: {
+                                default: "Percentage",
+                            },
+                        },
                         model: {
                             type: "percentage",
                         },
                     },
                     {
                         key: "total_memory_usage",
+                        header: {
+                            type: "name",
+                            name: {
+                                default: "Memory usage",
+                            },
+                        },
                         model: {
                             type: "memory_usage",
                         },
                     },
                     {
                         key: "alice_time_usage",
+                        header: {
+                            type: "name",
+                            name: {
+                                default: "Time usage (Alice)",
+                            },
+                        },
                         model: {
                             type: "time_usage",
-                        }
+                        },
                     },
                     {
                         key: "bob_time_usage",
+                        header: {
+                            type: "name",
+                            name: {
+                                default: "Time usage (Bob)",
+                            },
+                        },
                         model: {
                             type: "time_usage",
-                        }
+                        },
                     },
                 ],
                 rows: [
@@ -87,16 +130,15 @@ export const testMetadata: TaskMetadata = {
                             name: {
                                 type: "name",
                                 name: {
-                                    en: "Test case 1",
-                                    it: "Caso di prova 1",
-                                }
+                                    default: "Case 1",
+                                },
                             },
                             outcome: {
                                 type: "outcome",
                                 value: {
                                     type: "ref",
                                     ref: "test_case.1.outcome",
-                                }
+                                },
                             },
                             total_score: {
                                 type: "score",
@@ -111,7 +153,7 @@ export const testMetadata: TaskMetadata = {
                                 value: {
                                     type: "ref",
                                     ref: "test_case.1.total_memory_usage"
-                                }
+                                },
                             },
                             total_percentage: {
                                 type: "percentage",
@@ -141,16 +183,15 @@ export const testMetadata: TaskMetadata = {
                             name: {
                                 type: "name",
                                 name: {
-                                    en: "Test case 2",
-                                    it: "Caso di prova 2",
-                                }
+                                    default: "Case 2",
+                                },
                             },
                             outcome: {
                                 type: "outcome",
                                 value: {
                                     type: "ref",
                                     ref: "test_case.2.outcome",
-                                }
+                                },
                             },
                             total_score: {
                                 type: "score",
@@ -165,7 +206,7 @@ export const testMetadata: TaskMetadata = {
                                 value: {
                                     type: "ref",
                                     ref: "test_case.2.total_memory_usage"
-                                }
+                                },
                             },
                             total_percentage: {
                                 type: "percentage",
