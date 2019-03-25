@@ -1,15 +1,5 @@
 import { EvaluationModel } from "./evaluation_model";
 
-interface AwareLocalized<T> {
-    [language: string]: T;
-}
-
-interface UnawareLocalized<T> {
-    default: T;
-}
-
-type Localized<T> = AwareLocalized<T> | UnawareLocalized<T>;
-
 interface PdfStatement {
     type: "pdf";
     url: Localized<string>;

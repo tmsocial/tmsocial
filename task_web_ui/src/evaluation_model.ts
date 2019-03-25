@@ -12,6 +12,11 @@ export interface ConstantValue<T extends EvaluationValue> {
 
 export type ValueExpression<T extends EvaluationValue> = ConstantValue<T> | ValueReference
 
+export interface NameModel {
+    type: "name";
+    name: Localized<string>;
+}
+
 export interface ScoreModel {
     type: "score";
     value: ValueExpression<Score>;
@@ -57,6 +62,13 @@ export interface TableModel {
     rows: RowModel[];
 }
 
-export type FieldModel = ScoreModel | PercentageModel | TimeUsageModel | MemoryUsageModel;
-export type EvaluationModel = FieldModel | ListModel | TableModel;
+export type EvaluationModel = (
+    | NameModel
+    | ScoreModel
+    | PercentageModel
+    | TimeUsageModel
+    | MemoryUsageModel
+    | ListModel
+    | TableModel
+);
 

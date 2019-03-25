@@ -39,6 +39,12 @@ export const testMetadata: TaskMetadata = {
                 type: "table",
                 columns: [
                     {
+                        key: "name",
+                        model: {
+                            type: "name",
+                        }
+                    },
+                    {
                         key: "total_score",
                         model: {
                             type: "score",
@@ -60,6 +66,13 @@ export const testMetadata: TaskMetadata = {
                 rows: [
                     {
                         cells: {
+                            name: {
+                                type: "name",
+                                name: {
+                                    en: "Test case 1",
+                                    it: "Caso di prova 1",
+                                }
+                            },
                             total_score: {
                                 type: "score",
                                 value: {
@@ -86,6 +99,13 @@ export const testMetadata: TaskMetadata = {
                     },
                     {
                         cells: {
+                            name: {
+                                type: "name",
+                                name: {
+                                    en: "Test case 2",
+                                    it: "Caso di prova 2",
+                                }
+                            },
                             total_score: {
                                 type: "score",
                                 value: {

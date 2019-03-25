@@ -18,7 +18,7 @@ class MyComponent extends React.Component {
     reducer = new ValueReducer();
 
     componentDidMount() {
-        this.load();
+        this.load();    
     }
 
     private async load() {
