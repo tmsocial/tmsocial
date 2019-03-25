@@ -51,6 +51,18 @@ export const testMetadata: TaskMetadata = {
                         }
                     },
                     {
+                        key: "total_percentage",
+                        model: {
+                            type: "percentage",
+                        },
+                    },
+                    {
+                        key: "total_memory_usage",
+                        model: {
+                            type: "memory_usage",
+                        },
+                    },
+                    {
                         key: "alice_time_usage",
                         model: {
                             type: "time_usage",
@@ -80,6 +92,20 @@ export const testMetadata: TaskMetadata = {
                                     ref: "test_case.1.total_score",
                                 },
                                 max_score: 60,
+                            },
+                            total_memory_usage: {
+                                type: "memory_usage",
+                                value: {
+                                    type: "ref",
+                                    ref: "test_case.1.total_memory_usage"
+                                }
+                            },
+                            total_percentage: {
+                                type: "percentage",
+                                value: {
+                                    type: "ref",
+                                    ref: "test_case.1.total_percentage",
+                                },
                             },
                             alice_time_usage: {
                                 type: "time_usage",
@@ -114,6 +140,20 @@ export const testMetadata: TaskMetadata = {
                                 },
                                 max_score: 20,
                             },
+                            total_memory_usage: {
+                                type: "memory_usage",
+                                value: {
+                                    type: "ref",
+                                    ref: "test_case.2.total_memory_usage"
+                                }
+                            },
+                            total_percentage: {
+                                type: "percentage",
+                                value: {
+                                    type: "ref",
+                                    ref: "test_case.2.total_percentage",
+                                },
+                            },
                             alice_time_usage: {
                                 type: "time_usage",
                                 value: {
@@ -131,66 +171,6 @@ export const testMetadata: TaskMetadata = {
                         },
                     },
                 ]
-            },
-            {
-                type: "score",
-                value: {
-                    type: "ref",
-                    ref: "test_case.1.my_score",
-                },
-                max_score: 60,
-            },
-            {
-                type: "percentage",
-                value: {
-                    type: "ref",
-                    ref: "test_case.1.my_percentage",
-                },
-                precision: 1,
-            },
-            {
-                type: "time_usage",
-                value: {
-                    type: "ref",
-                    ref: "test_case.1.my_time_usage",
-                },
-            },
-            {
-                type: "memory_usage",
-                value: {
-                    type: "ref",
-                    ref: "test_case.1.my_memory_usage",
-                },
-            },
-            {
-                type: "score",
-                value: {
-                    type: "ref",
-                    ref: "test_case.2.my_score",
-                },
-                max_score: 40,
-            },
-            {
-                type: "percentage",
-                value: {
-                    type: "ref",
-                    ref: "test_case.2.my_percentage",
-                },
-                precision: 1,
-            },
-            {
-                type: "time_usage",
-                value: {
-                    type: "ref",
-                    ref: "test_case.2.my_time_usage",
-                },
-            },
-            {
-                type: "memory_usage",
-                value: {
-                    type: "ref",
-                    ref: "test_case.2.my_memory_usage",
-                },
             },
             {
                 type: "text_stream",
@@ -248,7 +228,7 @@ export const testEvaluation: EvaluationEvent[] = [
     },
     {
         type: "value",
-        key: "test_case.1.my_percentage",
+        key: "test_case.1.total_percentage",
         value: {
             type: "fraction",
             fraction: 0.7,
@@ -256,18 +236,10 @@ export const testEvaluation: EvaluationEvent[] = [
     },
     {
         type: "value",
-        key: "test_case.2.my_percentage",
+        key: "test_case.2.total_percentage",
         value: {
             type: "fraction",
             fraction: 0.2,
-        },
-    },
-    {
-        type: "value",
-        key: "test_case.2.my_time_usage",
-        value: {
-            type: "time_usage",
-            time_usage_seconds: 0.1234,
         },
     },
     {
@@ -280,7 +252,15 @@ export const testEvaluation: EvaluationEvent[] = [
     },
     {
         type: "value",
-        key: "test_case.2.my_memory_usage",
+        key: "test_case.1.total_memory_usage",
+        value: {
+            type: "memory_usage",
+            memory_usage_bytes: 400999,
+        },
+    },
+    {
+        type: "value",
+        key: "test_case.2.total_memory_usage",
         value: {
             type: "memory_usage",
             memory_usage_bytes: 123456,
