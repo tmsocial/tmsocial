@@ -1,0 +1,7 @@
+{"type":"resolve_field","path":"compilation.time_usage","value":{"type":"time_usage","time_usage_seconds":2.4}}
+{"type":"resolve_field","path":"test_case.1.my_score_field","value":{"type":"score","score":42}}
+{"type":"resolve_field","path":"test_case.1.my_percentage_field","value":{"type":"fraction","fraction":0.7}}
+{"type":"resolve_field","path":"test_case.2.my_percentage_field","value":{"type":"fraction","fraction":0.2}}
+{"type":"resolve_field","path":"test_case.2.my_time_usage_field","value":{"type":"time_usage","time_usage_seconds":0.1234}}
+{"type":"resolve_field","path":"test_case.2.my_memory_usage_field","value":{"type":"memory_usage","memory_usage_bytes":123456}}
+{"type":"resolve_field","path":"test_case.2.my_outcome_field","value":{"type":"outcome","outcome":"success"}}
