@@ -1,6 +1,6 @@
 import * as React from "react";
 import { EvaluationSummary, FieldValue, Fraction, MemoryUsage, Score, TimeUsage } from "./evaluation";
-import { EvaluationModel, FieldModelBase, MemoryUsageViewModel, PercentageViewModel, ArrayModel, RecordModel, ScopeModel, ScoreViewModel, TimeUsageViewModel } from "./metadata";
+import { EvaluationModel, FieldModelBase, ListModel, MemoryUsageViewModel, PercentageViewModel, ScoreViewModel, TimeUsageViewModel } from "./metadata";
 
 abstract class EvaluationModelView<T extends EvaluationModel> extends React.PureComponent<{ model: T, summary: EvaluationSummary }>{
 }
@@ -51,30 +51,7 @@ export class MemoryUsageFieldView extends FieldView<MemoryUsageViewModel, Memory
     }
 }
 
-export class ScopeView extends EvaluationModelView<ScopeModel> {
-    render() {
-        return (
-            <EvaluationNodeView
-                model={this.props.model.child}
-                summary={{ fields: this.props.summary.fields[this.props.model.key] || {} }}
-            />
-        );
-    }
-}
-
-export class ArrayView extends EvaluationModelView<ArrayModel> {
-    render() {
-        return this.props.model.keys.map((key) => (
-            <EvaluationNodeView
-                key={key}
-                model={this.props.model.child_model}
-                summary={{ fields: this.props.summary.fields[key] || {} }}
-            />
-        ))
-    }
-}
-
-export class RecordView extends EvaluationModelView<RecordModel> {
+export class ListView extends EvaluationModelView<ListModel> {
     render() {
         return (
             <ul>
@@ -91,9 +68,7 @@ const views: {
     "percentage": PercentageFieldView,
     "time_usage": TimeUsageFieldView,
     "memory_usage": MemoryUsageFieldView,
-    "scope": ScopeView,
-    "array": ArrayView,
-    "record": RecordView,
+    "list": ListView,
 };
 
 export class EvaluationNodeView extends React.PureComponent<{ model: EvaluationModel, summary: EvaluationSummary }> {

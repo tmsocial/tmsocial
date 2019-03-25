@@ -26,51 +26,47 @@ export const testMetadata: TaskMetadata = {
         }
     },
     evaluation_model: {
-        type: "record",
+        type: "list",
         items: [
             {
-                type: "scope",
-                key: "compilation",
-                child: {
-                    type: "record",
-                    items: [
-                        {
-                            type: "time_usage",
-                            name: "time_usage",
-                        },
-                    ]
-                },
+                type: "time_usage",
+                name: "compilation.time_usage",
             },
             {
-                type: "scope",
-                key: "test_case",
-                child: {
-                    type: "array",
-                    keys: [1, 2],
-                    child_model: {
-                        type: "record",
-                        items: [
-                            {
-                                type: "score",
-                                name: "my_score_field",
-                                max_score: 100,
-                            },
-                            {
-                                type: "percentage",
-                                name: "my_percentage_field",
-                                precision: 1,
-                            },
-                            {
-                                type: "time_usage",
-                                name: "my_time_usage_field",
-                            },
-                            {
-                                type: "memory_usage",
-                                name: "my_memory_usage_field",
-                            },
-                        ]
-                    },
-                },
+                type: "score",
+                name: "test_case.1.my_score_field",
+                max_score: 60,
+            },
+            {
+                type: "percentage",
+                name: "test_case.1.my_percentage_field",
+                precision: 1,
+            },
+            {
+                type: "time_usage",
+                name: "test_case.1.my_time_usage_field",
+            },
+            {
+                type: "memory_usage",
+                name: "test_case.1.my_memory_usage_field",
+            },
+            {
+                type: "score",
+                name: "test_case.2.my_score_field",
+                max_score: 40,
+            },
+            {
+                type: "percentage",
+                name: "test_case.2.my_percentage_field",
+                precision: 1,
+            },
+            {
+                type: "time_usage",
+                name: "test_case.2.my_time_usage_field",
+            },
+            {
+                type: "memory_usage",
+                name: "test_case.2.my_memory_usage_field",
             },
         ],
     }
@@ -79,7 +75,7 @@ export const testMetadata: TaskMetadata = {
 export const testEvaluation: EvaluationEvent[] = [
     {
         type: "resolve_field",
-        path: ["compilation", "time_usage"],
+        path: "compilation.time_usage",
         value: {
             type: "time_usage",
             time_usage_seconds: 2.4,
@@ -87,7 +83,7 @@ export const testEvaluation: EvaluationEvent[] = [
     },
     {
         type: "resolve_field",
-        path: ["test_case", 1, "my_score_field"],
+        path: "test_case.1.my_score_field",
         value: {
             type: "score",
             score: 42.0,
@@ -95,7 +91,7 @@ export const testEvaluation: EvaluationEvent[] = [
     },
     {
         type: "resolve_field",
-        path: ["test_case", 1, "my_percentage_field"],
+        path: "test_case.1.my_percentage_field",
         value: {
             type: "fraction",
             fraction: 0.7,
@@ -103,7 +99,7 @@ export const testEvaluation: EvaluationEvent[] = [
     },
     {
         type: "resolve_field",
-        path: ["test_case", 2, "my_percentage_field"],
+        path: "test_case.2.my_percentage_field",
         value: {
             type: "fraction",
             fraction: 0.2,
@@ -111,7 +107,7 @@ export const testEvaluation: EvaluationEvent[] = [
     },
     {
         type: "resolve_field",
-        path: ["test_case", 2, "my_time_usage_field"],
+        path: "test_case.2.my_time_usage_field",
         value: {
             type: "time_usage",
             time_usage_seconds: 0.1234,
@@ -119,7 +115,7 @@ export const testEvaluation: EvaluationEvent[] = [
     },
     {
         type: "resolve_field",
-        path: ["test_case", 2, "my_memory_usage_field"],
+        path: "test_case.2.my_memory_usage_field",
         value: {
             type: "memory_usage",
             memory_usage_bytes: 123456,
