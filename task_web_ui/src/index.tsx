@@ -41,7 +41,7 @@ class MyComponent extends React.Component {
         }
 
 
-        return <EvaluationNodeView model={testMetadata.evaluation_model} summary={summary as EvaluationSummary} />;
+        return <EvaluationNodeView models={testMetadata.evaluation_document} summary={summary as EvaluationSummary} />;
     }
 }
 

@@ -43,5 +43,5 @@ export interface TaskMetadata {
     statement: Statement;
     attachments: Localized<Attachment>[];
     submission_form: SubmissionForm;
-    evaluation_model: EvaluationModel;
+    evaluation_document: EvaluationModel[];
 }

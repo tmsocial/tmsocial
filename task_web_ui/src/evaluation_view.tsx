@@ -1,6 +1,6 @@
 import * as React from "react";
 import { EvaluationValue, Fraction, MemoryUsage, Outcome, Score, TimeUsage } from "./evaluation";
-import { ArrayModel, EvaluationModel, MemoryUsageModel, NameModel, OutcomeModel, PercentageModel, RecordModel, ScoreModel, TableModel, TextStreamModel, TimeUsageModel, ValueExpression } from "./evaluation_model";
+import { EvaluationModel, MemoryUsageModel, NameModel, OutcomeModel, PercentageModel, ScoreModel, TableModel, TextStreamModel, TimeUsageModel, ValueExpression } from "./evaluation_model";
 import { EvaluationSummary } from "./evaluation_process";
 
 function l18n<T>(data: Localized<T>) {
@@ -65,39 +65,15 @@ const MemoryUsageView = ({ model, summary }: EvaluationModelViewProps<MemoryUsag
     )
 }
 
-const ArrayView = <T extends EvaluationModel>({ model, summary }: EvaluationModelViewProps<ArrayModel<T>>) => {
-    return (
-        <ul>
-            {model.items.map((item, i) => <li key={i}><EvaluationNodeView model={item} summary={summary} /></li>)}
-        </ul>
-    );
-}
-
-const RecordView = <T extends EvaluationModel>({ model, summary }: EvaluationModelViewProps<RecordModel<T>>) => {
-    return model.items.map((item, i) => (
-        <section key={i}>
-            <header><h3><EvaluationNodeView model={item.key} summary={summary} /></h3></header>
-            <EvaluationNodeView model={item.value} summary={summary} />
-        </section>
-    ));
-}
-
 const TableView = ({ model, summary }: EvaluationModelViewProps<TableModel>) => {
     return (
         <table>
-            <thead>
-                <tr>
-                    {model.columns.map((column, j) => (
-                        <th key={j}><EvaluationNodeView model={column.header} summary={summary} /></th>
-                    ))}
-                </tr>
-            </thead>
             <tbody>
                 {model.rows.map((row, i) => (
                     <tr key={i}>
                         {model.columns.map((column, j) => (
                             <td key={j}>
-                                <EvaluationNodeView model={row.cells[column.key]} summary={summary} />
+                                <EvaluationNodeView models={row.cells[column.key]} summary={summary} />
                             </td>
                         ))}
                     </tr>
@@ -123,14 +99,12 @@ const views: {
     percentage: PercentageView,
     time_usage: TimeUsageView,
     memory_usage: MemoryUsageView,
-    record: RecordView,
-    array: ArrayView,
     table: TableView,
     text_stream: TextStreamView,
 };
 
-export class EvaluationNodeView extends React.PureComponent<{ model: EvaluationModel, summary: EvaluationSummary }> {
-    render() {
-        return React.createElement(views[this.props.model.type], this.props);
-    }
-}
+export const EvaluationNodeView = ({ models, summary }: { models: EvaluationModel[], summary: EvaluationSummary }) => (
+    <React.Fragment>
+        {models.map((model, i) => React.createElement(views[model.type], { key: i, model, summary }))}
+    </React.Fragment>
+)
