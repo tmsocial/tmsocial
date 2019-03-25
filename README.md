@@ -78,3 +78,15 @@ This structures encodes:
 
 TODO: defining the various node types available to construct an evaluation model is the most challenging part.
 It will be done first as code examples, and will be documented later when it is agreed upon.
+
+## Evaluation events
+
+An evaluation produces a stream of evaluation events: each one of them is an arbitrary JSON object, that must have a field `type` that identifies the type of the event. If an event of an unknown type arrives to the frontend it will be simply ignored. 
+
+Currentlly the only event type supported is `value`. This event has the following properties:
+- `key`: an arbitrary string that identifies the field, by convention a string of identifies separated by `.`, for example `test_case.1.memory_usage` 
+- `value`: a polymorfic JSON object as specified in the code
+
+A `value` event is produced by the backend to declare the value of a key for the evaluation, for example the event ```{"type": "value", "key": "test_case.1.memory_usage", "value": {"type": "memory_usage", "memory_usage_bytes": 10230042 }}``` declares that the memory usage of the first test case is 10230042 bytes. There must not be two `value` events with the same key in the same evaluation. 
+
+In the future more events types will be defined, for example to update values dynamically or to generate messages.
