@@ -1,6 +1,7 @@
 import * as React from "react";
-import { EvaluationSummary, EvaluationValue, Fraction, MemoryUsage, Score, TimeUsage } from "./evaluation";
-import { EvaluationModel, FieldModelBase, ListModel, MemoryUsageModel, PercentageModel, ScoreModel, TimeUsageModel, TableModel } from "./metadata";
+import { EvaluationValue, Fraction, MemoryUsage, Score, TimeUsage } from "./evaluation";
+import { EvaluationModel, FieldModelBase, ListModel, MemoryUsageModel, PercentageModel, ScoreModel, TableModel, TimeUsageModel } from "./evaluation_model";
+import { EvaluationSummary } from "./evaluation_process";
 
 abstract class EvaluationModelView<T extends EvaluationModel> extends React.PureComponent<{ model: T, summary: EvaluationSummary }>{
 }

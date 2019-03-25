@@ -1,9 +1,9 @@
 import * as React from "react";
 import ReactDOM from "react-dom";
 
-import { EvaluationNodeView } from "./evaluationView";
+import { EvaluationNodeView } from "./evaluation_view";
 import { testMetadata, testEvaluation } from "./testData";
-import { ValueReducer } from "./evaluation";
+import { ValueReducer } from "./evaluation_process";
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
