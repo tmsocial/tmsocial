@@ -1,9 +1,9 @@
 import * as React from "react";
 import ReactDOM from "react-dom";
-
+import { EvaluationSummary, TextReducer, ValueReducer, EvaluationReducer } from "./evaluation_process";
 import { EvaluationNodeView } from "./evaluation_view";
-import { testMetadata, testEvaluation } from "./test_data";
-import { ValueReducer, TextReducer, EvaluationSummary } from "./evaluation_process";
+import { testEvaluation, testMetadata } from "./test_data";
+
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -15,10 +15,7 @@ async function* events() {
 }
 
 class MyComponent extends React.Component {
-    reducers = {
-        values: new ValueReducer(),
-        textStreams: new TextReducer(),
-    };
+    reducer = new EvaluationReducer();
 
     componentDidMount() {
         this.load();    
@@ -26,23 +23,14 @@ class MyComponent extends React.Component {
 
     private async load() {
         for await (const e of events()) {
-            for (const k of Object.keys(this.reducers)) {
-                this.reducers[k].onEvent(e);
-            }
+            this.reducer.onEvent(e);
             this.forceUpdate();
         }
     }
 
     render() {
-        const summary = {};
-
-        for (const k of Object.keys(this.reducers)) {
-            summary[k] = this.reducers[k].value;
-        }
-
-
-        return <EvaluationNodeView models={testMetadata.evaluation_document} summary={summary as EvaluationSummary} />;
+        return <EvaluationNodeView models={testMetadata.evaluation_document} summary={this.reducer} />;
     }
-}
+}   
 
 ReactDOM.render(<MyComponent />, document.getElementById("container"));

@@ -1,8 +1,30 @@
 import { EvaluationEvent, EvaluationValue } from "./evaluation";
 
-export interface EventReducer<T> {
-    onEvent(event: EvaluationEvent): void;
-    readonly value: T;
+export interface EvaluationSummary {
+    readonly values: { readonly [key: string]: EvaluationValue };
+    readonly textStreams: { readonly [stream: string]: StreamBuffer };
+}
+
+export class EvaluationReducer implements EvaluationSummary {
+    readonly values: { [key: string]: EvaluationValue } = {};
+    readonly textStreams: { [stream: string]: StreamBuffer } = {};
+
+    onEvent(event: EvaluationEvent): void {
+        switch (event.type) {
+            case "value":
+                if (this.values[event.key]) throw Error("Value already defined");
+                this.values[event.key] = event.value;
+                break;
+            case "text":
+                const stream = event.stream;
+                this.textStreams[stream] = this.textStreams[stream] || {
+                    buffer: "",
+                };
+                // FIXME: quadratic complexity? Maintain list of chunks and join on-demand?
+                this.textStreams[stream].buffer += event.text;
+                break;
+        }
+    }
 }
 
 export interface ValueSet {
@@ -11,43 +33,4 @@ export interface ValueSet {
 
 export interface StreamBuffer {
     buffer: string;
-}
-
-export interface StreamBufferSet {
-    readonly [stream: string]: StreamBuffer;
-}
-
-export class ValueReducer implements EventReducer<ValueSet> {
-    readonly value: { [key: string]: EvaluationValue } = {};
-
-    onEvent(event: EvaluationEvent) {
-        switch (event.type) {
-            case "value":
-                this.value[event.key] = event.value;
-                break;
-        }
-    }
-}
-
-export class TextReducer implements EventReducer<StreamBufferSet> {
-    readonly value: { [stream: string]: StreamBuffer } = {};
-
-    onEvent(event: EvaluationEvent) {
-        switch (event.type) {
-            case "text":
-                const stream = event.stream;
-                this.value[stream] = this.value[stream] || {
-                    buffer: "",
-                };
-                // FIXME: quadratic complexity? Maintain list of chunks and join on-demand.
-                this.value[stream].buffer += event.text;
-                break;
-        }
-    }
-
-}
-
-export interface EvaluationSummary {
-    readonly values: ValueSet;
-    readonly textStreams: StreamBufferSet;
 }
