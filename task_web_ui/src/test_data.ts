@@ -26,216 +26,261 @@ export const testMetadata: TaskMetadata = {
         }
     },
     evaluation_model: {
-        type: "list",
+        type: "record",
+        header: {
+            type: "name",
+        },
         items: [
             {
-                type: "time_usage",
+                key: {
+                    type: "name",
+                    name: {
+                        en: "Compilation",
+                        it: "Compilazione",
+                    },
+                },
                 value: {
-                    type: "ref",
-                    ref: "compilation.time_usage",
+                    type: "record",
+                    header: {
+                        type: "name",
+                    },
+                    items: [
+                        {
+                            key: {
+                                type: "name",
+                                name: {
+                                    default: "Time usage",
+                                }
+                            },
+                            value: {
+                                type: "time_usage",
+                                value: {
+                                    type: "ref",
+                                    ref: "compilation.time_usage",
+                                },
+                            },
+                        }
+                    ]
+                }
+            },
+            {
+                key: {
+                    type: "name",
+                    name: {
+                        en: "Test cases",
+                        it: "Casi di test",
+                    },
+                },
+                value: {
+                    type: "table",
+                    columns: [
+                        {
+                            key: "name",
+                            header: {
+                                type: "name",
+                                name: {
+                                    en: "Test Case",
+                                    it: "Caso di prova",
+                                },
+                            },
+                            model: {
+                                type: "name",
+                            },
+                        },
+                        {
+                            key: "outcome",
+                            header: {
+                                type: "name",
+                                name: {
+                                    default: "Result",
+                                },
+                            },
+                            model: {
+                                type: "outcome",
+                            },
+                        },
+                        {
+                            key: "total_score",
+                            header: {
+                                type: "name",
+                                name: {
+                                    default: "Total score",
+                                },
+                            },
+                            model: {
+                                type: "score",
+                            },
+                        },
+                        {
+                            key: "total_percentage",
+                            header: {
+                                type: "name",
+                                name: {
+                                    default: "Percentage",
+                                },
+                            },
+                            model: {
+                                type: "percentage",
+                            },
+                        },
+                        {
+                            key: "total_memory_usage",
+                            header: {
+                                type: "name",
+                                name: {
+                                    default: "Memory usage",
+                                },
+                            },
+                            model: {
+                                type: "memory_usage",
+                            },
+                        },
+                        {
+                            key: "alice_time_usage",
+                            header: {
+                                type: "name",
+                                name: {
+                                    default: "Time usage (Alice)",
+                                },
+                            },
+                            model: {
+                                type: "time_usage",
+                            },
+                        },
+                        {
+                            key: "bob_time_usage",
+                            header: {
+                                type: "name",
+                                name: {
+                                    default: "Time usage (Bob)",
+                                },
+                            },
+                            model: {
+                                type: "time_usage",
+                            },
+                        },
+                    ],
+                    rows: [
+                        {
+                            cells: {
+                                name: {
+                                    type: "name",
+                                    name: {
+                                        default: "Case 1",
+                                    },
+                                },
+                                outcome: {
+                                    type: "outcome",
+                                    value: {
+                                        type: "ref",
+                                        ref: "test_case.1.outcome",
+                                    },
+                                },
+                                total_score: {
+                                    type: "score",
+                                    value: {
+                                        type: "ref",
+                                        ref: "test_case.1.total_score",
+                                    },
+                                    max_score: 60,
+                                },
+                                total_memory_usage: {
+                                    type: "memory_usage",
+                                    value: {
+                                        type: "ref",
+                                        ref: "test_case.1.total_memory_usage"
+                                    },
+                                },
+                                total_percentage: {
+                                    type: "percentage",
+                                    value: {
+                                        type: "ref",
+                                        ref: "test_case.1.total_percentage",
+                                    },
+                                },
+                                alice_time_usage: {
+                                    type: "time_usage",
+                                    value: {
+                                        type: "ref",
+                                        ref: "test_case.1.alice_time_usage",
+                                    },
+                                },
+                                bob_time_usage: {
+                                    type: "time_usage",
+                                    value: {
+                                        type: "ref",
+                                        ref: "test_case.1.bob_time_usage",
+                                    },
+                                },
+                            },
+                        },
+                        {
+                            cells: {
+                                name: {
+                                    type: "name",
+                                    name: {
+                                        default: "Case 2",
+                                    },
+                                },
+                                outcome: {
+                                    type: "outcome",
+                                    value: {
+                                        type: "ref",
+                                        ref: "test_case.2.outcome",
+                                    },
+                                },
+                                total_score: {
+                                    type: "score",
+                                    value: {
+                                        type: "ref",
+                                        ref: "test_case.2.total_score",
+                                    },
+                                    max_score: 20,
+                                },
+                                total_memory_usage: {
+                                    type: "memory_usage",
+                                    value: {
+                                        type: "ref",
+                                        ref: "test_case.2.total_memory_usage"
+                                    },
+                                },
+                                total_percentage: {
+                                    type: "percentage",
+                                    value: {
+                                        type: "ref",
+                                        ref: "test_case.2.total_percentage",
+                                    },
+                                },
+                                alice_time_usage: {
+                                    type: "time_usage",
+                                    value: {
+                                        type: "ref",
+                                        ref: "test_case.2.alice_time_usage",
+                                    },
+                                },
+                                bob_time_usage: {
+                                    type: "time_usage",
+                                    value: {
+                                        type: "ref",
+                                        ref: "test_case.2.bob_time_usage",
+                                    },
+                                },
+                            },
+                        },
+                    ]
                 },
             },
             {
-                type: "table",
-                columns: [
-                    {
-                        key: "name",
-                        header: {
-                            type: "name",
-                            name: {
-                                en: "Test Case",
-                                it: "Caso di prova",
-                            },
-                        },
-                        model: {
-                            type: "name",
-                        },
-                    },
-                    {
-                        key: "outcome",
-                        header: {
-                            type: "name",
-                            name: {
-                                default: "Result",
-                            },
-                        },
-                        model: {
-                            type: "outcome",
-                        },
-                    },
-                    {
-                        key: "total_score",
-                        header: {
-                            type: "name",
-                            name: {
-                                default: "Total score",
-                            },
-                        },
-                        model: {
-                            type: "score",
-                        },
-                    },
-                    {
-                        key: "total_percentage",
-                        header: {
-                            type: "name",
-                            name: {
-                                default: "Percentage",
-                            },
-                        },
-                        model: {
-                            type: "percentage",
-                        },
-                    },
-                    {
-                        key: "total_memory_usage",
-                        header: {
-                            type: "name",
-                            name: {
-                                default: "Memory usage",
-                            },
-                        },
-                        model: {
-                            type: "memory_usage",
-                        },
-                    },
-                    {
-                        key: "alice_time_usage",
-                        header: {
-                            type: "name",
-                            name: {
-                                default: "Time usage (Alice)",
-                            },
-                        },
-                        model: {
-                            type: "time_usage",
-                        },
-                    },
-                    {
-                        key: "bob_time_usage",
-                        header: {
-                            type: "name",
-                            name: {
-                                default: "Time usage (Bob)",
-                            },
-                        },
-                        model: {
-                            type: "time_usage",
-                        },
-                    },
-                ],
-                rows: [
-                    {
-                        cells: {
-                            name: {
-                                type: "name",
-                                name: {
-                                    default: "Case 1",
-                                },
-                            },
-                            outcome: {
-                                type: "outcome",
-                                value: {
-                                    type: "ref",
-                                    ref: "test_case.1.outcome",
-                                },
-                            },
-                            total_score: {
-                                type: "score",
-                                value: {
-                                    type: "ref",
-                                    ref: "test_case.1.total_score",
-                                },
-                                max_score: 60,
-                            },
-                            total_memory_usage: {
-                                type: "memory_usage",
-                                value: {
-                                    type: "ref",
-                                    ref: "test_case.1.total_memory_usage"
-                                },
-                            },
-                            total_percentage: {
-                                type: "percentage",
-                                value: {
-                                    type: "ref",
-                                    ref: "test_case.1.total_percentage",
-                                },
-                            },
-                            alice_time_usage: {
-                                type: "time_usage",
-                                value: {
-                                    type: "ref",
-                                    ref: "test_case.1.alice_time_usage",
-                                },
-                            },
-                            bob_time_usage: {
-                                type: "time_usage",
-                                value: {
-                                    type: "ref",
-                                    ref: "test_case.1.bob_time_usage",
-                                },
-                            },
-                        },
-                    },
-                    {
-                        cells: {
-                            name: {
-                                type: "name",
-                                name: {
-                                    default: "Case 2",
-                                },
-                            },
-                            outcome: {
-                                type: "outcome",
-                                value: {
-                                    type: "ref",
-                                    ref: "test_case.2.outcome",
-                                },
-                            },
-                            total_score: {
-                                type: "score",
-                                value: {
-                                    type: "ref",
-                                    ref: "test_case.2.total_score",
-                                },
-                                max_score: 20,
-                            },
-                            total_memory_usage: {
-                                type: "memory_usage",
-                                value: {
-                                    type: "ref",
-                                    ref: "test_case.2.total_memory_usage"
-                                },
-                            },
-                            total_percentage: {
-                                type: "percentage",
-                                value: {
-                                    type: "ref",
-                                    ref: "test_case.2.total_percentage",
-                                },
-                            },
-                            alice_time_usage: {
-                                type: "time_usage",
-                                value: {
-                                    type: "ref",
-                                    ref: "test_case.2.alice_time_usage",
-                                },
-                            },
-                            bob_time_usage: {
-                                type: "time_usage",
-                                value: {
-                                    type: "ref",
-                                    ref: "test_case.2.bob_time_usage",
-                                },
-                            },
-                        },
-                    },
-                ]
-            },
-            {
-                type: "text_stream",
-                stream: "stdout",
+                key: {
+                    type: "name",
+                    name: {
+                        default: "stdout"
+                    }
+                },
+                value: {
+                    type: "text_stream",
+                    stream: "stdout",
+                }
             },
         ],
     }

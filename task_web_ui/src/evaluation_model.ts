@@ -44,16 +44,24 @@ export interface MemoryUsageModel {
     value: ValueExpression<MemoryUsage>;
 }
 
-export interface ListModel {
-    type: "list";
-    items: EvaluationModel[];
-}
-
-export interface ValueColumnModel<T extends EvaluationModel> {
+export interface MetaModel<T extends EvaluationModel> {
     type: T["type"];
 }
 
-export type ColumnModel = ValueColumnModel<EvaluationModel>;
+export interface ArrayModel<T extends EvaluationModel> {
+    type: "array";
+    model: MetaModel<T>;
+    items: T[];
+}
+
+export interface RecordModel<T extends EvaluationModel> {
+    type: "record";
+    header: MetaModel<T>;
+    items: {
+        key: T,
+        value: EvaluationModel,
+    }[];
+}
 
 export interface RowModel {
     cells: {
@@ -65,9 +73,9 @@ export interface TableModel {
     type: "table";
     columns: {
         key: string,
-        model: ColumnModel,
+        model: MetaModel<EvaluationModel>,
         header: EvaluationModel,
-     }[];
+    }[];
     rows: RowModel[];
 }
 
@@ -83,7 +91,8 @@ export type EvaluationModel = (
     | PercentageModel
     | TimeUsageModel
     | MemoryUsageModel
-    | ListModel
+    | ArrayModel<any>
+    | RecordModel<any>
     | TableModel
     | TextStreamModel
 );

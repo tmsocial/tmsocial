@@ -1,6 +1,6 @@
 import * as React from "react";
-import { EvaluationValue, Fraction, MemoryUsage, Score, TimeUsage, Outcome } from "./evaluation";
-import { EvaluationModel, ListModel, MemoryUsageModel, PercentageModel, ScoreModel, TableModel, TimeUsageModel, ValueExpression, NameModel, TextStreamModel, OutcomeModel } from "./evaluation_model";
+import { EvaluationValue, Fraction, MemoryUsage, Outcome, Score, TimeUsage } from "./evaluation";
+import { ArrayModel, EvaluationModel, MemoryUsageModel, NameModel, OutcomeModel, PercentageModel, RecordModel, ScoreModel, TableModel, TextStreamModel, TimeUsageModel, ValueExpression } from "./evaluation_model";
 import { EvaluationSummary } from "./evaluation_process";
 
 function l18n<T>(data: Localized<T>) {
@@ -65,12 +65,21 @@ const MemoryUsageView = ({ model, summary }: EvaluationModelViewProps<MemoryUsag
     )
 }
 
-const ListView = ({ model, summary }: EvaluationModelViewProps<ListModel>) => {
+const ArrayView = <T extends EvaluationModel>({ model, summary }: EvaluationModelViewProps<ArrayModel<T>>) => {
     return (
         <ul>
             {model.items.map((item, i) => <li key={i}><EvaluationNodeView model={item} summary={summary} /></li>)}
         </ul>
     );
+}
+
+const RecordView = <T extends EvaluationModel>({ model, summary }: EvaluationModelViewProps<RecordModel<T>>) => {
+    return model.items.map((item, i) => (
+        <section key={i}>
+            <header><h3><EvaluationNodeView model={item.key} summary={summary} /></h3></header>
+            <EvaluationNodeView model={item.value} summary={summary} />
+        </section>
+    ));
 }
 
 const TableView = ({ model, summary }: EvaluationModelViewProps<TableModel>) => {
@@ -114,7 +123,8 @@ const views: {
     percentage: PercentageView,
     time_usage: TimeUsageView,
     memory_usage: MemoryUsageView,
-    list: ListView,
+    record: RecordView,
+    array: ArrayView,
     table: TableView,
     text_stream: TextStreamView,
 };
