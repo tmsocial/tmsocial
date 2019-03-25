@@ -1,4 +1,4 @@
-import { FieldValue, Fraction, Score, TimeUsage, MemoryUsage } from "./evaluation";
+import { EvaluationValue, Fraction, Score, TimeUsage, MemoryUsage } from "./evaluation";
 
 interface AwareLocalized<T> {
     [language: string]: T;
@@ -48,7 +48,7 @@ interface SubmissionForm {
     };
 }
 
-export interface FieldModelBase<T extends FieldValue> {
+export interface FieldModelBase<T extends EvaluationValue> {
     name: string;
 }
 

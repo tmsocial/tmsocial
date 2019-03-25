@@ -1,13 +1,13 @@
 import * as React from "react";
-import { EvaluationSummary, FieldValue, Fraction, MemoryUsage, Score, TimeUsage } from "./evaluation";
+import { EvaluationSummary, EvaluationValue, Fraction, MemoryUsage, Score, TimeUsage } from "./evaluation";
 import { EvaluationModel, FieldModelBase, ListModel, MemoryUsageModel, PercentageModel, ScoreModel, TimeUsageModel } from "./metadata";
 
 abstract class EvaluationModelView<T extends EvaluationModel> extends React.PureComponent<{ model: T, summary: EvaluationSummary }>{
 }
 
-abstract class FieldView<T extends FieldModelBase<U>, U extends FieldValue> extends React.PureComponent<{ model: T, summary: EvaluationSummary }>{
+abstract class FieldView<T extends FieldModelBase<U>, U extends EvaluationValue> extends React.PureComponent<{ model: T, summary: EvaluationSummary }>{
     get value(): U | null {
-        return this.props.summary.fields[this.props.model.name] as U || null;
+        return this.props.summary.values[this.props.model.name] as U || null;
     }
 }
 

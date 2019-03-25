@@ -30,7 +30,7 @@ class MyComponent extends React.Component {
 
     render() {
         return <EvaluationNodeView model={testMetadata.evaluation_model} summary={{
-            fields: this.reducer.value,
+            values: this.reducer.value,
         }} />;
     }
 }

@@ -25,37 +25,37 @@ export interface MemoryUsage {
     memory_usage_bytes: number;
 }
 
-export type FieldValue = Outcome | Score | Fraction | TimeUsage | MemoryUsage;
+export type EvaluationValue = Outcome | Score | Fraction | TimeUsage | MemoryUsage;
 
-export interface ResolveFieldEvent<T extends FieldValue> {
-    type: "resolve_field";
-    path: string;
+export interface ValueEvent<T extends EvaluationValue> {
+    type: "value";
+    key: string;
     value: T;
 }
 
-export type EvaluationEvent = ResolveFieldEvent<any>;
+export type EvaluationEvent = ValueEvent<any>;
 
 export interface EventReducer<T> {
     onEvent(event: EvaluationEvent): void;
     readonly value: T;
 }
 
-export interface FieldSet {
-    readonly [name: string]: FieldValue;
+export interface ValueSet {
+    readonly [key: string]: EvaluationValue;
 }
 
-export class FieldReducer implements EventReducer<FieldSet> {
-    readonly value: { [name: string]: FieldValue } = {};
+export class FieldReducer implements EventReducer<ValueSet> {
+    readonly value: { [key: string]: EvaluationValue } = {};
 
     onEvent(event: EvaluationEvent) {
         switch (event.type) {
-            case "resolve_field":
-                this.value[event.path] = event.value;
+            case "value":
+                this.value[event.key] = event.value;
                 break;
         }
     }
 }
 
 export interface EvaluationSummary {
-    readonly fields: FieldSet;
+    readonly values: ValueSet;
 }
