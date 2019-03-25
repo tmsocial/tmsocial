@@ -1,6 +1,6 @@
 import * as React from "react";
 import { EvaluationValue, Fraction, MemoryUsage, Score, TimeUsage } from "./evaluation";
-import { EvaluationModel, ListModel, MemoryUsageModel, PercentageModel, ScoreModel, TableModel, TimeUsageModel, ValueExpression, NameModel, TextModel } from "./evaluation_model";
+import { EvaluationModel, ListModel, MemoryUsageModel, PercentageModel, ScoreModel, TableModel, TimeUsageModel, ValueExpression, NameModel, TextStreamModel } from "./evaluation_model";
 import { EvaluationSummary } from "./evaluation_process";
 
 function l18n<T>(data: Localized<T>) {
@@ -92,7 +92,7 @@ const TableView = ({ model, summary }: EvaluationModelViewProps<TableModel>) => 
     );
 }
 
-const TextView = ({ model, summary }: EvaluationModelViewProps<TextModel>) => {
+const TextStreamView = ({ model, summary }: EvaluationModelViewProps<TextStreamModel>) => {
     const stream = summary.textStreams[model.stream];
     return (
         <pre>{stream && stream.buffer}</pre>
@@ -109,7 +109,7 @@ const views: {
     memory_usage: MemoryUsageView,
     list: ListView,
     table: TableView,
-    text: TextView,
+    text_stream: TextStreamView,
 };
 
 export class EvaluationNodeView extends React.PureComponent<{ model: EvaluationModel, summary: EvaluationSummary }> {

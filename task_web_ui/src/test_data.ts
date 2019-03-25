@@ -193,7 +193,7 @@ export const testMetadata: TaskMetadata = {
                 },
             },
             {
-                type: "text",
+                type: "text_stream",
                 stream: "stdout",
             },
         ],
