@@ -27,10 +27,9 @@ const NameView = ({ model }: EvaluationModelViewProps<NameModel>) => (
 
 const ScoreView = ({ model, summary }: EvaluationModelViewProps<ScoreModel>) => {
     const value: Score = expr(summary, model.value);
-    if (!value) return null;
     const max_score = model.max_score;
     return (
-        <span className="score">{value.score}{max_score && <React.Fragment> / {max_score}</React.Fragment>}</span>
+        <span className="score">{value && value.score}{max_score && <React.Fragment> / {max_score}</React.Fragment>}</span>
     )
 }
 
