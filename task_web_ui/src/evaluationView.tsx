@@ -11,7 +11,7 @@ abstract class FieldView<T extends FieldModelBase<U>, U extends FieldValue> exte
     }
 }
 
-export class ScoreFieldView extends FieldView<ScoreModel, Score> {
+export class ScoreView extends FieldView<ScoreModel, Score> {
     render() {
         if (!this.value) return null; // TODO: use a wrapper component for fields
         const max_score = this.props.model.max_score;
@@ -23,7 +23,7 @@ export class ScoreFieldView extends FieldView<ScoreModel, Score> {
     }
 }
 
-export class PercentageFieldView extends FieldView<PercentageModel, Fraction> {
+export class PercentageView extends FieldView<PercentageModel, Fraction> {
     render() {
         if (!this.value) return null;
         return (
@@ -32,7 +32,7 @@ export class PercentageFieldView extends FieldView<PercentageModel, Fraction> {
     }
 }
 
-export class TimeUsageFieldView extends FieldView<TimeUsageModel, TimeUsage> {
+export class TimeUsageView extends FieldView<TimeUsageModel, TimeUsage> {
     render() {
         if (!this.value) return null;
         return (
@@ -41,7 +41,7 @@ export class TimeUsageFieldView extends FieldView<TimeUsageModel, TimeUsage> {
     }
 }
 
-export class MemoryUsageFieldView extends FieldView<MemoryUsageModel, MemoryUsage> {
+export class MemoryUsageView extends FieldView<MemoryUsageModel, MemoryUsage> {
     render() {
         if (!this.value) return null;
         return (
@@ -64,17 +64,15 @@ export class ListView extends EvaluationModelView<ListModel> {
 const views: {
     [T in EvaluationModel["type"]]: any;
 } = {
-    "score": ScoreFieldView,
-    "percentage": PercentageFieldView,
-    "time_usage": TimeUsageFieldView,
-    "memory_usage": MemoryUsageFieldView,
+    "score": ScoreView,
+    "percentage": PercentageView,
+    "time_usage": TimeUsageView,
+    "memory_usage": MemoryUsageView,
     "list": ListView,
 };
 
 export class EvaluationNodeView extends React.PureComponent<{ model: EvaluationModel, summary: EvaluationSummary }> {
     render() {
-        console.log("rendering", this.props);
         return React.createElement(views[this.props.model.type], this.props);
     }
 }
-
