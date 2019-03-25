@@ -51,7 +51,7 @@ export class MemoryUsageFieldView extends FieldView<MemoryUsageViewModel, Memory
 export class ScopeView extends EvaluationModelView<ScopeModel> {
     render() {
         return (
-            <EvaluationView
+            <EvaluationNodeView
                 model={this.props.model.child}
                 summary={{ fields: this.props.summary.fields[this.props.model.key] || {} }}
             />
@@ -62,7 +62,7 @@ export class ScopeView extends EvaluationModelView<ScopeModel> {
 export class ArrayView extends EvaluationModelView<ArrayModel> {
     render() {
         return this.props.model.keys.map((key) => (
-            <EvaluationView
+            <EvaluationNodeView
                 key={key}
                 model={this.props.model.child_model}
                 summary={{ fields: this.props.summary.fields[key] || {} }}
@@ -75,7 +75,7 @@ export class RecordView extends EvaluationModelView<RecordModel> {
     render() {
         return (
             <ul>
-                {this.props.model.items.map((item, i) => <li key={i}><EvaluationView model={item} summary={this.props.summary} /></li>)}
+                {this.props.model.items.map((item, i) => <li key={i}><EvaluationNodeView model={item} summary={this.props.summary} /></li>)}
             </ul>
         );
     }
@@ -93,9 +93,10 @@ const views: {
     "record": RecordView,
 };
 
-export class EvaluationView extends React.PureComponent<{ model: EvaluationModel, summary: EvaluationSummary }> {
+export class EvaluationNodeView extends React.PureComponent<{ model: EvaluationModel, summary: EvaluationSummary }> {
     render() {
         console.log("rendering", this.props);
         return React.createElement(views[this.props.model.type], this.props);
     }
 }
+

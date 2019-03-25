@@ -1,18 +1,38 @@
 import * as React from "react";
 import ReactDOM from "react-dom";
 
-import { EvaluationView } from "./evaluationView";
+import { EvaluationNodeView } from "./evaluationView";
 import { testMetadata, testEvaluation } from "./testData";
 import { FieldReducer } from "./evaluation";
 
-const reducer = new FieldReducer();
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-for (const e of testEvaluation) {
-    reducer.onEvent(e);
+async function* events() {
+    for (const e of testEvaluation) {
+        await sleep(500);
+        yield e;
+    }
 }
 
-const summary = {
-    fields: reducer.value,
+class MyComponent extends React.Component {
+    reducer = new FieldReducer();
+
+    componentDidMount() {
+        this.load();
+    }
+
+    private async load() {
+        for await (const e of events()) {
+            this.reducer.onEvent(e);
+            this.forceUpdate();
+        }
+    }
+
+    render() {
+        return <EvaluationNodeView model={testMetadata.evaluation_model} summary={{
+            fields: this.reducer.value,
+        }} />;
+    }
 }
 
-ReactDOM.render(<EvaluationView model={testMetadata.evaluation_model} summary={summary} />, document.getElementById("container"));
+ReactDOM.render(<MyComponent />, document.getElementById("container"));
