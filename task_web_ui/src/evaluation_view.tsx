@@ -1,6 +1,6 @@
 import * as React from "react";
-import { EvaluationValue, Fraction, MemoryUsage, Score, TimeUsage } from "./evaluation";
-import { EvaluationModel, ListModel, MemoryUsageModel, PercentageModel, ScoreModel, TableModel, TimeUsageModel, ValueExpression, NameModel, TextStreamModel } from "./evaluation_model";
+import { EvaluationValue, Fraction, MemoryUsage, Score, TimeUsage, Outcome } from "./evaluation";
+import { EvaluationModel, ListModel, MemoryUsageModel, PercentageModel, ScoreModel, TableModel, TimeUsageModel, ValueExpression, NameModel, TextStreamModel, OutcomeModel } from "./evaluation_model";
 import { EvaluationSummary } from "./evaluation_process";
 
 function l18n<T>(data: Localized<T>) {
@@ -24,6 +24,13 @@ interface EvaluationModelViewProps<T extends EvaluationModel> {
 const NameView = ({ model }: EvaluationModelViewProps<NameModel>) => (
     <span className="name">{l18n(model.name)}</span>
 );
+
+const OutcomeView = ({ model, summary }: EvaluationModelViewProps<OutcomeModel>) => {
+    const value: Outcome = expr(summary, model.value);
+    return (
+        <span className="score">{value && value.outcome}</span>
+    )
+}
 
 const ScoreView = ({ model, summary }: EvaluationModelViewProps<ScoreModel>) => {
     const value: Score = expr(summary, model.value);
@@ -102,6 +109,7 @@ const views: {
     [T in EvaluationModel["type"]]: React.JSXElementConstructor<EvaluationModelViewProps<any>>;
 } = {
     name: NameView,
+    outcome: OutcomeView,
     score: ScoreView,
     percentage: PercentageView,
     time_usage: TimeUsageView,

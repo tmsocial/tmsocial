@@ -1,4 +1,4 @@
-import { EvaluationValue, Score, Fraction, TimeUsage, MemoryUsage } from "./evaluation";
+import { EvaluationValue, Score, Fraction, TimeUsage, MemoryUsage, Outcome } from "./evaluation";
 
 export interface ValueReference {
     type: "ref";
@@ -15,6 +15,11 @@ export type ValueExpression<T extends EvaluationValue> = ConstantValue<T> | Valu
 export interface NameModel {
     type: "name";
     name: Localized<string>;
+}
+
+export interface OutcomeModel {
+    type: "outcome";
+    value: ValueExpression<Outcome>;
 }
 
 export interface ScoreModel {
@@ -69,6 +74,7 @@ export interface TextStreamModel {
 
 export type EvaluationModel = (
     | NameModel
+    | OutcomeModel
     | ScoreModel
     | PercentageModel
     | TimeUsageModel

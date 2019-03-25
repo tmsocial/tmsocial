@@ -45,6 +45,12 @@ export const testMetadata: TaskMetadata = {
                         }
                     },
                     {
+                        key: "outcome",
+                        model: {
+                            type: "outcome",
+                        }
+                    },
+                    {
                         key: "total_score",
                         model: {
                             type: "score",
@@ -83,6 +89,13 @@ export const testMetadata: TaskMetadata = {
                                 name: {
                                     en: "Test case 1",
                                     it: "Caso di prova 1",
+                                }
+                            },
+                            outcome: {
+                                type: "outcome",
+                                value: {
+                                    type: "ref",
+                                    ref: "test_case.1.outcome",
                                 }
                             },
                             total_score: {
@@ -130,6 +143,13 @@ export const testMetadata: TaskMetadata = {
                                 name: {
                                     en: "Test case 2",
                                     it: "Caso di prova 2",
+                                }
+                            },
+                            outcome: {
+                                type: "outcome",
+                                value: {
+                                    type: "ref",
+                                    ref: "test_case.2.outcome",
                                 }
                             },
                             total_score: {
@@ -264,6 +284,22 @@ export const testEvaluation: EvaluationEvent[] = [
         value: {
             type: "memory_usage",
             memory_usage_bytes: 123456,
+        },
+    },
+    {
+        type: "value",
+        key: "test_case.1.outcome",
+        value: {
+            type: "outcome",
+            outcome: "success",
+        },
+    },
+    {
+        type: "value",
+        key: "test_case.2.outcome",
+        value: {
+            type: "outcome",
+            outcome: "partial",
         },
     },
     {
