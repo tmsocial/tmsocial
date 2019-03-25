@@ -39,15 +39,11 @@ export interface ListModel {
     items: EvaluationModel[];
 }
 
-export interface ScoreColumnModel {
-    type: "score";
+export interface ValueColumnModel<T extends EvaluationModel> {
+    type: T["type"];
 }
 
-export interface TimeUsageColumnModel {
-    type: "time_usage";
-}
-
-export type ColumnModel = ScoreColumnModel | TimeUsageColumnModel;
+export type ColumnModel = ValueColumnModel<EvaluationModel>;
 
 export interface RowModel {
     cells: {
