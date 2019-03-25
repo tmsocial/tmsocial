@@ -27,13 +27,13 @@ export interface MemoryUsage {
 
 export type FieldValue = Outcome | Score | Fraction | TimeUsage | MemoryUsage;
 
-export interface SetFieldEvent<T extends FieldValue> {
-    type: "set_field";
+export interface ResolveFieldEvent<T extends FieldValue> {
+    type: "resolve_field";
     path: (string | number)[];
     value: T;
 }
 
-export type EvaluationEvent = SetFieldEvent<any>;
+export type EvaluationEvent = ResolveFieldEvent<any>;
 
 export interface EventReducer<T> {
     onEvent(event: EvaluationEvent): void;
@@ -49,7 +49,7 @@ export class FieldReducer implements EventReducer<FieldSet> {
 
     onEvent(event: EvaluationEvent) {
         switch (event.type) {
-            case "set_field":
+            case "resolve_field":
                 let value = this.value;
                 for (let i = 0; i < event.path.length - 1; i++) {
                     const key = event.path[i];

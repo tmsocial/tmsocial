@@ -14,8 +14,11 @@ abstract class FieldView<T extends FieldModelBase<U>, U extends FieldValue> exte
 export class ScoreFieldView extends FieldView<ScoreViewModel, Score> {
     render() {
         if (!this.value) return null; // TODO: use a wrapper component for fields
+        const max_score = this.props.model.max_score;
         return (
-            <span className="score">{this.value.score}</span>
+            <span className="score">{this.value.score}{
+                max_score && <React.Fragment> / {max_score}</React.Fragment>
+            }</span>
         )
     }
 }

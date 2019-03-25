@@ -54,6 +54,7 @@ export interface FieldModelBase<T extends FieldValue> {
 
 export interface ScoreViewModel extends FieldModelBase<Score> {
     type: "score";
+    max_score?: number;
 }
 
 export interface PercentageViewModel extends FieldModelBase<Fraction> {

@@ -1,4 +1,4 @@
-import { SetFieldEvent, Score, EvaluationEvent } from "./evaluation";
+import { ResolveFieldEvent, Score, EvaluationEvent } from "./evaluation";
 import { TaskMetadata } from "./metadata";
 
 export const testMetadata: TaskMetadata = {
@@ -53,6 +53,7 @@ export const testMetadata: TaskMetadata = {
                             {
                                 type: "score",
                                 name: "my_score_field",
+                                max_score: 100,
                             },
                             {
                                 type: "percentage",
@@ -77,7 +78,7 @@ export const testMetadata: TaskMetadata = {
 
 export const testEvaluation: EvaluationEvent[] = [
     {
-        type: "set_field",
+        type: "resolve_field",
         path: ["compilation", "time_usage"],
         value: {
             type: "time_usage",
@@ -85,7 +86,7 @@ export const testEvaluation: EvaluationEvent[] = [
         },
     },
     {
-        type: "set_field",
+        type: "resolve_field",
         path: ["test_case", 1, "my_score_field"],
         value: {
             type: "score",
@@ -93,7 +94,7 @@ export const testEvaluation: EvaluationEvent[] = [
         },
     },
     {
-        type: "set_field",
+        type: "resolve_field",
         path: ["test_case", 1, "my_percentage_field"],
         value: {
             type: "fraction",
@@ -101,7 +102,7 @@ export const testEvaluation: EvaluationEvent[] = [
         },
     },
     {
-        type: "set_field",
+        type: "resolve_field",
         path: ["test_case", 2, "my_percentage_field"],
         value: {
             type: "fraction",
@@ -109,7 +110,7 @@ export const testEvaluation: EvaluationEvent[] = [
         },
     },
     {
-        type: "set_field",
+        type: "resolve_field",
         path: ["test_case", 2, "my_time_usage_field"],
         value: {
             type: "time_usage",
@@ -117,7 +118,7 @@ export const testEvaluation: EvaluationEvent[] = [
         },
     },
     {
-        type: "set_field",
+        type: "resolve_field",
         path: ["test_case", 2, "my_memory_usage_field"],
         value: {
             type: "memory_usage",
