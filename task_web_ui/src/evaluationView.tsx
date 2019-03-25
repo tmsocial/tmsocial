@@ -1,6 +1,6 @@
 import * as React from "react";
 import { EvaluationSummary, FieldValue, Fraction, MemoryUsage, Score, TimeUsage } from "./evaluation";
-import { EvaluationModel, FieldModelBase, ListModel, MemoryUsageViewModel, PercentageViewModel, ScoreViewModel, TimeUsageViewModel } from "./metadata";
+import { EvaluationModel, FieldModelBase, ListModel, MemoryUsageModel, PercentageModel, ScoreModel, TimeUsageModel } from "./metadata";
 
 abstract class EvaluationModelView<T extends EvaluationModel> extends React.PureComponent<{ model: T, summary: EvaluationSummary }>{
 }
@@ -11,7 +11,7 @@ abstract class FieldView<T extends FieldModelBase<U>, U extends FieldValue> exte
     }
 }
 
-export class ScoreFieldView extends FieldView<ScoreViewModel, Score> {
+export class ScoreFieldView extends FieldView<ScoreModel, Score> {
     render() {
         if (!this.value) return null; // TODO: use a wrapper component for fields
         const max_score = this.props.model.max_score;
@@ -23,7 +23,7 @@ export class ScoreFieldView extends FieldView<ScoreViewModel, Score> {
     }
 }
 
-export class PercentageFieldView extends FieldView<PercentageViewModel, Fraction> {
+export class PercentageFieldView extends FieldView<PercentageModel, Fraction> {
     render() {
         if (!this.value) return null;
         return (
@@ -32,7 +32,7 @@ export class PercentageFieldView extends FieldView<PercentageViewModel, Fraction
     }
 }
 
-export class TimeUsageFieldView extends FieldView<TimeUsageViewModel, TimeUsage> {
+export class TimeUsageFieldView extends FieldView<TimeUsageModel, TimeUsage> {
     render() {
         if (!this.value) return null;
         return (
@@ -41,7 +41,7 @@ export class TimeUsageFieldView extends FieldView<TimeUsageViewModel, TimeUsage>
     }
 }
 
-export class MemoryUsageFieldView extends FieldView<MemoryUsageViewModel, MemoryUsage> {
+export class MemoryUsageFieldView extends FieldView<MemoryUsageModel, MemoryUsage> {
     render() {
         if (!this.value) return null;
         return (

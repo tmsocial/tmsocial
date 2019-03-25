@@ -52,21 +52,21 @@ export interface FieldModelBase<T extends FieldValue> {
     name: string;
 }
 
-export interface ScoreViewModel extends FieldModelBase<Score> {
+export interface ScoreModel extends FieldModelBase<Score> {
     type: "score";
     max_score?: number;
 }
 
-export interface PercentageViewModel extends FieldModelBase<Fraction> {
+export interface PercentageModel extends FieldModelBase<Fraction> {
     type: "percentage";
     precision?: number;
 }
 
-export interface TimeUsageViewModel extends FieldModelBase<TimeUsage> {
+export interface TimeUsageModel extends FieldModelBase<TimeUsage> {
     type: "time_usage";
 }
 
-export interface MemoryUsageViewModel extends FieldModelBase<MemoryUsage> {
+export interface MemoryUsageModel extends FieldModelBase<MemoryUsage> {
     type: "memory_usage";
 }
 
@@ -75,8 +75,8 @@ export interface ListModel {
     items: EvaluationModel[];
 }
 
-export type FieldViewModel = ScoreViewModel | PercentageViewModel | TimeUsageViewModel | MemoryUsageViewModel;
-export type EvaluationModel = FieldViewModel | ListModel;
+export type FieldModel = ScoreModel | PercentageModel | TimeUsageModel | MemoryUsageModel;
+export type EvaluationModel = FieldModel | ListModel;
 
 export interface TaskMetadata {
     title: Localized<string>;
