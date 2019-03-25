@@ -1,6 +1,6 @@
 import * as React from "react";
 import { EvaluationSummary, EvaluationValue, Fraction, MemoryUsage, Score, TimeUsage } from "./evaluation";
-import { EvaluationModel, FieldModelBase, ListModel, MemoryUsageModel, PercentageModel, ScoreModel, TimeUsageModel } from "./metadata";
+import { EvaluationModel, FieldModelBase, ListModel, MemoryUsageModel, PercentageModel, ScoreModel, TimeUsageModel, TableModel } from "./metadata";
 
 abstract class EvaluationModelView<T extends EvaluationModel> extends React.PureComponent<{ model: T, summary: EvaluationSummary }>{
 }
@@ -61,14 +61,42 @@ export class ListView extends EvaluationModelView<ListModel> {
     }
 }
 
+export class TableView extends EvaluationModelView<TableModel> {
+    render() {
+        return (
+            <table>
+                <thead>
+                    <tr>
+                        {this.props.model.columns.map((column, j) => (
+                            <th key={j}><code>{column.key} (for debug)</code></th>
+                        ))}
+                    </tr>
+                </thead>
+                <tbody>
+                    {this.props.model.rows.map((row, i) => (
+                        <tr key={i}>
+                            {this.props.model.columns.map((column, j) => (
+                                <td key={j}>
+                                    <EvaluationNodeView model={row.cells[column.key]} summary={this.props.summary} />
+                                </td>
+                            ))}
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        );
+    }
+}
+
 const views: {
     [T in EvaluationModel["type"]]: any;
 } = {
-    "score": ScoreView,
-    "percentage": PercentageView,
-    "time_usage": TimeUsageView,
-    "memory_usage": MemoryUsageView,
-    "list": ListView,
+    score: ScoreView,
+    percentage: PercentageView,
+    time_usage: TimeUsageView,
+    memory_usage: MemoryUsageView,
+    list: ListView,
+    table: TableView,
 };
 
 export class EvaluationNodeView extends React.PureComponent<{ model: EvaluationModel, summary: EvaluationSummary }> {

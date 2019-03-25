@@ -33,6 +33,65 @@ export const testMetadata: TaskMetadata = {
                 name: "compilation.time_usage",
             },
             {
+                type: "table",
+                columns: [
+                    {
+                        key: "total_score",
+                        model: {
+                            type: "score",
+                        }
+                    },
+                    {
+                        key: "alice_time_usage",
+                        model: {
+                            type: "time_usage",
+                        }
+                    },
+                    {
+                        key: "bob_time_usage",
+                        model: {
+                            type: "time_usage",
+                        }
+                    },
+                ],
+                rows: [
+                    {
+                        cells: {
+                            total_score: {
+                                type: "score",
+                                name: "test_case.1.total_score",
+                                max_score: 60,
+                            },
+                            alice_time_usage: {
+                                type: "time_usage",
+                                name: "test_case.1.alice_time_usage",
+                            },
+                            bob_time_usage: {
+                                type: "time_usage",
+                                name: "test_case.1.bob_time_usage",
+                            },
+                        },
+                    },
+                    {
+                        cells: {
+                            total_score: {
+                                type: "score",
+                                name: "test_case.2.total_score",
+                                max_score: 20,
+                            },
+                            alice_time_usage: {
+                                type: "time_usage",
+                                name: "test_case.2.alice_time_usage",
+                            },
+                            bob_time_usage: {
+                                type: "time_usage",
+                                name: "test_case.2.bob_time_usage",
+                            },
+                        },
+                    },
+                ]
+            },
+            {
                 type: "score",
                 name: "test_case.1.my_score",
                 max_score: 60,
@@ -91,6 +150,30 @@ export const testEvaluation: EvaluationEvent[] = [
     },
     {
         type: "value",
+        key: "test_case.1.total_score",
+        value: {
+            type: "score",
+            score: 10.0,
+        },
+    },
+    {
+        type: "value",
+        key: "test_case.1.alice_time_usage",
+        value: {
+            type: "time_usage",
+            time_usage_seconds: 0.2,
+        },
+    },
+    {
+        type: "value",
+        key: "test_case.1.bob_time_usage",
+        value: {
+            type: "time_usage",
+            time_usage_seconds: 0.1,
+        },
+    },
+    {
+        type: "value",
         key: "test_case.1.my_percentage",
         value: {
             type: "fraction",
@@ -111,6 +194,14 @@ export const testEvaluation: EvaluationEvent[] = [
         value: {
             type: "time_usage",
             time_usage_seconds: 0.1234,
+        },
+    },
+    {
+        type: "value",
+        key: "test_case.2.bob_time_usage",
+        value: {
+            type: "time_usage",
+            time_usage_seconds: 2.3,
         },
     },
     {

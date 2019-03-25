@@ -75,8 +75,30 @@ export interface ListModel {
     items: EvaluationModel[];
 }
 
+export interface ScoreColumnModel {
+    type: "score";
+}
+
+export interface TimeUsageColumnModel {
+    type: "time_usage";
+}
+
+export type ColumnModel = ScoreColumnModel | TimeUsageColumnModel;
+
+export interface RowModel {
+    cells: {
+        [column: string]: EvaluationModel;
+    },
+}
+
+export interface TableModel {
+    type: "table";
+    columns: { key: string, model: ColumnModel }[];
+    rows: RowModel[];
+}
+
 export type FieldModel = ScoreModel | PercentageModel | TimeUsageModel | MemoryUsageModel;
-export type EvaluationModel = FieldModel | ListModel;
+export type EvaluationModel = FieldModel | ListModel | TableModel;
 
 export interface TaskMetadata {
     title: Localized<string>;
