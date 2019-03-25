@@ -3,7 +3,7 @@ import ReactDOM from "react-dom";
 
 import { EvaluationNodeView } from "./evaluationView";
 import { testMetadata, testEvaluation } from "./testData";
-import { FieldReducer } from "./evaluation";
+import { ValueReducer } from "./evaluation";
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -15,7 +15,7 @@ async function* events() {
 }
 
 class MyComponent extends React.Component {
-    reducer = new FieldReducer();
+    reducer = new ValueReducer();
 
     componentDidMount() {
         this.load();

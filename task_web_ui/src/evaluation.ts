@@ -44,7 +44,7 @@ export interface ValueSet {
     readonly [key: string]: EvaluationValue;
 }
 
-export class FieldReducer implements EventReducer<ValueSet> {
+export class ValueReducer implements EventReducer<ValueSet> {
     readonly value: { [key: string]: EvaluationValue } = {};
 
     onEvent(event: EvaluationEvent) {
