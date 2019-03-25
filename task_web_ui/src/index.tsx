@@ -3,7 +3,7 @@ import ReactDOM from "react-dom";
 
 import { EvaluationNodeView } from "./evaluation_view";
 import { testMetadata, testEvaluation } from "./test_data";
-import { ValueReducer } from "./evaluation_process";
+import { ValueReducer, TextReducer, EvaluationSummary } from "./evaluation_process";
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -15,7 +15,10 @@ async function* events() {
 }
 
 class MyComponent extends React.Component {
-    reducer = new ValueReducer();
+    reducers = {
+        values: new ValueReducer(),
+        textStreams: new TextReducer(),
+    };
 
     componentDidMount() {
         this.load();    
@@ -23,15 +26,22 @@ class MyComponent extends React.Component {
 
     private async load() {
         for await (const e of events()) {
-            this.reducer.onEvent(e);
+            for (const k of Object.keys(this.reducers)) {
+                this.reducers[k].onEvent(e);
+            }
             this.forceUpdate();
         }
     }
 
     render() {
-        return <EvaluationNodeView model={testMetadata.evaluation_model} summary={{
-            values: this.reducer.value,
-        }} />;
+        const summary = {};
+
+        for (const k of Object.keys(this.reducers)) {
+            summary[k] = this.reducers[k].value;
+        }
+
+
+        return <EvaluationNodeView model={testMetadata.evaluation_model} summary={summary as EvaluationSummary} />;
     }
 }
 

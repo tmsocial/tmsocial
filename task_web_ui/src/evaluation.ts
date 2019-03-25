@@ -33,4 +33,10 @@ export interface ValueEvent<T extends EvaluationValue> {
     value: T;
 }
 
-export type EvaluationEvent = ValueEvent<EvaluationValue>;
+export interface TextEvent {
+    type: "text",
+    stream: string;
+    text: string;
+}
+
+export type EvaluationEvent = ValueEvent<EvaluationValue> | TextEvent;

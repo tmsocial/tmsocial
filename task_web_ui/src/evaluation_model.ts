@@ -62,6 +62,11 @@ export interface TableModel {
     rows: RowModel[];
 }
 
+export interface TextModel {
+    type: "text";
+    stream: string;
+}
+
 export type EvaluationModel = (
     | NameModel
     | ScoreModel
@@ -70,5 +75,6 @@ export type EvaluationModel = (
     | MemoryUsageModel
     | ListModel
     | TableModel
+    | TextModel
 );
 

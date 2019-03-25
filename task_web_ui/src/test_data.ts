@@ -192,11 +192,20 @@ export const testMetadata: TaskMetadata = {
                     ref: "test_case.2.my_memory_usage",
                 },
             },
+            {
+                type: "text",
+                stream: "stdout",
+            },
         ],
     }
 };
 
 export const testEvaluation: EvaluationEvent[] = [
+    {
+        type: "text",
+        stream: "stdout",
+        text: "Begin evaluation...\n",
+    },
     {
         type: "value",
         key: "compilation.time_usage",
@@ -276,5 +285,10 @@ export const testEvaluation: EvaluationEvent[] = [
             type: "memory_usage",
             memory_usage_bytes: 123456,
         },
+    },
+    {
+        type: "text",
+        stream: "stdout",
+        text: "Evaluation finished\n",
     },
 ]
