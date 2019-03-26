@@ -28,29 +28,6 @@ const NameView = ({ model }: EvaluationModelViewProps<NameModel>) => (
     <span className="name">{l18n(model.name)}</span>
 );
 
-const OutcomeView = ({ model, summary }: EvaluationModelViewProps<OutcomeModel>) => {
-    const value: Outcome | null = expr(summary, model.value);
-    return (
-        <span className="score">{value && value.outcome}</span>
-    )
-}
-
-const ScoreView = ({ model, summary }: EvaluationModelViewProps<ScoreModel>) => {
-    const value: Score | null = expr(summary, model.value);
-    const max_score = model.max_score;
-    return (
-        <span className="score">{value && value.score}{max_score && <React.Fragment> / {max_score}</React.Fragment>}</span>
-    )
-}
-
-const PercentageView = ({ model, summary }: EvaluationModelViewProps<PercentageModel>) => {
-    const value: Fraction | null = expr(summary, model.value);
-    if (!value) return null;
-    return (
-        <span className="percentage">{(value.fraction * 100).toFixed(model.precision || 0)}%</span>
-    )
-}
-
 const TableView = ({ model, summary }: EvaluationModelViewProps<TableModel>) => {
     return (
         <table>
@@ -80,9 +57,6 @@ const views: {
     [T in EvaluationModel["type"]]: React.JSXElementConstructor<EvaluationModelViewProps<any>>;
 } = {
     name: NameView,
-    outcome: OutcomeView,
-    score: ScoreView,
-    percentage: PercentageView,
     table: TableView,
     text_stream: TextStreamView,
 };

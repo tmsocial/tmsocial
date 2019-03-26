@@ -35,6 +35,12 @@ export const testMetadata: TaskMetadata = {
                 {
                     type: "time_usage",
                 },
+                {
+                    type: "score",
+                },
+                {
+                    type: "percentage",
+                },
             ],
             groups: [
                 {
@@ -52,6 +58,20 @@ export const testMetadata: TaskMetadata = {
                                         type: "ref",
                                         ref: "my_time_usage"
                                     }
+                                },
+                                {
+                                    value: {
+                                        type: "ref",
+                                        ref: "my_score"
+                                    },
+                                    max_score: 10,
+                                },
+                                {
+                                    value: {
+                                        type: "ref",
+                                        ref: "my_percentage"
+                                    },
+                                    precision: 1,
                                 },
                             ]
                         }
@@ -82,6 +102,22 @@ export const testEvaluation: EvaluationEvent[] = [
         value: {
             type: "time_usage",
             time_usage_seconds: 2.4,
+        },
+    },
+    {
+        type: "value",
+        key: "my_score",
+        value: {
+            type: "score",
+            score: 2.4,
+        },
+    },
+    {
+        type: "value",
+        key: "my_percentage",
+        value: {
+            type: "fraction",
+            fraction: 0.5,
         },
     },
     {

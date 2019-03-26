@@ -55,9 +55,6 @@ export interface TextStreamModel {
 
 export type EvaluationModel = (
     | NameModel
-    | OutcomeModel
-    | ScoreModel
-    | PercentageModel
     | TableModel
     | TextStreamModel
 );
