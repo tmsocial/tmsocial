@@ -1,11 +1,11 @@
 import * as React from "react";
 import { EvaluationValue, MemoryUsage, TimeUsage, Outcome, Score, Fraction } from "./evaluation";
 import { EvaluationSummary } from "./evaluation_process";
-import { expr } from "./evaluation_view";
 import { EvaluationSection } from "./section";
 import { Cell, Column, MemoryUsageColumn, Table, TimeUsageColumn, ValueCell, ScoreCell, PercentageCell, ScoreColumn, PercentageColumn } from "./table";
+import { evaluateExpression } from "./section_view";
 
-interface EvaluationSectionViewProps<T extends EvaluationSection> {
+export interface EvaluationSectionViewProps<T extends EvaluationSection> {
     section: T,
     summary: EvaluationSummary,
 }
@@ -22,7 +22,7 @@ const wrapValue = <T extends EvaluationValue, U>(value: T | null, mapper: (value
 
 const TimeUsageCellView = ({ cell, summary }: CellViewProps<TimeUsageColumn, ValueCell<TimeUsage>>) => (
     <td>
-        {wrapValue(expr(summary, cell.value), v => (
+        {wrapValue(evaluateExpression(summary, cell.value), v => (
             <React.Fragment>{v.time_usage_seconds.toFixed(3)} s</React.Fragment>
         ))}
     </td>
@@ -30,7 +30,7 @@ const TimeUsageCellView = ({ cell, summary }: CellViewProps<TimeUsageColumn, Val
 
 const MemoryUsageCellView = ({ cell, summary }: CellViewProps<MemoryUsageColumn, ValueCell<MemoryUsage>>) => (
     <td>
-        {wrapValue(expr(summary, cell.value), v => (
+        {wrapValue(evaluateExpression(summary, cell.value), v => (
             <React.Fragment>{(v.memory_usage_bytes / 1e3).toFixed()} KB</React.Fragment>
         ))}
     </td>
@@ -38,7 +38,7 @@ const MemoryUsageCellView = ({ cell, summary }: CellViewProps<MemoryUsageColumn,
 
 const ScoreCellView = ({ cell, summary }: CellViewProps<ScoreColumn, ScoreCell>) => (
     <td>
-        {wrapValue(expr(summary, cell.value), v => (
+        {wrapValue(evaluateExpression(summary, cell.value), v => (
             <React.Fragment>{v.score}</React.Fragment>
         ))}{"max_score" in cell && <React.Fragment> / {cell.max_score}</React.Fragment>}
     </td>
@@ -46,7 +46,7 @@ const ScoreCellView = ({ cell, summary }: CellViewProps<ScoreColumn, ScoreCell>)
 
 const PercentageCellView = ({ cell, summary }: CellViewProps<PercentageColumn, PercentageCell>) => (
     <td>
-        {wrapValue(expr(summary, cell.value), v => (
+        {wrapValue(evaluateExpression(summary, cell.value), v => (
             <React.Fragment>{(v.fraction * 100).toFixed("precision" in cell ? cell.precision : 0)}%</React.Fragment>
         ))}
     </td>

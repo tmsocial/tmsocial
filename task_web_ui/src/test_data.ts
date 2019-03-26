@@ -78,7 +78,11 @@ export const testMetadata: TaskMetadata = {
                     ]
                 }
             ]
-        }
+        },
+        {
+            type: "text_stream",
+            stream: "stdout",
+        },
     ],
 };
 

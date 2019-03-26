@@ -2,12 +2,22 @@ import * as React from 'react';
 import { EvaluationEvent } from "./evaluation";
 import { EvaluationReducer } from './evaluation_process';
 import { TaskMetadata } from './metadata';
+import { EvaluationSection } from './section';
+import { Table } from './table';
 import { TableView } from './table_view';
+import { TextStreamView } from './text_stream_view';
 
 type Props = {
     events: AsyncIterableIterator<EvaluationEvent> | Iterable<EvaluationEvent>;
     metadata: TaskMetadata;
 };
+
+const sectionViews: {
+    [K in EvaluationSection["type"]]: React.JSXElementConstructor<any>
+} = {
+    table: TableView,
+    text_stream: TextStreamView,
+}
 
 export default class Component extends React.Component<Props> {
     reducer = new EvaluationReducer();
@@ -28,6 +38,14 @@ export default class Component extends React.Component<Props> {
     }
 
     render() {
-        return <TableView section={this.props.metadata.evaluation_sections[0]} summary={this.reducer} />;
+        return (
+            <React.Fragment>
+                {this.props.metadata.evaluation_sections.map((section, i) => (
+                    React.createElement(sectionViews[section.type], {
+                        section, summary: this.reducer
+                    })
+                ))}
+            </React.Fragment>
+        );
     }
 }
