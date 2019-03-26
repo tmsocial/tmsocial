@@ -4,9 +4,10 @@ import { EvaluationReducer } from "./evaluation_process";
 import { EvaluationNodeView } from "./evaluation_view";
 import { testEvaluation, testMetadata } from "./test_data";
 import Component from "./component";
+import { TableView } from "./table_view";
 
 
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function* events() {
     for (const e of testEvaluation) {
@@ -30,7 +31,7 @@ class MyComponent extends React.Component {
     }
 
     render() {
-        return <EvaluationNodeView models={testMetadata.evaluation_document} summary={this.reducer} />;
+        return <TableView section={testMetadata.evaluation_sections[0]} summary={this.reducer} />;
     }
 }
 

@@ -25,6 +25,32 @@ export const testMetadata: TaskMetadata = {
             }
         }
     },
+    evaluation_sections: [
+        {
+            type: "table",
+            columns: [
+                {
+                    type: "memory_usage",
+                }
+            ],
+            groups: [
+                {
+                    rows: [
+                        {
+                            cells: [
+                                {
+                                    value: {
+                                        type: "ref",
+                                        ref: "my_memory_usage"
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
     evaluation_document: [
         {
             type: "time_usage",

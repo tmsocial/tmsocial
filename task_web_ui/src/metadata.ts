@@ -1,4 +1,5 @@
 import { EvaluationModel } from "./evaluation_model";
+import { EvaluationSection } from "./section";
 
 interface PdfStatement {
     type: "pdf";
@@ -43,5 +44,5 @@ export interface TaskMetadata {
     statement: Statement;
     attachments: Localized<Attachment>[];
     submission_form: SubmissionForm;
-    evaluation_document: EvaluationModel[];
+    evaluation_sections: EvaluationSection[];
 }

@@ -3,11 +3,14 @@ import { EvaluationValue, Fraction, MemoryUsage, Outcome, Score, TimeUsage } fro
 import { EvaluationModel, MemoryUsageModel, NameModel, OutcomeModel, PercentageModel, ScoreModel, TableModel, TextStreamModel, TimeUsageModel, ValueExpression } from "./evaluation_model";
 import { EvaluationSummary } from "./evaluation_process";
 
-function l18n<T>(data: Localized<T>) {
-    return data.default || data["en"];
+export function l18n<T>(data: Localized<T>) {
+    if ("default" in data) {
+        return data.default;
+    }
+    return data["en"];
 }
 
-function expr<U extends EvaluationValue>(summary: EvaluationSummary, expr: ValueExpression<U>): U | null {
+export function expr<U extends EvaluationValue>(summary: EvaluationSummary, expr: ValueExpression<U>): U | null {
     switch (expr.type) {
         case "constant":
             return expr.constant;
@@ -26,14 +29,14 @@ const NameView = ({ model }: EvaluationModelViewProps<NameModel>) => (
 );
 
 const OutcomeView = ({ model, summary }: EvaluationModelViewProps<OutcomeModel>) => {
-    const value: Outcome = expr(summary, model.value);
+    const value: Outcome | null = expr(summary, model.value);
     return (
         <span className="score">{value && value.outcome}</span>
     )
 }
 
 const ScoreView = ({ model, summary }: EvaluationModelViewProps<ScoreModel>) => {
-    const value: Score = expr(summary, model.value);
+    const value: Score | null = expr(summary, model.value);
     const max_score = model.max_score;
     return (
         <span className="score">{value && value.score}{max_score && <React.Fragment> / {max_score}</React.Fragment>}</span>
@@ -41,7 +44,7 @@ const ScoreView = ({ model, summary }: EvaluationModelViewProps<ScoreModel>) => 
 }
 
 const PercentageView = ({ model, summary }: EvaluationModelViewProps<PercentageModel>) => {
-    const value: Fraction = expr(summary, model.value);
+    const value: Fraction | null = expr(summary, model.value);
     if (!value) return null;
     return (
         <span className="percentage">{(value.fraction * 100).toFixed(model.precision || 0)}%</span>
@@ -49,7 +52,7 @@ const PercentageView = ({ model, summary }: EvaluationModelViewProps<PercentageM
 }
 
 const TimeUsageView = ({ model, summary }: EvaluationModelViewProps<TimeUsageModel>) => {
-    const value: TimeUsage = expr(summary, model.value);
+    const value: TimeUsage | null = expr(summary, model.value);
     if (!value) return null;
     return (
         <span className="time_usage">{value.time_usage_seconds.toFixed(3)} s</span>
@@ -57,7 +60,7 @@ const TimeUsageView = ({ model, summary }: EvaluationModelViewProps<TimeUsageMod
 }
 
 const MemoryUsageView = ({ model, summary }: EvaluationModelViewProps<MemoryUsageModel>) => {
-    const value: MemoryUsage = expr(summary, model.value);
+    const value: MemoryUsage | null = expr(summary, model.value);
     if (!value) return null;
     return (
         // TODO: use a proper visualization of byte sizes
