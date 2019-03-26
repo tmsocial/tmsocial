@@ -99,7 +99,80 @@ export const testMetadata: TaskMetadata = {
                             ]
                         }
                     ]
-                }
+                },
+                {
+                    name: {
+                        en: "Subtask 2",
+                    },
+                    rows: [
+                        {
+                            name: {
+                                default: "2",
+                            },
+                            cells: [
+                                {
+                                    value: {
+                                        type: "ref",
+                                        ref: "my_memory_usage"
+                                    }
+                                },
+                                {
+                                    value: {
+                                        type: "ref",
+                                        ref: "my_time_usage"
+                                    }
+                                },
+                                {
+                                    value: {
+                                        type: "ref",
+                                        ref: "my_score"
+                                    },
+                                    max_score: 10,
+                                },
+                                {
+                                    value: {
+                                        type: "ref",
+                                        ref: "my_percentage"
+                                    },
+                                    precision: 1,
+                                },
+                            ]
+                        },
+                        {
+                            name: {
+                                default: "3",
+                            },
+                            cells: [
+                                {
+                                    value: {
+                                        type: "ref",
+                                        ref: "my_memory_usage"
+                                    }
+                                },
+                                {
+                                    value: {
+                                        type: "ref",
+                                        ref: "my_time_usage"
+                                    }
+                                },
+                                {
+                                    value: {
+                                        type: "ref",
+                                        ref: "my_score"
+                                    },
+                                    max_score: 10,
+                                },
+                                {
+                                    value: {
+                                        type: "ref",
+                                        ref: "my_percentage"
+                                    },
+                                    precision: 1,
+                                },
+                            ]
+                        },
+                    ]
+                },
             ]
         },
         {

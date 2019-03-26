@@ -2,7 +2,7 @@ import * as React from "react";
 import { EvaluationValue, MemoryUsage, TimeUsage, Outcome, Score, Fraction } from "./evaluation";
 import { EvaluationSummary } from "./evaluation_process";
 import { EvaluationSection } from "./section";
-import { Cell, Column, MemoryUsageColumn, Table, TimeUsageColumn, ValueCell, ScoreCell, PercentageCell, ScoreColumn, PercentageColumn } from "./table";
+import { Cell, Column, MemoryUsageColumn, Table, TimeUsageColumn, ValueCell, ScoreCell, PercentageCell, ScoreColumn, PercentageColumn, RowGroup } from "./table";
 import { evaluateExpression, localize } from "./section_view";
 
 export interface EvaluationSectionViewProps<T extends EvaluationSection> {
@@ -71,20 +71,25 @@ const columnViews: {
     score: { header: NamedColumnHeaderView, cell: ScoreCellView },
 };
 
+const GroupHeaderView = ({ section, group }: { section: Table, group: RowGroup }) => (
+    <React.Fragment>
+        <tr><th></th><th colSpan={section.columns.length}>{localize(group.name)}</th></tr>
+        <tr>
+            {"header_column" in section ? (
+                <th>{localize(section.header_column.name)}</th>
+            ) : null}
+            {section.columns.map((column, i) => (
+                React.createElement(columnViews[column.type].header, { key: i, column })
+            ))}
+        </tr>
+    </React.Fragment>
+)
+
 export const TableView = ({ section, summary }: EvaluationSectionViewProps<Table>) => (
     <table>
-        <thead>
-            <tr>
-                {"header_column" in section ? (
-                    <th>{localize(section.header_column.name)}</th>
-                ) : null}
-                {section.columns.map((column, i) => (
-                    React.createElement(columnViews[column.type].header, { key: i, column })
-                ))}
-            </tr>
-        </thead>
         {section.groups.map((group, i) => (
             <tbody key={i}>
+                <GroupHeaderView section={section} group={group} />
                 {group.rows.map((row, j) => (
                     <tr key={j}>
                         <th>{localize(row.name)}</th>
