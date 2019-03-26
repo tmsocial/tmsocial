@@ -16,6 +16,7 @@
     "typescript": "^3.3.4000"
   },
   "dependencies": {
+    "babel-polyfill": "^6.26.0",
     "react": "^16.8.5",
     "react-dom": "^16.8.5"
   }

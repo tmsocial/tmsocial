@@ -308,5 +308,3 @@ export const testEvaluation: EvaluationEvent[] = [
         text: "Evaluation finished\n",
     },
 ]
-
-console.log(JSON.stringify(testMetadata));
