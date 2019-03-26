@@ -1,6 +1,6 @@
 import * as React from "react";
-import { EvaluationValue, Fraction, MemoryUsage, Outcome, Score, TimeUsage } from "./evaluation";
-import { EvaluationModel, MemoryUsageModel, NameModel, OutcomeModel, PercentageModel, ScoreModel, TableModel, TextStreamModel, TimeUsageModel, ValueExpression } from "./evaluation_model";
+import { EvaluationValue, Fraction, Outcome, Score } from "./evaluation";
+import { EvaluationModel, NameModel, OutcomeModel, PercentageModel, ScoreModel, TableModel, TextStreamModel, ValueExpression } from "./evaluation_model";
 import { EvaluationSummary } from "./evaluation_process";
 
 export function l18n<T>(data: Localized<T>) {
@@ -51,23 +51,6 @@ const PercentageView = ({ model, summary }: EvaluationModelViewProps<PercentageM
     )
 }
 
-const TimeUsageView = ({ model, summary }: EvaluationModelViewProps<TimeUsageModel>) => {
-    const value: TimeUsage | null = expr(summary, model.value);
-    if (!value) return null;
-    return (
-        <span className="time_usage">{value.time_usage_seconds.toFixed(3)} s</span>
-    )
-}
-
-const MemoryUsageView = ({ model, summary }: EvaluationModelViewProps<MemoryUsageModel>) => {
-    const value: MemoryUsage | null = expr(summary, model.value);
-    if (!value) return null;
-    return (
-        // TODO: use a proper visualization of byte sizes
-        <span className="memory_usage">{(value.memory_usage_bytes / 1e3).toFixed()} KB</span>
-    )
-}
-
 const TableView = ({ model, summary }: EvaluationModelViewProps<TableModel>) => {
     return (
         <table>
@@ -100,8 +83,6 @@ const views: {
     outcome: OutcomeView,
     score: ScoreView,
     percentage: PercentageView,
-    time_usage: TimeUsageView,
-    memory_usage: MemoryUsageView,
     table: TableView,
     text_stream: TextStreamView,
 };

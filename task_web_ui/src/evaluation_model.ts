@@ -34,16 +34,6 @@ export interface PercentageModel {
     precision?: number;
 }
 
-export interface TimeUsageModel {
-    type: "time_usage";
-    value: ValueExpression<TimeUsage>;
-}
-
-export interface MemoryUsageModel {
-    type: "memory_usage";
-    value: ValueExpression<MemoryUsage>;
-}
-
 export interface RowModel {
     cells: {
         [column: string]: EvaluationModel[];
@@ -68,8 +58,6 @@ export type EvaluationModel = (
     | OutcomeModel
     | ScoreModel
     | PercentageModel
-    | TimeUsageModel
-    | MemoryUsageModel
     | TableModel
     | TextStreamModel
 );
