@@ -28,24 +28,47 @@ export const testMetadata: TaskMetadata = {
     evaluation_sections: [
         {
             type: "table",
+            header_column: {
+                name: {
+                    en: "Test case",
+                },
+            },
             columns: [
                 {
                     type: "memory_usage",
+                    name: {
+                        en: "Memory usage",
+                    },
                 },
                 {
                     type: "time_usage",
+                    name: {
+                        en: "Time usage"
+                    },
                 },
                 {
                     type: "score",
+                    name: {
+                        en: "Score"
+                    },
                 },
                 {
                     type: "percentage",
+                    name: {
+                        en: "Percentage"
+                    },
                 },
             ],
             groups: [
                 {
+                    name: {
+                        en: "Subtask 1",
+                    },
                     rows: [
                         {
+                            name: {
+                                default: "1",
+                            },
                             cells: [
                                 {
                                     value: {

@@ -3,21 +3,28 @@ import { EvaluationValue, MemoryUsage, TimeUsage, Outcome, Score, Fraction } fro
 import { EvaluationSummary } from "./evaluation_process";
 import { EvaluationSection } from "./section";
 import { Cell, Column, MemoryUsageColumn, Table, TimeUsageColumn, ValueCell, ScoreCell, PercentageCell, ScoreColumn, PercentageColumn } from "./table";
-import { evaluateExpression } from "./section_view";
+import { evaluateExpression, localize } from "./section_view";
 
 export interface EvaluationSectionViewProps<T extends EvaluationSection> {
     section: T,
     summary: EvaluationSummary,
 }
 
-interface CellViewProps<T extends Column, U extends Cell> {
+interface ColumnViewProps<T extends Column> {
     column: T;
+}
+
+interface CellViewProps<T extends Column, U extends Cell> extends ColumnViewProps<T> {
     cell: U;
     summary: EvaluationSummary;
 }
 
 const wrapValue = <T extends EvaluationValue, U>(value: T | null, mapper: (value: T) => U): U | null => (
     value !== null ? mapper(value) : null
+)
+
+const NamedColumnHeaderView = ({ column }: ColumnViewProps<TimeUsageColumn>) => (
+    <th>{column.name && localize(column.name)}</th>
 )
 
 const TimeUsageCellView = ({ cell, summary }: CellViewProps<TimeUsageColumn, ValueCell<TimeUsage>>) => (
@@ -52,23 +59,37 @@ const PercentageCellView = ({ cell, summary }: CellViewProps<PercentageColumn, P
     </td>
 )
 
-const cellViews: {
-    [K in Column["type"]]: React.JSXElementConstructor<CellViewProps<any, any>>
+const columnViews: {
+    [K in Column["type"]]: {
+        header: React.JSXElementConstructor<ColumnViewProps<any>>,
+        cell: React.JSXElementConstructor<CellViewProps<any, any>>,
+    }
 } = {
-    time_usage: TimeUsageCellView,
-    memory_usage: MemoryUsageCellView,
-    percentage: PercentageCellView,
-    score: ScoreCellView,
+    time_usage: { header: NamedColumnHeaderView, cell: TimeUsageCellView },
+    memory_usage: { header: NamedColumnHeaderView, cell: MemoryUsageCellView },
+    percentage: { header: NamedColumnHeaderView, cell: PercentageCellView },
+    score: { header: NamedColumnHeaderView, cell: ScoreCellView },
 };
 
 export const TableView = ({ section, summary }: EvaluationSectionViewProps<Table>) => (
     <table>
+        <thead>
+            <tr>
+                {"header_column" in section ? (
+                    <th>{localize(section.header_column.name)}</th>
+                ) : null}
+                {section.columns.map((column, i) => (
+                    React.createElement(columnViews[column.type].header, { key: i, column })
+                ))}
+            </tr>
+        </thead>
         {section.groups.map((group, i) => (
             <tbody key={i}>
                 {group.rows.map((row, j) => (
                     <tr key={j}>
+                        <th>{localize(row.name)}</th>
                         {row.cells.map((cell, k) => (
-                            React.createElement(cellViews[section.columns[k].type], { column: section.columns[k], cell, summary, key: k })
+                            React.createElement(columnViews[section.columns[k].type].cell, { key: k, column: section.columns[k], cell, summary, })
                         ))}
                     </tr>
                 ))}

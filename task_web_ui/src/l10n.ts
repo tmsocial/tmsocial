@@ -7,3 +7,4 @@ interface UnawareLocalized<T> {
 }
 
 type Localized<T> = AwareLocalized<T> | UnawareLocalized<T>;
+

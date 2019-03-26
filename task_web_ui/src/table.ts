@@ -1,36 +1,48 @@
+import { EvaluationValue, Fraction, Score } from "./evaluation";
 import { ValueExpression } from "./evaluation_model";
-import { MemoryUsage, TimeUsage, EvaluationValue, Score, Fraction } from "./evaluation";
 
 export interface Table {
     type: "table";
+    header_column?: HeaderColumn;
     columns: Column[];
     groups: RowGroup[];
 }
 
+export interface HeaderColumn {
+    name: Localized<string>;
+};
+
+export type Column = MemoryUsageColumn | TimeUsageColumn | ScoreColumn | PercentageColumn;
+
 export interface RowGroup {
+    name: Localized<string>;
     rows: Row[];
 }
 
 export interface Row {
+    name: Localized<string>;
     cells: Cell[],
 }
 
-export type Column = MemoryUsageColumn | TimeUsageColumn | ScoreColumn | PercentageColumn;
 export type Cell = ValueCell<any> | ScoreCell | PercentageCell;
 
-export interface MemoryUsageColumn {
+export interface NamedColumn {
+    name: Localized<string>;
+}
+
+export interface MemoryUsageColumn extends NamedColumn {
     type: "memory_usage";
 }
 
-export interface TimeUsageColumn {
+export interface TimeUsageColumn extends NamedColumn {
     type: "time_usage";
 }
 
-export interface ScoreColumn {
+export interface ScoreColumn extends NamedColumn {
     type: "score";
 }
 
-export interface PercentageColumn {
+export interface PercentageColumn extends NamedColumn {
     type: "percentage";
 }
 
