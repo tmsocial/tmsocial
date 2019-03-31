@@ -19,12 +19,14 @@ const server = new ApolloServer({
       id: ID!
 
       # no explicit support for localization here for simplicity
-      name: String!
+      title: String!
     }
 
     type Participant {
       id: ID!
-      name: String!
+
+      # full name to show in the UI
+      display_name: String!
 
       # one-to-one correspondence with contest.tasks
       tasks: [ParticipantTask!]!
@@ -58,13 +60,13 @@ const server = new ApolloServer({
             tasks: [
               {
                 id: "my_first_task",
-                name: "My First Task",
+                title: "My First Task",
               }
             ],
             participants: [
               {
                 id: "user1",
-                name: "John Smith",
+                display_name: "John Smith",
                 tasks: [
                   {
                     submissions: [
