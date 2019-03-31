@@ -1,5 +1,6 @@
 import { ValueEvent, Score, EvaluationEvent } from "./evaluation";
 import { TaskMetadata } from "./metadata";
+import { number } from "prop-types";
 
 export const testMetadata: TaskMetadata = {
     title: {
@@ -28,12 +29,13 @@ export const testMetadata: TaskMetadata = {
     evaluation_sections: [
         {
             type: "table",
-            header_column: {
-                name: {
-                    en: "Test case",
-                },
-            },
             columns: [
+                {
+                    type: "row_number",
+                    name: {
+                        en: "Test case",
+                    },
+                },
                 {
                     type: "memory_usage",
                     name: {
@@ -51,25 +53,30 @@ export const testMetadata: TaskMetadata = {
                     name: {
                         en: "Score"
                     },
+                    score_precision: 2,
+                    max_score_precision: 0,
                 },
                 {
                     type: "percentage",
                     name: {
                         en: "Percentage"
                     },
+                    precision: 2,
                 },
             ],
             groups: [
                 {
-                    name: {
-                        en: "Subtask 1",
+                    header: {
+                        title: {
+                            en: "Subtask 1",
+                        },
                     },
                     rows: [
                         {
-                            name: {
-                                default: "1",
-                            },
                             cells: [
+                                {
+                                    number: 1,
+                                },
                                 {
                                     value: {
                                         type: "ref",
@@ -94,22 +101,23 @@ export const testMetadata: TaskMetadata = {
                                         type: "ref",
                                         ref: "my_percentage"
                                     },
-                                    precision: 1,
                                 },
                             ]
                         }
                     ]
                 },
                 {
-                    name: {
-                        en: "Subtask 2",
+                    header: {
+                        title: {
+                            en: "Subtask 2",
+                        },
                     },
                     rows: [
                         {
-                            name: {
-                                default: "2",
-                            },
                             cells: [
+                                {
+                                    number: 2,
+                                },
                                 {
                                     value: {
                                         type: "ref",
@@ -134,15 +142,14 @@ export const testMetadata: TaskMetadata = {
                                         type: "ref",
                                         ref: "my_percentage"
                                     },
-                                    precision: 1,
                                 },
                             ]
                         },
                         {
-                            name: {
-                                default: "3",
-                            },
                             cells: [
+                                {
+                                    number: 3,
+                                },
                                 {
                                     value: {
                                         type: "ref",
@@ -167,7 +174,6 @@ export const testMetadata: TaskMetadata = {
                                         type: "ref",
                                         ref: "my_percentage"
                                     },
-                                    precision: 1,
                                 },
                             ]
                         },
