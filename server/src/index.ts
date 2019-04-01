@@ -1,11 +1,40 @@
 import { ApolloServer, gql } from "apollo-server";
-import { DateTime } from "luxon";
+
+const contest = {
+  id: "my_contest",
+  title: "My Contest",
+  tasks: [
+    {
+      id: "my_first_task",
+      title: "My First Task",
+    }
+  ],
+  participants: [
+    {
+      id: "user1",
+      display_name: "John Smith",
+      tasks: [
+        {
+          submissions: [
+            {
+              id: "submission1"
+            }
+          ]
+        }
+      ],
+    }
+  ],
+}
 
 const server = new ApolloServer({
   debug: true,
   typeDefs: gql`
     type Contest {
       id: ID!
+
+      # no explicit support for localization here for simplicity
+      title: String!
+
       tasks: [Task!]!
 
       # usable only by admins
@@ -17,8 +46,6 @@ const server = new ApolloServer({
 
     type Task {
       id: ID!
-
-      # no explicit support for localization here for simplicity
       title: String!
     }
 
@@ -54,33 +81,11 @@ const server = new ApolloServer({
   `, resolvers: {
     Query: {
       contests(parent, { }, context) {
-        return [
-          {
-            id: "my_contest",
-            tasks: [
-              {
-                id: "my_first_task",
-                title: "My First Task",
-              }
-            ],
-            participants: [
-              {
-                id: "user1",
-                display_name: "John Smith",
-                tasks: [
-                  {
-                    submissions: [
-                      {
-                        id: "submission1"
-                      }
-                    ]
-                  }
-                ],
-              }
-            ],
-          }
-        ]
-      }
+        return [ contest ];
+      },
+      contest(parent, { id }, context) {
+        return contest;
+      },
     },
     Mutation: {
       async example(parent, { a }) {
