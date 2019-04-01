@@ -1,0 +1,24 @@
+{
+  "scripts": {
+    "start": "parcel src/index.html"
+  },
+  "devDependencies": {
+    "@types/graphql": "^14.2.0",
+    "@types/luxon": "^1.11.1",
+    "@types/react": "^16.8.10",
+    "@types/react-dom": "^16.8.3",
+    "jest": "^24.5.0",
+    "parcel-bundler": "^1.12.3",
+    "typescript": "^3.4.1"
+  },
+  "dependencies": {
+    "apollo-cache-inmemory": "^1.5.1",
+    "apollo-client": "^2.5.1",
+    "apollo-link-http": "^1.5.14",
+    "graphql": "^14.2.1",
+    "luxon": "^1.12.0",
+    "react": "^16.8.6",
+    "react-apollo": "^2.5.3",
+    "react-dom": "^16.8.6"
+  }
+}
