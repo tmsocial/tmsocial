@@ -1,0 +1,63 @@
+input PageQuery {
+    before: ID
+    after: ID
+    first: Int
+    last: Int
+}
+
+type Query {
+    site(id: ID!): Site!
+}
+
+type Site {
+    default_contest: Contest
+    user(id: ID!): User!
+    # contests_list: [Contest!]
+}
+
+type Contest {
+    tasks: [Task!]!
+    task(id: ID): Task!
+    participation(user_id: ID!): Participation
+    max_score: Int
+}
+
+type User {
+    display_name: String!
+}
+
+type Participation {
+    tasks: [ParticipationTask!]
+    score: Int
+}
+
+interface TaskInterface {
+    id: ID!
+    metadata_json: String!
+}
+
+type ContestTask implements TaskInterface {
+    id: ID!    
+    metadata_json: String!
+}
+
+type ParticipationTask {
+    id: ID!
+    metadata_json: String!
+    submissions(query: PageQuery): [Submission!]!
+}
+
+type Submission {
+    evaluation: Evaluation!
+    files: [SubmissionFile!]!
+}
+
+type SubmissionFile {
+    field: String!
+    type: String!
+    content: String! # Content of the file in base64
+}
+
+type Evaluation {
+
+}
