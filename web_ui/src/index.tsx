@@ -17,12 +17,10 @@ const App = () => (
   <ApolloProvider client={client}>
     <Query query={gql`
       query Contest {
-        contest(id: "a") {
+        site(id: "site1") {
           id
-          title
-          tasks {
+          default_contest {
             id
-            title
           }
         }
       }
@@ -31,14 +29,7 @@ const App = () => (
         loading ? "Loading..." :
           error ? error.message :
             <React.Fragment>
-              <h1>{data.contest.title}</h1>
-              <nav>
-                <ul>
-                  {data.contest.tasks.map((task: any, i: number) => (
-                    <li key={i}>{task.title}</li>
-                  ))}
-                </ul>
-              </nav>
+              <h1>{data.site.default_contest.id}</h1>
             </React.Fragment>
       )}
     </Query>

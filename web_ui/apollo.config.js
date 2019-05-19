@@ -1,7 +1,9 @@
+const path = require("path");
+
 module.exports = {
     client: {
         service: {
-            url: "http://localhost:4000/graphql"
+            localSchemaFile: path.resolve(__dirname, "../server/src/api.graphql"),
         }
     }
 }
