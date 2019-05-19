@@ -7,9 +7,11 @@ input PageQuery {
 
 type Query {
     site(id: ID!): Site!
+    user(id: ID!): User!
     contest(id: ID): Contest!
     task(id: ID): ContestTask!
-    user(id: ID!): User!
+    submission(id: ID): Submission!
+    evaluation(id: ID): Evaluation!
 }
 
 type Site {
@@ -63,6 +65,7 @@ type SubmissionFile {
 }
 
 type Evaluation {
+    id: ID!
     total_score: Int!
     partial_scores: [PartialScore!]!
 }

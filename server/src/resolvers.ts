@@ -4,6 +4,8 @@ import { join } from "path";
 import { fromEvent } from "rxjs";
 import { first } from "rxjs/operators";
 import { Tail } from "tail";
+import { spawn, execFile, execFileSync } from "child_process";
+import { EventEmitter } from "events";
 
 interface SubmissionFileInput {
   field: string
@@ -54,17 +56,31 @@ export const resolvers = {
       const [site] = id.split("/");
       return await loadEmptyConfig(id, join(site));
     },
-    async contest(obj: unknown, { id }: { id: string }) {
-      const [site, contest] = id.split("/");
-      return await loadConfig(`${site}/${contest}`, join(site, 'contests', contest));
-    },
     async user(obj: unknown, { id }: { id: string }) {
       const [site, user] = id.split("/");
       return await loadConfig(`${site}/${user}`, join(site, 'users', user));
     },
+    async contest(obj: unknown, { id }: { id: string }) {
+      const [site, contest] = id.split("/");
+      return await loadConfig(`${site}/${contest}`, join(site, 'contests', contest));
+    },
     async task(obj: unknown, { id }: { id: string }) {
       const [site, contest, task] = id.split("/");
       return await loadEmptyConfig(`${site}/${contest}/${task}`, join(site, 'contests', contest, 'tasks', task));
+    },
+    async submission(obj: unknown, { id }: { id: string }) {
+      const [site, contest, user, task, submission] = id.split("/");
+      return await loadEmptyConfig(
+        `${site}/${contest}/${user}/${task}/${submission}`, 
+        join(site, 'contests', contest, 'participations', user, 'tasks', task, 'submissions', submission),
+      );
+    },
+    async evaluation(obj: unknown, { id }: { id: string }) {
+      const [site, contest, user, task, submission, evaluation] = id.split("/");
+      return await loadEmptyConfig(
+        `${site}/${contest}/${user}/${task}/${submission}/${evaluation}`, 
+        join(site, 'contests', contest, 'participations', user, 'tasks', task, 'submissions', submission, 'evalutions', evaluation),
+      );
     },
   },
   Site: {
@@ -112,12 +128,26 @@ export const resolvers = {
       writeFileSync(join(DATA_DIRECTORY, submissionPath, "data.json"), JSON.stringify({
         timestamp: submission,
       }), {
-          encoding: 'utf8',
-        })
+        encoding: 'utf8',
+      })
 
-      mkdirSync(join(DATA_DIRECTORY, submissionPath, 'evaluations'));
+      mkdirSync(join(DATA_DIRECTORY, submissionPath, "files"), { recursive: true });
 
-      // TODO: actually start evaluation
+      files.forEach(({ field, type, content_base64 }) => {
+        writeFileSync(join(DATA_DIRECTORY, submissionPath, 'files', `${field}.${type}`), Buffer.from(content_base64, 'base64'));
+      })
+
+      const evaluation = DateTime.utc().toISO();
+      mkdirSync(join(DATA_DIRECTORY, submissionPath, 'evaluations', evaluation), { recursive: true });
+
+      console.log("Starting evaluation...");
+      const process = execFileSync("../task_maker_wrapper/adapter.py", [
+        join(CONFIG_DIRECTORY, site, 'contests', contest, 'tasks', task),
+        join(DATA_DIRECTORY, submissionPath),
+        join(DATA_DIRECTORY, submissionPath, 'evaluations', evaluation),
+      ])
+
+      execFile("echo", [ "XXXXXXXXXXXXXXXXXXXXXXXXXXXXX" ]);
 
       return await loadData(`${site}/${contest}/${user}/${task}/${submission}`, submissionPath);
     }
@@ -142,8 +172,13 @@ export const resolvers = {
           evaluation,
           "events.jsonl"
         )
-        console.log(path);
-        const tail = new Tail(path);
+
+        const tail = new Tail(path, {
+          encoding: 'utf8',
+          fromBeginning: true,
+          follow: true,
+        }) as Tail & EventEmitter;
+        // Tail extends EventEmitter but it is not typed as such in @types/tail :(
 
         const lines = fromEvent<string>(tail, 'line');
         tail.watch();
