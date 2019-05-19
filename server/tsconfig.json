@@ -1,8 +1,13 @@
 {
     "compilerOptions": {
-        "target": "esnext",
+        "target": "es5",
         "module": "commonjs",
-        "strict": true
+        "strict": true,
+        "downlevelIteration": true,
+        "lib": [
+            "es6",
+            "esnext.asynciterable"
+        ]
     },
     "exclude": [
         "node_modules"

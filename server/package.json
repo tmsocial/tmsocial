@@ -1,19 +1,32 @@
 {
   "scripts": {
-    "start": "npx nodemon -x ts-node src/index.ts"
+    "start": "concurrently npm:build:watch npm:dev-server",
+    "dev-server": "nodemon -x node dist/index.js",
+    "build:watch": "NODE_ENV=development webpack --watch",
+    "build": "webpack"
   },
   "dependencies": {
     "apollo-server": "^2.4.8",
+    "core-js": "^3.0.1",
     "graphql": "^14.2.1",
     "luxon": "^1.12.0"
   },
   "devDependencies": {
-    "@types/cors": "^2.8.4",
+    "@types/cors": "^2.8.5",
     "@types/express": "^4.16.1",
     "@types/graphql": "^14.2.0",
+    "@types/jest": "^24.0.13",
+    "@types/jsonwebtoken": "^8.3.2",
     "@types/luxon": "^1.11.1",
+    "@types/node": "^12.0.2",
+    "@types/webpack": "^4.4.31",
+    "concurrently": "^4.1.0",
+    "jest": "^24.8.0",
     "nodemon": "^1.18.10",
-    "ts-node": "^8.0.3",
-    "typescript": "^3.4.1"
+    "ts-jest": "^24.0.2",
+    "ts-loader": "^6.0.1",
+    "typescript": "^3.4.1",
+    "webpack": "^4.31.0",
+    "webpack-cli": "^3.3.2"
   }
 }

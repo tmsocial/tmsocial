@@ -16,8 +16,8 @@ type Site {
 }
 
 type Contest {
-    tasks: [Task!]!
-    task(id: ID): Task!
+    tasks: [ContestTask!]!
+    task(id: ID): ContestTask!
     participation(user_id: ID!): Participation
     max_score: Int
 }
@@ -48,7 +48,7 @@ type ParticipationTask {
 }
 
 type Submission {
-    evaluation: Evaluation!
+    official_evaluation: Evaluation!
     files: [SubmissionFile!]!
 }
 
@@ -59,5 +59,28 @@ type SubmissionFile {
 }
 
 type Evaluation {
+    total_score: Int!
+    partial_scores: [PartialScore!]!
+}
 
+type PartialScore {
+    display_name: String!
+    score: Int!
+}
+
+type Mutation {
+    login_token(site: ID!, token: String!): LoginResponse!
+}
+
+type LoginResponse {
+    site: Site!
+    user: User!
+}
+
+type Subscription {
+    evaluation_events(id: ID!): EvaluationEvent!
+}
+
+type EvaluationEvent {
+    json: String!
 }
