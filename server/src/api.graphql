@@ -87,7 +87,7 @@ type LoginResponse {
 }
 
 type Subscription {
-    evaluation_events(id: ID!): EvaluationEvent!
+    evaluation_events(evaluation_id: ID!): EvaluationEvent!
 }
 
 type EvaluationEvent {
