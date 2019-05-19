@@ -7,17 +7,17 @@ input PageQuery {
 
 type Query {
     site(id: ID!): Site!
+    task(id: ID): ContestTask!
+    user(id: ID!): User!
 }
 
 type Site {
     default_contest: Contest
-    user(id: ID!): User!
     # contests_list: [Contest!]
 }
 
 type Contest {
     tasks: [ContestTask!]!
-    task(id: ID): ContestTask!
     participation(user_id: ID!): Participation
     max_score: Int
 }

@@ -30,8 +30,8 @@ async function* makeDummyStream() {
 const CONFIG_DIRECTORY = '../test_site/config';
 const DATA_DIRECTORY = '../test_site/data';
 
-async function loadTaskDir(path: string, id: string): Promise<any> {
-  return {path: join(path, 'tasks', id), id};
+async function loadEmptyNode(path: string, id: string): Promise<Node> {
+  return {id, path: join(path, 'tasks', id)};
 }
 
 async function loadNode(root: string, id: string, path: string): Promise<Node | null> {
@@ -61,31 +61,40 @@ async function loadData(id: string, path: string): Promise<any> {
 
 export const resolvers = {
   Query: {
-    async site(obj: any, { id }: {id: string}) {
+    async site(obj: unknown, { id }: {id: string}) {
       const [site] = id.split("/");
       return await loadConfig(id, join(site));
+    },
+    async user(obj: unknown, {id}: {id: string}) {
+      const [site, user] = id.split("/");
+      return await loadConfig(`${site}/${user}`, join(site, 'users', user));
+    },
+    async task(obj: unknown, {id} : {id: string}) {
+      const [site, contest, task] = id.split("/");
+      return await loadEmptyNode(`${site}/${contest}/${task}`, join(site, 'contests', contest, 'tasks', task));
     },
    },
   Site: {
     async default_contest({id, path}: Node) {
       return await loadConfig(`${id}/default`, join(path, 'contests/default'));
     },
-    async user({id, path}: Node, {id: user_id}: {id: string}) {
-      return await loadConfig(`${id}/${user_id}`, join(path, 'users/', user_id));
-    },
   },
   Contest: {
     async tasks({path}: {path: string}) {
-      const dir = readdirSync(join(CONFIG_DIRECTORY, path, 'tasks/'));
-      return await Promise.all(dir.map(id => loadTaskDir(path, id)));
-    },
-    async task({path}: {path: string}, {id} : {id: string}) {
-      return await loadTaskDir(path, id);
+      const dir = readdirSync(join(CONFIG_DIRECTORY, path, 'tasks'));
+      return await Promise.all(dir.map(id => loadEmptyNode(path, id)));
     },
   },
   ContestTask: {
     id({id}: {id: string}) {
       return id;
+    }
+  },
+  Submission: {
+    async official_evaluation({id, path}: Node) {
+      const dir = readdirSync(join(DATA_DIRECTORY, path, 'evaluations')).sort();
+      const evaluation = dir[dir.length - 1];
+      return await loadEmptyNode(`${id}/${evaluation}`, join(path, "evaluations", evaluation));
     }
   },
   Mutation: {
@@ -119,10 +128,12 @@ export const resolvers = {
         encoding: 'utf8',
       })
 
+      mkdirSync(join(DATA_DIRECTORY, submissionPath, 'evaluations'));
+
+      // TODO: actually start evaluation
+
       return await loadData(`${site}/${contest}/${user}/${task}/${submission}`, submissionPath);
     }
-  },
-  Submission: {
   },
   Subscription: {
     evaluation_events: {
