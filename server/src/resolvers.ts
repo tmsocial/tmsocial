@@ -6,7 +6,8 @@ import { join } from "path";
 import { fromEvent } from "rxjs";
 import { first } from "rxjs/operators";
 import { Tail } from "tail";
-import { NodeManager, CONFIG_DIRECTORY, Node, DATA_DIRECTORY } from "./nodes";
+import { CONFIG_DIRECTORY, DATA_DIRECTORY, Node, NodeManager } from "./nodes";
+import { PubSub } from "apollo-server";
 
 interface SubmissionFileInput {
   field: string
@@ -111,20 +112,22 @@ export const resolvers = {
         const path = join(DATA_DIRECTORY, evaluationManager.path(evaluation_id), "events.jsonl")
 
         const tail = new Tail(path, {
-          encoding: 'utf8',
+          encoding: 'utf-8',
           fromBeginning: true,
-          follow: true,
         }) as Tail & EventEmitter;
         // Tail extends EventEmitter but it is not typed as such in @types/tail :(
 
-        const lines = fromEvent<string>(tail, 'line');
-        tail.watch();
+        const pubSub = new PubSub();
+
+        tail.on("line", (line) => pubSub.publish("line", line));
 
         try {
+          const iterator = pubSub.asyncIterator<string>("line");
           while (true) {
-            const line = await lines.pipe(first()).toPromise();
+            const { value: line } = await iterator.next();
             const event = JSON.parse(line);
             if (event.type === "end") {
+              iterator.return!();
               break;
             }
             yield {
