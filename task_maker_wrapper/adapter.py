@@ -49,13 +49,15 @@ def start_task_maker(*, task_dir, submission_dir, evaluation_dir):
     files_dir = os.path.join(submission_dir, "files")
     submitted_files = list(os.path.abspath(os.path.join(files_dir, f)) for f in os.listdir(files_dir))
 
-    with open(os.path.join(evaluation_dir, "events.jsonl"), "w") as out:
+    stderr_file = os.path.join(evaluation_dir, "stderr.log")
+    events_file = os.path.join(evaluation_dir, "events.jsonl")
+    with open(events_file, "w") as out, open(stderr_file, "w") as stderr:
         with subprocess.Popen([
             TASK_MAKER,
             "--ui", "json",
             "--task-dir", task_dir,
             *submitted_files
-        ], stdout=subprocess.PIPE) as p:
+        ], stdout=subprocess.PIPE, stderr=stderr) as p:
 
             for line in p.stdout:
                 for e in process_event(json.loads(line), os.path.split(submitted_files[0])[1]):
