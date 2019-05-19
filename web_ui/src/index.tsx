@@ -2,12 +2,14 @@ import { InMemoryCache } from "apollo-cache-inmemory";
 import { ApolloClient } from "apollo-client";
 import { HttpLink } from "apollo-link-http";
 import { WebSocketLink } from "apollo-link-ws";
+import { setContext } from "apollo-link-context";
 import gql from "graphql-tag";
 import * as React from "react";
 import { ApolloProvider, Query, QueryResult, Subscription, SubscriptionResult } from "react-apollo";
 import * as ReactDOM from "react-dom";
 import { Contest } from "./__generated__/Contest";
 import { EvaluationEvents } from "./__generated__/EvaluationEvents";
+import { EvaluationComponent } from "./evaluation_component";
 
 const authLink = setContext((_, { headers }) => {
   const token = localStorage.getItem('token');
@@ -20,10 +22,10 @@ const authLink = setContext((_, { headers }) => {
 });
 
 const client = new ApolloClient({
-  link: new WebSocketLink({
+  link: authLink.concat(new WebSocketLink({
     uri: "ws://localhost:4000/graphql",
-    credentials: "same-origin"
-  }),
+    // credentials: "same-origin",
+  })),
   cache: new InMemoryCache(),
 });
 
@@ -35,6 +37,10 @@ const App = () => (
           id
           default_contest {
             id
+            tasks {
+              id
+              metadata_json
+            }
             participation_of_user(user_id: $user_id) {
               task_participations {
                 task {
@@ -52,6 +58,7 @@ const App = () => (
             data ?
               <React.Fragment>
                 <h1>{data.site.default_contest!.id}</h1>
+                <EvaluationComponent events={[]} metadata={JSON.parse(data.site.default_contest.tasks[0].metadata_json)} />
               </React.Fragment>
               : null
       )}

@@ -7,15 +7,24 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   debug: true,
+  subscriptions: {
+    onConnect(connectionParams: any) {
+      return { token: connectionParams.token };
+    }
+  },
   context: ({ req }) => {
-   const token = req.headers.authorization || '';
-   // // try to retrieve a user with the token
-   // const user = getUser(token);
-   //
-   console.log(`Received token: ${token}`)
-   // // add the user to the context
-   return { token: token, test: "ciao" };
- },
+    if (req) {
+      const token = req.headers.authorization || '';
+      // // try to retrieve a user with the token
+      // const user = getUser(token);
+      //
+      console.log(`Received token: ${token}`)
+      // // add the user to the context
+      return { token: token, test: "ciao" };
+    } else {
+      return {};
+    }
+  },
 });
 
 server.listen().then(({ url }) => {

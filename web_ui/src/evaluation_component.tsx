@@ -3,7 +3,6 @@ import { EvaluationEvent } from "./evaluation";
 import { EvaluationReducer } from './evaluation_process';
 import { TaskMetadata } from './metadata';
 import { EvaluationSection } from './section';
-import { Table } from './table';
 import { TableView } from './table_view';
 import { TextStreamView } from './text_stream_view';
 
@@ -17,9 +16,9 @@ const sectionViews: {
 } = {
     table: TableView,
     text_stream: TextStreamView,
-}
+};
 
-export default class Component extends React.Component<Props> {
+export class EvaluationComponent extends React.Component<Props> {
     reducer = new EvaluationReducer();
 
     constructor(props: Props) {

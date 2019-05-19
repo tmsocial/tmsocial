@@ -1,7 +1,7 @@
 {
   "scripts": {
     "prestart": "npm run apollo:codegen",
-    "start": "webpack-dev-server",
+    "start": "parcel index.html",
     "apollo:codegen": "apollo client:codegen --target typescript --globalTypesFile src/__generated__/globalTypes.ts"
   },
   "devDependencies": {
@@ -21,6 +21,7 @@
   "dependencies": {
     "apollo-cache-inmemory": "^1.5.1",
     "apollo-client": "^2.5.1",
+    "apollo-link-context": "^1.0.17",
     "apollo-link-http": "^1.5.14",
     "apollo-link-ws": "^1.0.17",
     "graphql": "^14.2.1",
@@ -28,7 +29,6 @@
     "luxon": "^1.12.0",
     "react": "^16.8.6",
     "react-apollo": "^2.5.3",
-    "react-dom": "^16.8.6",
-    "subscriptions-transport-ws": "^0.9.16"
+    "react-dom": "^16.8.6"
   }
 }
