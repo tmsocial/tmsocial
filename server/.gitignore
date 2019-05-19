@@ -1,3 +1,4 @@
+/dist
 
 # Created by https://www.gitignore.io/api/node
 # Edit at https://www.gitignore.io/?templates=node
@@ -40,8 +41,6 @@ bower_components
 
 # Compiled binary addons (https://nodejs.org/api/addons.html)
 build/Release
-
-/dist
 
 # Dependency directories
 node_modules/
