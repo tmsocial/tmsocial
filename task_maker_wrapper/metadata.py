@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 
+import sys
 import json
+import subprocess
+
+
+TASK_MAKER = "task-maker"
 
 
 def gen_path(subtask, testcase, field):
@@ -43,9 +48,40 @@ def generate_table(metadata):
     )
 
 
+def generate_metadata(*, task_dir):
+    try:
+        output = subprocess.check_output([
+            TASK_MAKER,
+            "--ui", "json",
+            "--task-dir", task_dir,
+            "--task-info",
+        ])
+    except subprocess.CalledProcessError:
+        raise RuntimeError("Error calling task maker")
+
+    metadata = json.loads(output)
+
+    return {
+        "name": metadata["name"],
+        "title": metadata["title"],
+        "table": generate_table(metadata),
+    }
+
+
 def main():
-    metadata = json.loads(input())
-    print(json.dumps(generate_table(metadata)))
+    if len(sys.argv) != 2:
+        print(f"Usage: {sys.argv[0]} <task_dir>", file=sys.stderr)
+        exit(1)
+
+    try:
+        metadata = generate_metadata(
+            task_dir=sys.argv[1],
+        )
+        print(json.dumps(metadata))
+    except RuntimeError as e:
+        print(e, file=sys.stderr)
+        exit(1)
+
 
 if __name__ == "__main__":
     main()
