@@ -1,10 +1,10 @@
-const conf = {
+const path = require('path');
+
+module.exports = {
     client: {
         service: {
             name: 'tmsocial',
-            localSchemaFile: "../server/src/api.graphql",
+            localSchemaFile: path.resolve(__dirname, "../server/src/api.graphql"),
         }
     }
-}
-
-module.exports = conf;
+};

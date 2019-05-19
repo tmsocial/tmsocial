@@ -17,22 +17,26 @@ const client = new ApolloClient({
 const App = () => (
   <ApolloProvider client={client}>
     <Query query={gql`
-      query Contest {
+      query Contest($user_id: ID!) {
         site(id: "site1") {
           id
           default_contest {
             id
+            participation(user_id: $user_id) {
+              tasks {
+                id
+              }
+            }
           }
         }
       }
-    `}>
+    `} variables={{ user_id: "site1/user1" }}>
       {({ loading, error, data }: QueryResult<Contest>) => (
         loading ? "Loading..." :
           error ? error.message :
             data ?
               <React.Fragment>
                 <h1>{data.site.default_contest!.id}</h1>
-                {}
               </React.Fragment>
               : null
       )}
