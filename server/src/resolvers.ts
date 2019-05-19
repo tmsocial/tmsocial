@@ -71,14 +71,14 @@ export const resolvers = {
     async submission(obj: unknown, { id }: { id: string }) {
       const [site, contest, user, task, submission] = id.split("/");
       return await loadEmptyConfig(
-        `${site}/${contest}/${user}/${task}/${submission}`, 
+        `${site}/${contest}/${user}/${task}/${submission}`,
         join(site, 'contests', contest, 'participations', user, 'tasks', task, 'submissions', submission),
       );
     },
     async evaluation(obj: unknown, { id }: { id: string }) {
       const [site, contest, user, task, submission, evaluation] = id.split("/");
       return await loadEmptyConfig(
-        `${site}/${contest}/${user}/${task}/${submission}/${evaluation}`, 
+        `${site}/${contest}/${user}/${task}/${submission}/${evaluation}`,
         join(site, 'contests', contest, 'participations', user, 'tasks', task, 'submissions', submission, 'evalutions', evaluation),
       );
     },
@@ -141,7 +141,7 @@ export const resolvers = {
       mkdirSync(join(DATA_DIRECTORY, submissionPath, 'evaluations', evaluation), { recursive: true });
 
       console.log("Starting evaluation...");
-      const process = execFileSync("../task_maker_wrapper/adapter.py", [
+      const process = execFile("../task_maker_wrapper/adapter.py", [
         join(CONFIG_DIRECTORY, site, 'contests', contest, 'tasks', task),
         join(DATA_DIRECTORY, submissionPath),
         join(DATA_DIRECTORY, submissionPath, 'evaluations', evaluation),
