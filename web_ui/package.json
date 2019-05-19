@@ -1,6 +1,8 @@
 {
   "scripts": {
-    "start": "webpack-dev-server"
+    "prestart": "npm run apollo:codegen",
+    "start": "webpack-dev-server",
+    "apollo:codegen": "apollo client:codegen --target typescript --globalTypesFile src/__generated__/globalTypes.ts"
   },
   "devDependencies": {
     "@types/graphql": "^14.2.0",

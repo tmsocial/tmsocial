@@ -3,8 +3,9 @@ import { ApolloClient } from "apollo-client";
 import { HttpLink } from "apollo-link-http";
 import gql from "graphql-tag";
 import * as React from "react";
-import { ApolloProvider, Query } from "react-apollo";
+import { ApolloProvider, Query, QueryResult } from "react-apollo";
 import * as ReactDOM from "react-dom";
+import { Contest } from "./__generated__/Contest";
 
 const client = new ApolloClient({
   link: new HttpLink({
@@ -25,12 +26,15 @@ const App = () => (
         }
       }
     `}>
-      {({ loading, error, data }) => (
+      {({ loading, error, data }: QueryResult<Contest>) => (
         loading ? "Loading..." :
           error ? error.message :
-            <React.Fragment>
-              <h1>{data.site.default_contest.id}</h1>
-            </React.Fragment>
+            data ?
+              <React.Fragment>
+                <h1>{data.site.default_contest!.id}</h1>
+                {}
+              </React.Fragment>
+              : null
       )}
     </Query>
   </ApolloProvider>
