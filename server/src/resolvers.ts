@@ -16,25 +16,11 @@ interface Node {
   path: string,
 }
 
-async function* makeDummyStream() {
-  yield {
-    evaluation_events: {
-      json: "1",
-    }
-  };
-  await new Promise((res) => setTimeout(res, 1000));
-  yield {
-    evaluation_events: {
-      json: "2",
-    }
-  };
-};
-
 const CONFIG_DIRECTORY = '../test_site/config';
 const DATA_DIRECTORY = '../test_site/data';
 
 async function loadEmptyNode(path: string, id: string): Promise<Node> {
-  return { id, path: join(path, 'tasks', id) };
+  return { id, path };
 }
 
 async function loadNode(root: string, id: string, path: string): Promise<Node | null> {
@@ -66,7 +52,7 @@ export const resolvers = {
   Query: {
     async site(obj: unknown, { id }: { id: string }) {
       const [site] = id.split("/");
-      return await loadConfig(id, join(site));
+      return await loadEmptyNode(id, join(site));
     },
     async user(obj: unknown, { id }: { id: string }) {
       const [site, user] = id.split("/");
@@ -112,7 +98,6 @@ export const resolvers = {
       const submission = DateTime.utc().toISO();
 
       const submissionPath = join(
-        "site",
         site,
         "contests",
         contest,
@@ -145,7 +130,6 @@ export const resolvers = {
 
         const path = join(
           DATA_DIRECTORY,
-          "site",
           site,
           "contests",
           contest,
