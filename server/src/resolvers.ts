@@ -171,14 +171,12 @@ export const resolvers = {
       const evaluation = DateTime.utc().toISO();
       mkdirSync(join(DATA_DIRECTORY, submissionPath, 'evaluations', evaluation), { recursive: true });
 
-      console.log("Starting evaluation...");
       const process = execFile("../task_maker_wrapper/adapter.py", [
         join(CONFIG_DIRECTORY, site, 'contests', contest, 'tasks', task),
         join(DATA_DIRECTORY, submissionPath),
         join(DATA_DIRECTORY, submissionPath, 'evaluations', evaluation),
-      ])
-
-      execFile("echo", ["XXXXXXXXXXXXXXXXXXXXXXXXXXXXX"]);
+      ]);
+      process.unref();
 
       return await submissionManager.loadData(`${site}/${contest}/${user}/${task}/${submission}`);
     }
