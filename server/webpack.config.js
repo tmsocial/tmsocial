@@ -7,6 +7,7 @@ const conf = {
   },
   target: 'node',
   mode: 'development',
+  devtool: 'inline-source-map',
   module: {
     rules: [
       {

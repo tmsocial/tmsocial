@@ -129,9 +129,6 @@ export const resolvers = {
       return await taskManager.load({ site, contest, task });
     },
   },
-  LoginResponse: {
-
-  }
   Submission: {
     async task_participation({ id_parts: { site, contest, user, task } }: Node) {
       return await taskParticipationManager.load({ site, contest, user, task });
@@ -143,20 +140,17 @@ export const resolvers = {
     }
   },
   Mutation: {
-    async login(site: string, username: string, password: string) {
-      console.log(`Logging on ${site} with username ${username} and password: ${password}`);
-      const payload = {
-        user: username,
-        site: site
-      };
-      //
-      const token = jwt.sign(payload, "SecretKey!", { expiresIn: 60 * 60 });
-      return {
-        site:
-        token: token
-      };
-    },
+    async login(obj: unknown, { site_id, user, password }: { site_id: string, user: string, password: string }) {
+      console.log(await siteManager.load(site_id));
+      const { id_parts: { site } } = await siteManager.load(site_id);
+      const userNode = await userManager.load({ site, user });
+      const { id: user_id } = userNode;
 
+      console.log(`Logging on ${site} with username ${user} and password: ${password}`);
+
+      const token = jwt.sign({ user_id }, "SecretKey!");
+      return { user: userNode, token };
+    },
 
     async submit(root: unknown, { task_id, user_id, files }: { task_id: string, user_id: string, files: SubmissionFileInput[] }) {
       const { id_parts: { site: site1, contest, task } } = await taskManager.load(task_id);

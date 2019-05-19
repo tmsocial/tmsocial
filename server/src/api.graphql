@@ -83,7 +83,7 @@ type PartialScore {
 }
 
 type Mutation {
-    login(site: ID!, username: String!, password: String!): LoginResponse
+    login(site_id: ID!, user: String!, password: String!): LoginResponse!
     submit(task_id: ID!, user_id: ID!, files: [SubmissionFileInput!]!): Submission!
 }
 
