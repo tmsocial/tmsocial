@@ -19,7 +19,7 @@ interface Node {
 const CONFIG_DIRECTORY = '../test_site/config';
 const DATA_DIRECTORY = '../test_site/data';
 
-async function loadEmptyNode(path: string, id: string): Promise<Node> {
+async function loadEmptyConfig(id: string, path: string): Promise<Node> {
   return { id, path };
 }
 
@@ -52,7 +52,11 @@ export const resolvers = {
   Query: {
     async site(obj: unknown, { id }: { id: string }) {
       const [site] = id.split("/");
-      return await loadEmptyNode(id, join(site));
+      return await loadEmptyConfig(id, join(site));
+    },
+    async contest(obj: unknown, { id }: { id: string }) {
+      const [site, contest] = id.split("/");
+      return await loadConfig(`${site}/${contest}`, join(site, 'contests', contest));
     },
     async user(obj: unknown, { id }: { id: string }) {
       const [site, user] = id.split("/");
@@ -60,7 +64,7 @@ export const resolvers = {
     },
     async task(obj: unknown, { id }: { id: string }) {
       const [site, contest, task] = id.split("/");
-      return await loadEmptyNode(`${site}/${contest}/${task}`, join(site, 'contests', contest, 'tasks', task));
+      return await loadEmptyConfig(`${site}/${contest}/${task}`, join(site, 'contests', contest, 'tasks', task));
     },
   },
   Site: {
@@ -69,21 +73,16 @@ export const resolvers = {
     },
   },
   Contest: {
-    async tasks({ path }: { path: string }) {
+    async tasks({ id, path }: Node) {
       const dir = readdirSync(join(CONFIG_DIRECTORY, path, 'tasks'));
-      return await Promise.all(dir.map(id => loadEmptyNode(path, id)));
+      return await Promise.all(dir.map(task => loadEmptyConfig(`${id}/${task}`, join(path, 'tasks', task))));
     },
-  },
-  ContestTask: {
-    id({ id }: { id: string }) {
-      return id;
-    }
   },
   Submission: {
     async official_evaluation({ id, path }: Node) {
       const dir = readdirSync(join(DATA_DIRECTORY, path, 'evaluations')).sort();
       const evaluation = dir[dir.length - 1];
-      return await loadEmptyNode(`${id}/${evaluation}`, join(path, "evaluations", evaluation));
+      return await loadEmptyConfig(`${id}/${evaluation}`, join(path, "evaluations", evaluation));
     }
   },
   Mutation: {
