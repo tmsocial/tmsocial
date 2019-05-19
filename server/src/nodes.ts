@@ -1,11 +1,16 @@
 import { join } from "path";
-import { readFileSync } from "fs";
+import { readFileSync, existsSync } from "fs";
 
 export const CONFIG_DIRECTORY = '../test_site/config';
 export const DATA_DIRECTORY = '../test_site/data';
 
+export interface IdParts {
+    [name: string]: string
+}
+
 export interface Node {
     id: string,
+    id_parts: IdParts
 }
 
 interface IdSegment { type: "id", name: string };
@@ -25,12 +30,33 @@ export class NodeManager {
         return new NodeManager([...this.segments, { type: "id", name }])
     }
 
+    async load(id: string, { loadDataIn }: {
+        loadDataIn?: string,
+    } = {}): Promise<Node & object> {
+        let data;
+        if (loadDataIn !== undefined) {
+            const dataFilePath = join(loadDataIn, this.path(id), 'data.json')
+            if(existsSync(dataFilePath)) {
+                data = JSON.parse(readFileSync(dataFilePath, 'utf8'));
+            } else {
+                throw new Error(`id '${id}' not found`);
+            }
+        } else {
+            data = {};
+        }
+        return {
+            id,
+            id_parts: this.parseId(id),
+            ...data,
+        };
+    }
+
     parseId(id: string) {
         const parts = id.split("/");
-        const parsed: { [name: string]: string } = {};
+        const parsed: IdParts = {};
 
         const expectedParts = this.segments.filter(s => s.type === "id").length;
-        if(parts.length !== expectedParts) {
+        if (parts.length !== expectedParts) {
             throw new Error(`unable to parse id, expected ${expectedParts} parts, got ${parts.length}`);
         }
 
@@ -40,7 +66,7 @@ export class NodeManager {
         return parsed;
     }
 
-    formatId(parts: { [name: string]: string }) {
+    formatId(parts: IdParts) {
         return this.segments.filter(s => s.type === "id").map((segment, i) => parts[(segment as IdSegment).name]).join("/");
     }
 
@@ -56,34 +82,6 @@ export class NodeManager {
             }
         }
         return join(...pathParts);
-    }
-
-    async loadEmptyConfig(id: string): Promise<Node> {
-        return { id };
-    }
-
-    async loadNode(root: string, id: string): Promise<Node | null> {
-        let file;
-        try {
-            file = readFileSync(join(root, this.path(id), 'data.json'), 'utf8');
-        } catch (e) {
-            console.log(e);
-            return null;
-        }
-
-        const content = JSON.parse(file);
-        return {
-            id,
-            ...content,
-        };
-    }
-
-    async loadConfig(id: string): Promise<any> {
-        return await this.loadNode(CONFIG_DIRECTORY, id);
-    }
-
-    async loadData(id: string): Promise<any> {
-        return await this.loadNode(DATA_DIRECTORY, id);
     }
 }
 

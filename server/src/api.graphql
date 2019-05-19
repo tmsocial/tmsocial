@@ -9,51 +9,57 @@ type Query {
     site(id: ID!): Site!
     user(id: ID!): User!
     contest(id: ID): Contest!
-    task(id: ID): ContestTask!
+    task(id: ID): Task!
     submission(id: ID): Submission!
     evaluation(id: ID): Evaluation!
+    participation(user_id: ID!, contest_id: ID!): Participation!
+    task_participation(user_id: ID!, task_id: ID!): TaskParticipation!
 }
 
 type Site {
     id: ID!
-    default_contest: Contest
+    default_contest: Contest!
     # contests_list: [Contest!]
 }
 
 type Contest {
     id: ID!
-    tasks: [ContestTask!]!
-    participation(user_id: ID!): Participation
+    site: Site!
+    tasks: [Task!]!
+    participation_of_user(user_id: ID!): Participation!
     max_score: Int
 }
 
 type User {
+    id: ID!
+    site: Site!
     display_name: String!
+    participation_in_default_contest: Participation!
+    participation_in_contest(contest_id: ID!): Participation!
 }
 
 type Participation {
-    tasks: [ParticipationTask!]
+    user: User!
+    contest: Contest!
+    task_participations: [TaskParticipation!]!
     score: Int
 }
 
-interface TaskInterface {
+type Task {
     id: ID!
+    contest: Contest!    
     metadata_json: String!
 }
 
-type ContestTask implements TaskInterface {
-    id: ID!    
-    metadata_json: String!
-}
-
-type ParticipationTask {
-    id: ID!
-    metadata_json: String!
+type TaskParticipation {
+    user: User!
+    task: Task!
     submissions(query: PageQuery): [Submission!]!
 }
 
 type Submission {
     id: ID!
+    task_participation: TaskParticipation!
     official_evaluation: Evaluation!
     timestamp: String!
     files: [SubmissionFile!]!
@@ -88,7 +94,6 @@ input SubmissionFileInput {
 }
 
 type LoginResponse {
-    site: Site!
     user: User!
 }
 

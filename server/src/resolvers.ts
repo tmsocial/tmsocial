@@ -1,13 +1,11 @@
+import { PubSub } from "apollo-server";
 import { execFile } from "child_process";
 import { EventEmitter } from "events";
 import { mkdirSync, readdirSync, writeFileSync } from "fs";
 import { DateTime } from "luxon";
 import { join } from "path";
-import { fromEvent } from "rxjs";
-import { first } from "rxjs/operators";
 import { Tail } from "tail";
 import { CONFIG_DIRECTORY, DATA_DIRECTORY, Node, NodeManager } from "./nodes";
-import { PubSub } from "apollo-server";
 
 interface SubmissionFileInput {
   field: string
@@ -20,57 +18,123 @@ const userManager = siteManager.appendPath("users").appendId("user");
 const contestManager = siteManager.appendPath("contests").appendId("contest");
 const taskManager = contestManager.appendPath("tasks").appendId("task");
 const participationManager = contestManager.appendPath("participations").appendId("user");
-const participationTaskManager = participationManager.appendPath("tasks").appendId("task");
-const submissionManager = participationTaskManager.appendPath("submissions").appendId("submission");
+const taskParticipationManager = participationManager.appendPath("tasks").appendId("task");
+const submissionManager = taskParticipationManager.appendPath("submissions").appendId("submission");
 const evaluationManager = submissionManager.appendPath("evaluations").appendId("evaluation");
+
+function checkSameSite(site1: string, site2: string) {
+  if (site1 !== site2) {
+    throw new Error(`Sites do not match: '${site1}', '${site2}'`)
+  }
+  return site1;
+}
 
 export const resolvers = {
   Query: {
     async site(obj: unknown, { id }: { id: string }) {
-      return await siteManager.loadEmptyConfig(id);
+      return await siteManager.load(id);
     },
     async user(obj: unknown, { id }: { id: string }) {
-      return await userManager.loadConfig(id);
+      return await userManager.load(id, { loadDataIn: CONFIG_DIRECTORY });
     },
     async contest(obj: unknown, { id }: { id: string }) {
-      return await contestManager.loadConfig(id);
+      return await contestManager.load(id, { loadDataIn: CONFIG_DIRECTORY });
     },
     async task(obj: unknown, { id }: { id: string }) {
-      return await taskManager.loadEmptyConfig(id);
+      return await taskManager.load(id);
+    },
+    async participation(obj: unknown, { user_id, contest_id }: { user_id: string, contest_id: string }) {
+      const { id_parts: { site: site1, user } } = await userManager.load(user_id, { loadDataIn: CONFIG_DIRECTORY });
+      const { id_parts: { site: site2, contest } } = await contestManager.load(contest_id, { loadDataIn: CONFIG_DIRECTORY });
+      const site = checkSameSite(site1, site2);
+      return await participationManager.load(participationManager.formatId({ site, user, contest }), { loadDataIn: CONFIG_DIRECTORY });
+    },
+    async task_participation(obj: unknown, { user_id, task_id }: { user_id: string, task_id: string }) {
+      const { id_parts: { site: site1, user } } = await userManager.load(user_id, { loadDataIn: CONFIG_DIRECTORY });
+      const { id_parts: { site: site2, contest, task } } = await taskManager.load(task_id);
+      const site = checkSameSite(site1, site2);
+      return await participationManager.load(taskParticipationManager.formatId({ site, user, contest, task }), { loadDataIn: CONFIG_DIRECTORY });
     },
     async submission(obj: unknown, { id }: { id: string }) {
-      return await submissionManager.loadEmptyConfig(id);
+      return await submissionManager.load(id);
     },
     async evaluation(obj: unknown, { id }: { id: string }) {
-      return await evaluationManager.loadEmptyConfig(id);
+      return await evaluationManager.load(id);
     },
   },
   Site: {
-    async default_contest({ id }: Node) {
-      return await contestManager.loadConfig(`${id}/default`);
+    async default_contest({ id_parts: { site } }: Node) {
+      return await contestManager.load(contestManager.formatId({ site, contest: 'default' }), { loadDataIn: CONFIG_DIRECTORY });
+    },
+  },
+  User: {
+    async site({ id_parts: { site } }: Node) {
+      return await siteManager.load(siteManager.formatId({ site }));
+    },
+    async participation_in_default_contest({ id_parts: { site, user } }: Node) {
+      return await participationManager.load(participationManager.formatId({ site, contest: 'default', user }));
+    },
+    async participation_in_contest({ id_parts: { site, user } }: Node, { contest_id }: { contest_id: string }) {
+      const { id_parts: { site: site2, contest } } = await contestManager.load(contest_id);
+      checkSameSite(site, site2);
+      return await participationManager.load(participationManager.formatId({ site, contest, user }));
     },
   },
   Contest: {
+    async site({ id_parts: { site } }: Node) {
+      return await siteManager.load(siteManager.formatId({ site }));
+    },
     async tasks({ id }: Node) {
       const dir = readdirSync(join(CONFIG_DIRECTORY, contestManager.path(id), 'tasks'));
-      return await Promise.all(dir.map(task => taskManager.loadEmptyConfig(`${id}/${task}`)));
+      return await Promise.all(dir.map(task => taskManager.load(`${id}/${task}`)));
+    },
+    async participation_of_user({ id_parts: { site, contest } }: Node, { user_id }: { user_id: string }) {
+      const { id_parts: { site: site2, user } } = await userManager.load(user_id);
+      checkSameSite(site, site2);
+      return await participationManager.load(participationManager.formatId({ site, contest, user }));
+    },
+  },
+  Task: {
+    async contest({ id_parts: { site, contest } }: Node) {
+      return await taskManager.load(taskManager.formatId({ site, contest }));
+    },
+  },
+  Participation: {
+    async user({ id_parts: { site, user } }: Node) {
+      return await userManager.load(userManager.formatId({ site, user }));
+    },
+    async contest({ id_parts: { site, contest } }: Node) {
+      return await contestManager.load(contestManager.formatId({ site, contest }));
+    },
+    async task_participations({ id_parts: { site, contest, user } }: Node) {
+      const dir = readdirSync(join(CONFIG_DIRECTORY, contestManager.path(contestManager.formatId({ site, contest })), 'tasks'));
+      return await Promise.all(dir.map(task => taskParticipationManager.load(taskParticipationManager.formatId({ site, contest, user, task })));
+    },
+  },
+  TaskParticipation: {
+    async user({ id_parts: { site, user } }: Node) {
+      return await userManager.load(userManager.formatId({ site, user }));
+    },
+    async task({ id_parts: { site, contest, task } }: Node) {
+      return await taskManager.load(taskManager.formatId({ site, contest, task }));
     },
   },
   Submission: {
+    async task_participation({ id_parts: { site, contest, user, task } }: Node) {
+      return await taskParticipationManager.load(taskParticipationManager.formatId({ site, contest, user, task }));
+    },
     async official_evaluation({ id }: Node) {
       const dir = readdirSync(join(DATA_DIRECTORY, submissionManager.path(id), 'evaluations')).sort();
       const evaluation = dir[dir.length - 1];
-      return await evaluationManager.loadEmptyConfig(`${id}/${evaluation}`);
+      return await evaluationManager.load(`${id}/${evaluation}`);
     }
   },
   Mutation: {
     async submit(root: unknown, { task_id, user_id, files }: { task_id: string, user_id: string, files: SubmissionFileInput[] }) {
-      const { site, contest, task } = taskManager.parseId(task_id);
-      const { site: site2, user } = userManager.parseId(user_id);
+      const { id_parts: { site: site1, contest, task } } = await taskManager.load(task_id);
+      const { id_parts: { site: site2, user } } = await userManager.load(user_id, { loadDataIn: CONFIG_DIRECTORY });
 
-      if (site !== site2) {
-        throw new Error("cannot submit for a different site");
-      }
+      const site = checkSameSite(site1, site2);
 
       const submission = DateTime.utc().toISO();
 
@@ -103,7 +167,7 @@ export const resolvers = {
       ]);
       process.unref();
 
-      return await submissionManager.loadData(submissionId);
+      return await submissionManager.load(submissionId, { loadDataIn: DATA_DIRECTORY });
     }
   },
   Subscription: {
