@@ -15,6 +15,7 @@ type Query {
 }
 
 type Site {
+    id: ID!
     default_contest: Contest
     # contests_list: [Contest!]
 }

@@ -3,7 +3,8 @@
     "start": "concurrently npm:build:watch npm:dev-server",
     "dev-server": "nodemon -x node dist/index.js",
     "build:watch": "NODE_ENV=development webpack --watch",
-    "build": "webpack"
+    "build": "webpack",
+    "test": "jest"
   },
   "dependencies": {
     "apollo-server": "^2.4.8",

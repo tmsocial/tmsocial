@@ -1,11 +1,12 @@
-import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "fs";
+import { execFile } from "child_process";
+import { EventEmitter } from "events";
+import { mkdirSync, readdirSync, writeFileSync } from "fs";
 import { DateTime } from "luxon";
 import { join } from "path";
 import { fromEvent } from "rxjs";
 import { first } from "rxjs/operators";
 import { Tail } from "tail";
-import { spawn, execFile, execFileSync } from "child_process";
-import { EventEmitter } from "events";
+import { NodeManager, CONFIG_DIRECTORY, Node, DATA_DIRECTORY } from "./nodes";
 
 interface SubmissionFileInput {
   field: string
@@ -13,91 +14,14 @@ interface SubmissionFileInput {
   content_base64: string
 }
 
-interface Node {
-  id: string,
-  path: string,
-}
-
-type PathSegment = { type: "path", path: string } | { type: "id" };
-
-class NodeManager {
-  constructor(
-    readonly segments: PathSegment[],
-  ) { }
-
-  appendPath(path: string) {
-    return new NodeManager([...this.segments, { type: "path", path }])
-  }
-
-  appendId() {
-    return new NodeManager([...this.segments, { type: "id" }])
-  }
-
-  parseId(id: string) {
-    const parts = id.split("/");
-    return this.segments.filter(s => s.type === "id").map((_, i) => parts[i]);
-  }
-
-  formatId(parts: string[]) {
-    return parts.join("/");
-  }
-
-  path(id: string) {
-    const idParts = this.parseId(id);
-    const pathParts = [];
-    for (const segment of this.segments) {
-      if (segment.type === "id") {
-        pathParts.push(idParts.shift() as string);
-      }
-      if (segment.type === "path") {
-        pathParts.push(segment.path);
-      }
-    }
-    return join(...pathParts);
-  }
-
-  async loadEmptyConfig(id: string): Promise<Node> {
-    return { id, path: this.path(id) };
-  }
-
-  async loadNode(root: string, id: string): Promise<Node | null> {
-    const path = this.path(id);
-    let file;
-    try {
-      file = readFileSync(join(root, path, 'data.json'), 'utf8');
-    } catch (e) {
-      console.log(e);
-      return null;
-    }
-
-    const content = JSON.parse(file);
-    return {
-      id,
-      path,
-      ...content,
-    };
-  }
-
-  async loadConfig(id: string): Promise<any> {
-    return await this.loadNode(CONFIG_DIRECTORY, id);
-  }
-
-  async loadData(id: string): Promise<any> {
-    return await this.loadNode(DATA_DIRECTORY, id);
-  }
-}
-
-const CONFIG_DIRECTORY = '../test_site/config';
-const DATA_DIRECTORY = '../test_site/data';
-
-const siteManager = new NodeManager([]).appendId();
-const userManager = siteManager.appendPath("users").appendId();
-const contestManager = siteManager.appendPath("contests").appendId();
-const taskManager = contestManager.appendPath("tasks").appendId();
-const participationManager = contestManager.appendPath("participations").appendId();
-const participationTaskManager = participationManager.appendPath("tasks").appendId();
-const submissionManager = participationTaskManager.appendPath("submissions").appendId();
-const evaluationManager = submissionManager.appendPath("evaluations").appendId();
+const siteManager = new NodeManager([]).appendId("site");
+const userManager = siteManager.appendPath("users").appendId("user");
+const contestManager = siteManager.appendPath("contests").appendId("contest");
+const taskManager = contestManager.appendPath("tasks").appendId("task");
+const participationManager = contestManager.appendPath("participations").appendId("user");
+const participationTaskManager = participationManager.appendPath("tasks").appendId("task");
+const submissionManager = participationTaskManager.appendPath("submissions").appendId("submission");
+const evaluationManager = submissionManager.appendPath("evaluations").appendId("evaluation");
 
 export const resolvers = {
   Query: {
@@ -139,9 +63,9 @@ export const resolvers = {
     }
   },
   Mutation: {
-    async submit(root: any, { task_id, user_id, files }: { task_id: string, user_id: string, files: SubmissionFileInput[] }) {
-      const [site, contest, task] = taskManager.parseId(task_id);
-      const [site2, user] = userManager.parseId(user_id);
+    async submit(root: unknown, { task_id, user_id, files }: { task_id: string, user_id: string, files: SubmissionFileInput[] }) {
+      const { site, contest, task } = taskManager.parseId(task_id);
+      const { site: site2, user } = userManager.parseId(user_id);
 
       if (site !== site2) {
         throw new Error("cannot submit for a different site");
@@ -149,7 +73,7 @@ export const resolvers = {
 
       const submission = DateTime.utc().toISO();
 
-      const submissionId = submissionManager.formatId([site, contest, user, task, submission]);
+      const submissionId = submissionManager.formatId({ site, contest, user, task, submission });
       const submissionPath = submissionManager.path(submissionId);
 
       mkdirSync(join(DATA_DIRECTORY, submissionPath), { recursive: true });
@@ -178,7 +102,7 @@ export const resolvers = {
       ]);
       process.unref();
 
-      return await submissionManager.loadData(`${site}/${contest}/${user}/${task}/${submission}`);
+      return await submissionManager.loadData(submissionId);
     }
   },
   Subscription: {
