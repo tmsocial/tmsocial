@@ -18,87 +18,124 @@ interface Node {
   path: string,
 }
 
+type PathSegment = { type: "path", path: string } | { type: "id" };
+
+class NodeManager {
+  constructor(
+    readonly segments: PathSegment[],
+  ) { }
+
+  appendPath(path: string) {
+    return new NodeManager([...this.segments, { type: "path", path }])
+  }
+
+  appendId() {
+    return new NodeManager([...this.segments, { type: "id" }])
+  }
+
+  parseId(id: string) {
+    const parts = id.split("/");
+    return this.segments.filter(s => s.type === "id").map((_, i) => parts[i]);
+  }
+
+  formatId(parts: string[]) {
+    return parts.join("/");
+  }
+
+  path(id: string) {
+    const idParts = id.split("/");
+    const pathParts = [];
+    for (const segment of this.segments) {
+      if (segment.type === "id") {
+        pathParts.push(idParts.shift() as string);
+      }
+      if (segment.type === "path") {
+        pathParts.push(segment.path);
+      }
+    }
+    return join(...pathParts);
+  }
+
+  async loadEmptyConfig(id: string): Promise<Node> {
+    return { id, path: this.path(id) };
+  }
+
+  async loadNode(root: string, id: string): Promise<Node | null> {
+    const path = this.path(id);
+    let file;
+    try {
+      file = readFileSync(join(root, path, 'data.json'), 'utf8');
+    } catch (e) {
+      console.log(e);
+      return null;
+    }
+
+    const content = JSON.parse(file);
+    return {
+      id,
+      path,
+      ...content,
+    };
+  }
+
+  async loadConfig(id: string): Promise<any> {
+    return await this.loadNode(CONFIG_DIRECTORY, id);
+  }
+
+  async loadData(id: string): Promise<any> {
+    return await this.loadNode(DATA_DIRECTORY, id);
+  }
+}
+
 const CONFIG_DIRECTORY = '../test_site/config';
 const DATA_DIRECTORY = '../test_site/data';
 
-async function loadEmptyConfig(id: string, path: string): Promise<Node> {
-  return { id, path };
-}
-
-async function loadNode(root: string, id: string, path: string): Promise<Node | null> {
-  let file;
-  try {
-    file = readFileSync(join(root, path, 'data.json'), 'utf8');
-  } catch (e) {
-    console.log(e);
-    return null;
-  }
-
-  const content = JSON.parse(file);
-  return {
-    id,
-    path,
-    ...content,
-  };
-}
-
-async function loadConfig(id: string, path: string): Promise<any> {
-  return await loadNode(CONFIG_DIRECTORY, id, path);
-}
-
-async function loadData(id: string, path: string): Promise<any> {
-  return await loadNode(DATA_DIRECTORY, id, path);
-}
+const siteManager = new NodeManager([]).appendId();
+const userManager = siteManager.appendPath("users").appendId();
+const contestManager = siteManager.appendPath("contests").appendId();
+const taskManager = contestManager.appendPath("tasks").appendId();
+const participationManager = contestManager.appendPath("participations").appendId();
+const participationTaskManager = participationManager.appendPath("tasks").appendId();
+const submissionManager = participationTaskManager.appendPath("submissions").appendId();
+const evaluationManager = submissionManager.appendPath("evaluations").appendId();
 
 export const resolvers = {
   Query: {
     async site(obj: unknown, { id }: { id: string }) {
-      const [site] = id.split("/");
-      return await loadEmptyConfig(id, join(site));
+      return await siteManager.loadEmptyConfig(id);
     },
     async user(obj: unknown, { id }: { id: string }) {
-      const [site, user] = id.split("/");
-      return await loadConfig(`${site}/${user}`, join(site, 'users', user));
+      return await userManager.loadConfig(id);
     },
     async contest(obj: unknown, { id }: { id: string }) {
-      const [site, contest] = id.split("/");
-      return await loadConfig(`${site}/${contest}`, join(site, 'contests', contest));
+      return await contestManager.loadConfig(id);
     },
     async task(obj: unknown, { id }: { id: string }) {
-      const [site, contest, task] = id.split("/");
-      return await loadEmptyConfig(`${site}/${contest}/${task}`, join(site, 'contests', contest, 'tasks', task));
+      return await taskManager.loadEmptyConfig(id);
     },
     async submission(obj: unknown, { id }: { id: string }) {
-      const [site, contest, user, task, submission] = id.split("/");
-      return await loadEmptyConfig(
-        `${site}/${contest}/${user}/${task}/${submission}`, 
-        join(site, 'contests', contest, 'participations', user, 'tasks', task, 'submissions', submission),
-      );
+      return await submissionManager.loadEmptyConfig(id);
     },
     async evaluation(obj: unknown, { id }: { id: string }) {
-      const [site, contest, user, task, submission, evaluation] = id.split("/");
-      return await loadEmptyConfig(
-        `${site}/${contest}/${user}/${task}/${submission}/${evaluation}`, 
-        join(site, 'contests', contest, 'participations', user, 'tasks', task, 'submissions', submission, 'evalutions', evaluation),
-      );
+      return await evaluationManager.loadEmptyConfig(id);
     },
   },
   Site: {
     async default_contest({ id, path }: Node) {
-      return await loadConfig(`${id}/default`, join(path, 'contests/default'));
+      return await contestManager.loadConfig(`${id}/default`);
     },
   },
   Contest: {
     async tasks({ id, path }: Node) {
       const dir = readdirSync(join(CONFIG_DIRECTORY, path, 'tasks'));
-      return await Promise.all(dir.map(task => loadEmptyConfig(`${id}/${task}`, join(path, 'tasks', task))));
+      return await Promise.all(dir.map(task => taskManager.loadEmptyConfig(`${id}/${task}`)));
     },
   },
   Submission: {
     async official_evaluation({ id, path }: Node) {
       const dir = readdirSync(join(DATA_DIRECTORY, path, 'evaluations')).sort();
       const evaluation = dir[dir.length - 1];
-      return await loadEmptyConfig(`${id}/${evaluation}`, join(path, "evaluations", evaluation));
+      return await evaluationManager.loadEmptyConfig(`${id}/${evaluation}`);
     }
   },
   Mutation: {
@@ -128,8 +165,8 @@ export const resolvers = {
       writeFileSync(join(DATA_DIRECTORY, submissionPath, "data.json"), JSON.stringify({
         timestamp: submission,
       }), {
-        encoding: 'utf8',
-      })
+          encoding: 'utf8',
+        })
 
       mkdirSync(join(DATA_DIRECTORY, submissionPath, "files"), { recursive: true });
 
@@ -147,9 +184,9 @@ export const resolvers = {
         join(DATA_DIRECTORY, submissionPath, 'evaluations', evaluation),
       ])
 
-      execFile("echo", [ "XXXXXXXXXXXXXXXXXXXXXXXXXXXXX" ]);
+      execFile("echo", ["XXXXXXXXXXXXXXXXXXXXXXXXXXXXX"]);
 
-      return await loadData(`${site}/${contest}/${user}/${task}/${submission}`, submissionPath);
+      return await submissionManager.loadData(`${site}/${contest}/${user}/${task}/${submission}`);
     }
   },
   Subscription: {
@@ -184,10 +221,10 @@ export const resolvers = {
         tail.watch();
 
         try {
-          while(true) {
+          while (true) {
             const line = await lines.pipe(first()).toPromise();
             const event = JSON.parse(line);
-            if(event.type === "end") {
+            if (event.type === "end") {
               break;
             }
             yield {
