@@ -45,7 +45,7 @@ def process_event(event, source):
         yield from process_result(event, source)
 
 
-def start_task_maker(*, task_dir, submission_dir, evaluation_dir):
+def evaluate_submission(*, task_dir, submission_dir, evaluation_dir):
     files_dir = os.path.join(submission_dir, "files")
     submitted_files = list(os.path.abspath(os.path.join(files_dir, f)) for f in os.listdir(files_dir))
 
@@ -75,7 +75,7 @@ def main():
     if len(sys.argv) < 4:
         print(f"Usage: {sys.argv[0]} <task_dir> <submission_dir> <evaluation_dir>", file=sys.stderr)
         exit(1)
-    start_task_maker(
+    evaluate_submission(
         task_dir=sys.argv[1],
         submission_dir=sys.argv[2],
         evaluation_dir=sys.argv[3],
