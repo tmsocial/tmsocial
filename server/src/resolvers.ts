@@ -1,5 +1,5 @@
 import { PubSub } from "apollo-server";
-import { execFile } from "child_process";
+import { execFile, execFileSync } from "child_process";
 import { EventEmitter } from "events";
 import { mkdirSync, readdirSync, writeFileSync } from "fs";
 import { DateTime } from "luxon";
@@ -97,6 +97,14 @@ export const resolvers = {
   Task: {
     async contest({ id_parts: { site, contest } }: Node) {
       return await taskManager.load({ site, contest });
+    },
+    async metadata_json({ path }: Node) {
+      const metadata = execFileSync("../task_maker_wrapper/metadata.py", [
+        join(CONFIG_DIRECTORY, path)
+      ], {
+          encoding: 'utf8',
+        });
+      return metadata;
     },
   },
   Participation: {
