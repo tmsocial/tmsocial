@@ -43,7 +43,7 @@ class NodeManager {
   }
 
   path(id: string) {
-    const idParts = id.split("/");
+    const idParts = this.parseId(id);
     const pathParts = [];
     for (const segment of this.segments) {
       if (segment.type === "id") {
@@ -121,27 +121,27 @@ export const resolvers = {
     },
   },
   Site: {
-    async default_contest({ id, path }: Node) {
+    async default_contest({ id }: Node) {
       return await contestManager.loadConfig(`${id}/default`);
     },
   },
   Contest: {
-    async tasks({ id, path }: Node) {
-      const dir = readdirSync(join(CONFIG_DIRECTORY, path, 'tasks'));
+    async tasks({ id }: Node) {
+      const dir = readdirSync(join(CONFIG_DIRECTORY, contestManager.path(id), 'tasks'));
       return await Promise.all(dir.map(task => taskManager.loadEmptyConfig(`${id}/${task}`)));
     },
   },
   Submission: {
-    async official_evaluation({ id, path }: Node) {
-      const dir = readdirSync(join(DATA_DIRECTORY, path, 'evaluations')).sort();
+    async official_evaluation({ id }: Node) {
+      const dir = readdirSync(join(DATA_DIRECTORY, submissionManager.path(id), 'evaluations')).sort();
       const evaluation = dir[dir.length - 1];
       return await evaluationManager.loadEmptyConfig(`${id}/${evaluation}`);
     }
   },
   Mutation: {
     async submit(root: any, { task_id, user_id, files }: { task_id: string, user_id: string, files: SubmissionFileInput[] }) {
-      const [site, contest, task] = task_id.split("/");
-      const [site2, user] = user_id.split("/");
+      const [site, contest, task] = taskManager.parseId(task_id);
+      const [site2, user] = userManager.parseId(user_id);
 
       if (site !== site2) {
         throw new Error("cannot submit for a different site");
@@ -149,24 +149,18 @@ export const resolvers = {
 
       const submission = DateTime.utc().toISO();
 
-      const submissionPath = join(
-        site,
-        "contests",
-        contest,
-        "participations",
-        user,
-        "tasks",
-        task,
-        "submissions",
-        submission,
-      );
+      const submissionId = submissionManager.formatId([site, contest, user, task, submission]);
+      const submissionPath = submissionManager.path(submissionId);
 
       mkdirSync(join(DATA_DIRECTORY, submissionPath), { recursive: true });
-      writeFileSync(join(DATA_DIRECTORY, submissionPath, "data.json"), JSON.stringify({
-        timestamp: submission,
-      }), {
+      writeFileSync(
+        join(DATA_DIRECTORY, submissionPath, "data.json"),
+        JSON.stringify({
+          timestamp: submission,
+        }), {
           encoding: 'utf8',
-        })
+        }
+      )
 
       mkdirSync(join(DATA_DIRECTORY, submissionPath, "files"), { recursive: true });
 
@@ -192,23 +186,7 @@ export const resolvers = {
   Subscription: {
     evaluation_events: {
       async * subscribe(obj: any, { evaluation_id }: { evaluation_id: string }) {
-        const [site, contest, user, task, submission, evaluation] = evaluation_id.split("/");
-
-        const path = join(
-          DATA_DIRECTORY,
-          site,
-          "contests",
-          contest,
-          "participations",
-          user,
-          "tasks",
-          task,
-          "submissions",
-          submission,
-          "evaluations",
-          evaluation,
-          "events.jsonl"
-        )
+        const path = join(DATA_DIRECTORY, evaluationManager.path(evaluation_id), "events.jsonl")
 
         const tail = new Tail(path, {
           encoding: 'utf8',
