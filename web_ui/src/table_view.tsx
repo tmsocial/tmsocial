@@ -71,11 +71,15 @@ const ScoreCellView = ({ column, cell, summary }: CellViewProps<ScoreColumn, Sco
     </td>
 )
 
+const DummyCellView = ({ column, cell, summary }: CellViewProps<Column, Cell>) => (
+    <td>{column.type}</td>
+)
+
 const PercentageCellView = ({ column, cell, summary }: CellViewProps<PercentageColumn, ValueCell<Fraction>>) => (
     <td>
         {wrapValue(evaluateExpression(summary, cell.value), v => (
             <React.Fragment>{(v.fraction * 100).toFixed(column.precision || 0)}%</React.Fragment>
-        ))}
+            ))}
     </td>
 )
 
@@ -91,6 +95,16 @@ const columnViews: {
     memory_usage: { header: NamedColumnHeaderView, cell: MemoryUsageCellView },
     percentage: { header: NamedColumnHeaderView, cell: PercentageCellView },
     score: { header: NamedColumnHeaderView, cell: ScoreCellView },
+    // row_name: { header: NamedColumnHeaderView, cell: DummyCellView },
+    // row_number: { header: NamedColumnHeaderView, cell: DummyCellView },
+    // time_usage: { header: NamedColumnHeaderView, cell: DummyCellView },
+    // memory_usage: { header: NamedColumnHeaderView, cell: DummyCellView },
+    // percentage: { header: NamedColumnHeaderView, cell: DummyCellView },
+    // score: { header: NamedColumnHeaderView, cell: DummyCellView },
+    outcome: { header: NamedColumnHeaderView, cell: DummyCellView },
+    signal: { header: NamedColumnHeaderView, cell: DummyCellView },
+    return_code: { header: NamedColumnHeaderView, cell: DummyCellView },
+    message: { header: NamedColumnHeaderView, cell: DummyCellView },
 };
 
 const GroupHeaderView = ({ section, group }: { section: Table, group: RowGroup }) => (
