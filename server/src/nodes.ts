@@ -11,6 +11,7 @@ export interface IdParts {
 export interface Node {
     id: string,
     id_parts: IdParts
+    path: string
 }
 
 interface IdSegment { type: "id", name: string };
@@ -30,12 +31,21 @@ export class NodeManager {
         return new NodeManager([...this.segments, { type: "id", name }])
     }
 
-    async load(id: string, { loadDataIn }: {
+    async load(idOrIdParts: string | IdParts, { loadDataIn }: {
         loadDataIn?: string,
     } = {}): Promise<Node & object> {
+        let id;
+        if(typeof idOrIdParts === "string") {
+            id = idOrIdParts;
+        } else {
+            id = this.formatId(idOrIdParts);
+        }
+        const id_parts = this.parseId(id);
+
+        const path = this.path(id);
         let data;
         if (loadDataIn !== undefined) {
-            const dataFilePath = join(loadDataIn, this.path(id), 'data.json')
+            const dataFilePath = join(loadDataIn, path, 'data.json')
             if(existsSync(dataFilePath)) {
                 data = JSON.parse(readFileSync(dataFilePath, 'utf8'));
             } else {
@@ -46,7 +56,8 @@ export class NodeManager {
         }
         return {
             id,
-            id_parts: this.parseId(id),
+            id_parts,
+            path,
             ...data,
         };
     }

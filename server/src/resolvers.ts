@@ -53,7 +53,7 @@ export const resolvers = {
       const { id_parts: { site: site1, user } } = await userManager.load(user_id, { loadDataIn: CONFIG_DIRECTORY });
       const { id_parts: { site: site2, contest, task } } = await taskManager.load(task_id);
       const site = checkSameSite(site1, site2);
-      return await participationManager.load(taskParticipationManager.formatId({ site, user, contest, task }), { loadDataIn: CONFIG_DIRECTORY });
+      return await taskParticipationManager.load({ site, user, contest, task }, { loadDataIn: CONFIG_DIRECTORY });
     },
     async submission(obj: unknown, { id }: { id: string }) {
       return await submissionManager.load(id);
@@ -64,69 +64,70 @@ export const resolvers = {
   },
   Site: {
     async default_contest({ id_parts: { site } }: Node) {
-      return await contestManager.load(contestManager.formatId({ site, contest: 'default' }), { loadDataIn: CONFIG_DIRECTORY });
+      return await contestManager.load({ site, contest: 'default' }, { loadDataIn: CONFIG_DIRECTORY });
     },
   },
   User: {
     async site({ id_parts: { site } }: Node) {
-      return await siteManager.load(siteManager.formatId({ site }));
+      return await siteManager.load({ site });
     },
     async participation_in_default_contest({ id_parts: { site, user } }: Node) {
-      return await participationManager.load(participationManager.formatId({ site, contest: 'default', user }));
+      return await participationManager.load({ site, contest: 'default', user });
     },
     async participation_in_contest({ id_parts: { site, user } }: Node, { contest_id }: { contest_id: string }) {
       const { id_parts: { site: site2, contest } } = await contestManager.load(contest_id);
       checkSameSite(site, site2);
-      return await participationManager.load(participationManager.formatId({ site, contest, user }));
+      return await participationManager.load({ site, contest, user });
     },
   },
   Contest: {
     async site({ id_parts: { site } }: Node) {
       return await siteManager.load(siteManager.formatId({ site }));
     },
-    async tasks({ id }: Node) {
-      const dir = readdirSync(join(CONFIG_DIRECTORY, contestManager.path(id), 'tasks'));
-      return await Promise.all(dir.map(task => taskManager.load(`${id}/${task}`)));
+    async tasks({ path, id_parts: { site, contest } }: Node) {
+      const dir = readdirSync(join(CONFIG_DIRECTORY, path, 'tasks'));
+      return await Promise.all(dir.map(task => taskManager.load({ site, contest, task })));
     },
     async participation_of_user({ id_parts: { site, contest } }: Node, { user_id }: { user_id: string }) {
       const { id_parts: { site: site2, user } } = await userManager.load(user_id);
       checkSameSite(site, site2);
-      return await participationManager.load(participationManager.formatId({ site, contest, user }));
+      return await participationManager.load({ site, contest, user });
     },
   },
   Task: {
     async contest({ id_parts: { site, contest } }: Node) {
-      return await taskManager.load(taskManager.formatId({ site, contest }));
+      return await taskManager.load({ site, contest });
     },
   },
   Participation: {
     async user({ id_parts: { site, user } }: Node) {
-      return await userManager.load(userManager.formatId({ site, user }));
+      return await userManager.load({ site, user });
     },
     async contest({ id_parts: { site, contest } }: Node) {
-      return await contestManager.load(contestManager.formatId({ site, contest }));
+      return await contestManager.load({ site, contest });
     },
     async task_participations({ id_parts: { site, contest, user } }: Node) {
-      const dir = readdirSync(join(CONFIG_DIRECTORY, contestManager.path(contestManager.formatId({ site, contest })), 'tasks'));
-      return await Promise.all(dir.map(task => taskParticipationManager.load(taskParticipationManager.formatId({ site, contest, user, task })));
+      const { path } = await contestManager.load({ site, contest });
+      const dir = readdirSync(join(CONFIG_DIRECTORY, path, 'tasks'));
+      return await Promise.all(dir.map(task => taskParticipationManager.load({ site, contest, user, task })));
     },
   },
   TaskParticipation: {
     async user({ id_parts: { site, user } }: Node) {
-      return await userManager.load(userManager.formatId({ site, user }));
+      return await userManager.load({ site, user });
     },
     async task({ id_parts: { site, contest, task } }: Node) {
-      return await taskManager.load(taskManager.formatId({ site, contest, task }));
+      return await taskManager.load({ site, contest, task });
     },
   },
   Submission: {
     async task_participation({ id_parts: { site, contest, user, task } }: Node) {
-      return await taskParticipationManager.load(taskParticipationManager.formatId({ site, contest, user, task }));
+      return await taskParticipationManager.load({ site, contest, user, task });
     },
-    async official_evaluation({ id }: Node) {
-      const dir = readdirSync(join(DATA_DIRECTORY, submissionManager.path(id), 'evaluations')).sort();
+    async official_evaluation({ path, id_parts }: Node) {
+      const dir = readdirSync(join(DATA_DIRECTORY, path, 'evaluations')).sort();
       const evaluation = dir[dir.length - 1];
-      return await evaluationManager.load(`${id}/${evaluation}`);
+      return await evaluationManager.load({ ...id_parts, evaluation });
     }
   },
   Mutation: {
