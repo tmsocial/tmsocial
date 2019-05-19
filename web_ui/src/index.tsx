@@ -24,9 +24,11 @@ const App = () => (
           id
           default_contest {
             id
-            participation(user_id: $user_id) {
-              tasks {
-                id
+            participation_of_user(user_id: $user_id) {
+              task_participations {
+                task {
+                  id
+                }
               }
             }
           }
