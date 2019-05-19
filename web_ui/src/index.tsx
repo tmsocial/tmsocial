@@ -9,9 +9,20 @@ import * as ReactDOM from "react-dom";
 import { Contest } from "./__generated__/Contest";
 import { EvaluationEvents } from "./__generated__/EvaluationEvents";
 
+const authLink = setContext((_, { headers }) => {
+  const token = localStorage.getItem('token');
+  return {
+    headers: {
+      ...headers,
+      authorization: token ? `${token}` : "",
+    }
+  }
+});
+
 const client = new ApolloClient({
   link: new WebSocketLink({
     uri: "ws://localhost:4000/graphql",
+    credentials: "same-origin"
   }),
   cache: new InMemoryCache(),
 });

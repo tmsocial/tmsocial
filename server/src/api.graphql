@@ -47,7 +47,7 @@ type Participation {
 
 type Task {
     id: ID!
-    contest: Contest!    
+    contest: Contest!
     metadata_json: String!
 }
 
@@ -83,7 +83,7 @@ type PartialScore {
 }
 
 type Mutation {
-    login_token(site: ID!, token: String!): LoginResponse!
+    login(site: ID!, username: String!, password: String!): LoginResponse
     submit(task_id: ID!, user_id: ID!, files: [SubmissionFileInput!]!): Submission!
 }
 
@@ -94,6 +94,7 @@ input SubmissionFileInput {
 }
 
 type LoginResponse {
+    token: String!
     user: User!
 }
 

@@ -7,6 +7,15 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   debug: true,
+  context: ({ req }) => {
+   const token = req.headers.authorization || '';
+   // // try to retrieve a user with the token
+   // const user = getUser(token);
+   //
+   console.log(`Received token: ${token}`)
+   // // add the user to the context
+   return { token: token, test: "ciao" };
+ },
 });
 
 server.listen().then(({ url }) => {
