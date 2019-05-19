@@ -50,8 +50,9 @@ def start_task_maker(*, task_dir, submission_dir, evaluation_dir):
     submitted_files = list(os.path.abspath(os.path.join(files_dir, f)) for f in os.listdir(files_dir))
 
     stderr_file = os.path.join(evaluation_dir, "stderr.log")
+    stdout_file = os.path.join(evaluation_dir, "stdout.log")
     events_file = os.path.join(evaluation_dir, "events.jsonl")
-    with open(events_file, "w") as out, open(stderr_file, "w") as stderr:
+    with open(events_file, "w") as out, open(stderr_file, "w") as stderr, open(stdout_file, "w") as stdout:
         with subprocess.Popen([
             TASK_MAKER,
             "--ui", "json",
@@ -60,6 +61,7 @@ def start_task_maker(*, task_dir, submission_dir, evaluation_dir):
         ], stdout=subprocess.PIPE, stderr=stderr) as p:
 
             for line in p.stdout:
+                print(line.decode("utf-8"), file=stdout, end="")
                 for e in process_event(json.loads(line), os.path.split(submitted_files[0])[1]):
                     print(json.dumps(e), file=out)
 
