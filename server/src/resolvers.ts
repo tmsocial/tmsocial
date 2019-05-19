@@ -15,8 +15,12 @@ async function* makeDummyStream() {
   };
 };
 
-const CONFIG_DIRECTORY = '/Users/ale/git/tmsocial/test_site/config';
+const CONFIG_DIRECTORY = '../test_site/config';
 const DATA_DIRECTORY = '';
+
+async function loadTaskDir(path: string, id: string): Promise<any> {
+  return {path: join(path, 'tasks', id), id};
+}
 
 async function loadConfig(path: string): Promise<any> {
   let file;
@@ -53,10 +57,10 @@ export const resolvers = {
   Contest: {
     async tasks({path}: {path: string}) {
       const dir = readdirSync(join(CONFIG_DIRECTORY, path, 'tasks/'));
-      return dir.map(e => ({path: join(path, 'tasks', e), id: e}));
+      return await Promise.all(dir.map(id => loadTaskDir(path, id)));
     },
-    async task({path}: {path: string}, id: string) {
-      return {path: join(path, 'tasks', id), id}
+    async task({path}: {path: string}, {id} : {id: string}) {
+      return await loadTaskDir(path, id);
     },
   },
   ContestTask: {
