@@ -48,14 +48,16 @@ type ParticipationTask {
 }
 
 type Submission {
+    id: ID!
     official_evaluation: Evaluation!
+    timestamp: String!
     files: [SubmissionFile!]!
 }
 
 type SubmissionFile {
     field: String!
     type: String!
-    content: String! # Content of the file in base64
+    content_base64: String! # Content of the file in base64
 }
 
 type Evaluation {
@@ -70,6 +72,13 @@ type PartialScore {
 
 type Mutation {
     login_token(site: ID!, token: String!): LoginResponse!
+    submit(task_id: ID!, user_id: ID!, files: [SubmissionFileInput!]!): Submission!
+}
+
+input SubmissionFileInput {
+    field: String!
+    type: String!
+    content_base64: String!
 }
 
 type LoginResponse {
