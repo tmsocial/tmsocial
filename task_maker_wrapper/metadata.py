@@ -1,10 +1,7 @@
-#!/usr/bin/env python3
-
 import json
 import subprocess
 
-
-TASK_MAKER = "task-maker"
+from common import TASK_MAKER_EXE
 
 
 def gen_path(subtask, testcase, field):
@@ -52,7 +49,7 @@ def generate_table(metadata):
 def generate_metadata(*, task_dir):
     try:
         output = subprocess.check_output([
-            TASK_MAKER,
+            TASK_MAKER_EXE,
             "--ui", "json",
             "--task-dir", task_dir,
             "--task-info",

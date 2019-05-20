@@ -100,8 +100,9 @@ export const resolvers = {
       return await taskManager.load({ site, contest });
     },
     async metadata_json({ path }: Node) {
-      const metadata = execFileSync("../task_maker_wrapper/metadata.py", [
-        join(CONFIG_DIRECTORY, path)
+      const metadata = execFileSync("../task_maker_wrapper/cli.py", [
+        'metadata',
+        '--task-dir', join(CONFIG_DIRECTORY, path)
       ], {
           encoding: 'utf8',
         });
@@ -175,19 +176,29 @@ export const resolvers = {
 
       mkdirSync(join(DATA_DIRECTORY, submissionPath, "files"), { recursive: true });
 
+      const submittedFiles: string[] = [];
       files.forEach(({ field, type, content_base64 }) => {
-        writeFileSync(join(DATA_DIRECTORY, submissionPath, 'files', `${field}.${type}`), Buffer.from(content_base64, 'base64'));
+        const file = join(DATA_DIRECTORY, submissionPath, 'files', `${field}.${type}`);
+        submittedFiles.push(file);
+        writeFileSync(file, Buffer.from(content_base64, 'base64'));
       })
 
       const evaluation = DateTime.utc().toISO();
       mkdirSync(join(DATA_DIRECTORY, submissionPath, 'evaluations', evaluation), { recursive: true });
       writeFileSync(join(DATA_DIRECTORY, submissionPath, 'evaluations', evaluation, 'events.jsonl'), Buffer.from([]));
 
-      const process = execFile("../task_maker_wrapper/adapter.py", [
-        join(CONFIG_DIRECTORY, site, 'contests', contest, 'tasks', task),
-        join(DATA_DIRECTORY, submissionPath),
-        join(DATA_DIRECTORY, submissionPath, 'evaluations', evaluation),
-      ]);
+      const args = [
+        'evaluate',
+        '--task-dir', join(CONFIG_DIRECTORY, site, 'contests', contest, 'tasks', task),
+        '--evaluation-dir', join(DATA_DIRECTORY, submissionPath, 'evaluations', evaluation),
+      ];
+      submittedFiles.forEach(file => {
+        args.push('--file', file);
+      });
+
+      console.log(`Executing: ${args}`);
+
+      const process = execFile("../task_maker_wrapper/cli.py", args);
       process.unref();
 
       return await submissionManager.load(submissionId, { loadDataIn: DATA_DIRECTORY });

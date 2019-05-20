@@ -1,11 +1,8 @@
-#!/usr/bin/env python3
-
 import os
 import json
 import subprocess
 
-
-TASK_MAKER = "task-maker"
+from common import TASK_MAKER_EXE
 
 STATUS_MAP = {
     "ACCEPTED": "success",
@@ -42,7 +39,7 @@ def process_result(event, source):
             # TODO: the following are not implemented in UI
             yield from generate_value_event(path + "return_code", result["result"][0]["return_code"])
             yield from generate_value_event(path + "signal", result["result"][0]["signal"])
-    
+
 
 def process_event(event, source):
     action = event["action"]
@@ -60,7 +57,7 @@ def evaluate_submission(*, task_dir, files, evaluation_dir):
     events_file = os.path.join(evaluation_dir, "events.jsonl")
     with open(events_file, "w") as out, open(stderr_file, "w") as stderr, open(stdout_file, "w") as stdout:
         with subprocess.Popen([
-            TASK_MAKER,
+            TASK_MAKER_EXE,
             "--ui", "json",
             "--task-dir", task_dir,
             "--dry-run",
