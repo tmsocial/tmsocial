@@ -83,8 +83,8 @@ const App = () => (
               <React.Fragment>
                 <h1>{data.site.default_contest!.id}</h1>
                 <Mutation mutation={gql`
-                    mutation Submit($files: [SubmissionFileInput!]!) {
-                      submit(task_id: "site1/default/easy1", user_id: "site1/user1", files: $files) {
+                    mutation Submit($task_id: ID!, $files: [SubmissionFileInput!]!) {
+                      submit(task_id: $task_id, user_id: "site1/user1", files: $files) {
                         id
                         official_evaluation {
                           id
@@ -97,7 +97,7 @@ const App = () => (
                       <SubmissionFormView
                         form={JSON.parse(data.site.default_contest.tasks[0].metadata_json).submission_form}
                         onSubmit={(files) => mutate({
-                          variables: { files }
+                          variables: { files, task_id: data.site.default_contest!.tasks[0].id }
                         })} />
                       {submitData ? <EvaluationComponent events={loadEvents(submitData.submit.official_evaluation.id)} metadata={JSON.parse(data.site.default_contest.tasks[0].metadata_json)} /> : null}
                     </div>
