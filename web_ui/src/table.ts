@@ -11,7 +11,17 @@ export interface HeaderColumn {
     name: Localized<string>;
 };
 
-export type Column = RowNameColumn | RowNumberColumn | MemoryUsageColumn | TimeUsageColumn | ScoreColumn | PercentageColumn;
+export type Column =
+    | RowNameColumn
+    | RowNumberColumn
+    | OutcomeColumn
+    | MessageColumn
+    | MemoryUsageColumn
+    | TimeUsageColumn
+    | ScoreColumn
+    | PercentageColumn
+    | UnsupportedColumn
+    ;
 
 export interface RowGroupHeader {
     title: Localized<string>;
@@ -52,6 +62,14 @@ export interface TimeUsageColumn extends NamedColumn {
     type: "time_usage";
 }
 
+export interface OutcomeColumn extends NamedColumn {
+    type: "outcome";
+}
+
+export interface MessageColumn extends NamedColumn {
+    type: "message";
+}
+
 export interface ScoreColumn extends NamedColumn {
     type: "score";
     score_precision?: number,
@@ -61,6 +79,10 @@ export interface ScoreColumn extends NamedColumn {
 export interface PercentageColumn extends NamedColumn {
     type: "percentage";
     precision?: number,
+}
+
+export interface UnsupportedColumn extends NamedColumn {
+    type: "signal" | "return_code";
 }
 
 export interface ValueCell<T extends EvaluationValue> {

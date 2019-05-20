@@ -3,12 +3,13 @@ import { EvaluationEvent } from "./evaluation";
 import { EvaluationReducer } from './evaluation_process';
 import { TaskMetadata } from './metadata';
 import { EvaluationSection } from './section';
-import { Table } from './table';
 import { TableView } from './table_view';
 import { TextStreamView } from './text_stream_view';
+import { Subscription } from 'react-apollo';
+import { Observable } from 'apollo-link';
 
 type Props = {
-    events: AsyncIterableIterator<EvaluationEvent> | Iterable<EvaluationEvent>;
+    events: Observable<EvaluationEvent>;
     metadata: TaskMetadata;
 };
 
@@ -17,24 +18,25 @@ const sectionViews: {
 } = {
     table: TableView,
     text_stream: TextStreamView,
-}
+};
 
-export default class Component extends React.Component<Props> {
-    reducer = new EvaluationReducer();
+export class EvaluationComponent extends React.Component<Props> {
+    private subscription: { unsubscribe: () => void } | null = null;
+    private readonly reducer = new EvaluationReducer();
 
     constructor(props: Props) {
         super(props);
     }
 
     componentDidMount() {
-        this.load();
+        this.subscription = this.props.events.subscribe((event) => {
+            this.reducer.onEvent(event);
+            this.forceUpdate();
+        });
     }
 
-    private async load() {
-        for await (const e of this.props.events) {
-            this.reducer.onEvent(e);
-            this.forceUpdate();
-        }
+    componentWillUnmount() {
+        this.subscription!.unsubscribe();
     }
 
     render() {

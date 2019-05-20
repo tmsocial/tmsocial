@@ -12,13 +12,14 @@ def gen_path(subtask, testcase, field):
 
 
 def generate_cells(subtask, testcase):
-    yield dict(value=dict(type="ref", key=gen_path(subtask, testcase, "outcome")), type="outcome"),
-    yield dict(value=dict(type="ref", key=gen_path(subtask, testcase, "total_score")), type="total_score"),
-    yield dict(value=dict(type="ref", key=gen_path(subtask, testcase, "memory_usage")), type="memory_usage"),
-    yield dict(value=dict(type="ref", key=gen_path(subtask, testcase, "time_usage")), type="time_usage"),
-    yield dict(value=dict(type="ref", key=gen_path(subtask, testcase, "signal")), type="signal"),
-    yield dict(value=dict(type="ref", key=gen_path(subtask, testcase, "return_code")), type="return_code"),
-    yield dict(value=dict(type="ref", key=gen_path(subtask, testcase, "message")), type="message"),
+    yield dict(number=testcase)
+    yield dict(value=dict(type="ref", ref=gen_path(subtask, testcase, "outcome")), type="outcome")
+    yield dict(value=dict(type="ref", ref=gen_path(subtask, testcase, "score")), type="score")
+    yield dict(value=dict(type="ref", ref=gen_path(subtask, testcase, "memory_usage")), type="memory_usage")
+    yield dict(value=dict(type="ref", ref=gen_path(subtask, testcase, "time_usage")), type="time_usage")
+    yield dict(value=dict(type="ref", ref=gen_path(subtask, testcase, "signal")), type="signal")
+    yield dict(value=dict(type="ref", ref=gen_path(subtask, testcase, "return_code")), type="return_code")
+    yield dict(value=dict(type="ref", ref=gen_path(subtask, testcase, "message")), type="message")
 
 
 def generate_testcases(subtask, data):
@@ -35,15 +36,16 @@ def generate_table(metadata):
     return dict(
         type="table",
         columns=[
-            dict(type="outcome"),
-            dict(type="total_score"),
-            dict(type="memory_usage"),
-            dict(type="time_usage"),
-            dict(type="signal"),
-            dict(type="return_code"),
-            dict(type="message"),
+            dict(type="row_number", name=dict(default="Test Case")),
+            dict(type="outcome", name=dict(default="Outcome")),
+            dict(type="score", name=dict(default="Score")),
+            dict(type="memory_usage", name=dict(default="Memory Usage")),
+            dict(type="time_usage", name=dict(default="Time Usage")),
+            dict(type="signal", name=dict(default="Exit signal")),
+            dict(type="return_code", name=dict(default="Return code")),
+            dict(type="message", name=dict(default="Message")),
         ],
-        sections=list(generate_subtasks(metadata)),
+        groups=list(generate_subtasks(metadata)),
     )
 
 
@@ -63,5 +65,15 @@ def generate_metadata(*, task_dir):
     return {
         "name": metadata["name"],
         "title": metadata["title"],
-        "table": generate_table(metadata),
+        "evaluation_sections": [
+            generate_table(metadata),
+        ],
+        "submission_form": dict(fields=[
+            dict(id="solution", title=dict(default="Solution"), types=[
+                dict(id="cpp", title=dict(default="C++"), extensions=[".cpp", ".cc"]),
+                dict(id="pas", title=dict(default="Pascal"), extensions=[".pas"]),
+                dict(id="python3.py", title=dict(default="Python 3"), extensions=[".py"]),
+                dict(id="python2.py", title=dict(default="Python 2"), extensions=[".py"]),
+            ], required=True)
+        ])
     }

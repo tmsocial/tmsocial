@@ -7,6 +7,11 @@ import subprocess
 
 TASK_MAKER = "task-maker"
 
+STATUS_MAP = {
+    "ACCEPTED": "success",
+    "SKIPPED": "skip",
+}
+
 
 def generate_value_event(key, value):
     yield dict(type="value", key=key, value=value)
@@ -15,9 +20,9 @@ def generate_value_event(key, value):
 def process_testcase_outcome(event):
     data = event["data"]
     path = f"subtask.{data['subtask']}.testcase.{data['testcase']}."
-    yield from generate_value_event(path + "status", data["status"])
-    yield from generate_value_event(path + "score", data["score"])
-    yield from generate_value_event(path + "message", data["message"])
+    yield from generate_value_event(path + "score", dict(type="score", score=data["score"]))
+    yield from generate_value_event(path + "outcome", dict(type="outcome", outcome=STATUS_MAP.get(data["status"], "done")))
+    yield from generate_value_event(path + "message", dict(type="message", message=dict(default=data["message"])))
 
 
 def process_result(event, source):
@@ -29,11 +34,14 @@ def process_result(event, source):
     for subtask, testcases in testcase_results.items():
         for testcase, result in testcases.items():
             path =  f"subtask.{subtask}.testcase.{testcase}."
-            yield from generate_value_event(path + "time_usage", result["result"][0]["resources"]["cpu_time"])
-            yield from generate_value_event(path + "memory_usage", result["result"][0]["resources"]["memory"])
+            yield from generate_value_event(path + "time_usage",
+                dict(type="time_usage", time_usage_seconds=result["result"][0]["resources"]["cpu_time"]))
+            # FIXME: most likely they are kBs, not bytes
+            yield from generate_value_event(path + "memory_usage",
+                dict(type="memory_usage", memory_usage_bytes=result["result"][0]["resources"]["memory"]))
+            # TODO: the following are not implemented in UI
             yield from generate_value_event(path + "return_code", result["result"][0]["return_code"])
             yield from generate_value_event(path + "signal", result["result"][0]["signal"])
-            yield from generate_value_event(path + "return_code", result["result"][0]["return_code"])
     
 
 def process_event(event, source):
