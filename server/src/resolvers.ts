@@ -30,6 +30,14 @@ function checkSameSite(site1: string, site2: string) {
   return site1;
 }
 
+interface PageQueryInput {
+  // TODO: may be generated using graphqlgen
+  before?: string
+  after?: string
+  first?: number
+  last?: number
+}
+
 export const resolvers = {
   Query: {
     async site(obj: unknown, { id }: { id: string }) {
@@ -57,7 +65,7 @@ export const resolvers = {
       return await taskParticipationManager.load({ site, user, contest, task }, { loadDataIn: CONFIG_DIRECTORY });
     },
     async submission(obj: unknown, { id }: { id: string }) {
-      return await submissionManager.load(id);
+      return await submissionManager.load(id, { loadDataIn: DATA_DIRECTORY });
     },
     async evaluation(obj: unknown, { id }: { id: string }) {
       return await evaluationManager.load(id);
@@ -128,6 +136,22 @@ export const resolvers = {
     },
     async task({ id_parts: { site, contest, task } }: Node) {
       return await taskManager.load({ site, contest, task });
+    },
+    async submissions(
+      { id_parts: { site, contest, user, task }, path }: Node,
+      { query: { before = "9999", after = "0000", last = 1e9, first = 1e9 } = {} }: { query?: PageQueryInput } = {}
+    ) {
+      mkdirSync(join(DATA_DIRECTORY, path, 'submissions'), { recursive: true });
+      const dir = readdirSync(join(DATA_DIRECTORY, path, 'submissions')).sort();
+      return await Promise.all(
+        dir
+          .filter(submission => submission > after && submission < before)
+          .filter((_, i) => i < first)
+          .reverse()
+          .filter((_, i) => i < last)
+          .reverse()
+          .map(submission => submissionManager.load({ site, contest, user, task, submission }, { loadDataIn: DATA_DIRECTORY }))
+      );
     },
   },
   Submission: {

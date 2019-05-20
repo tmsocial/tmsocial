@@ -1,18 +1,19 @@
 import { InMemoryCache } from "apollo-cache-inmemory";
 import { ApolloClient } from "apollo-client";
-import { HttpLink } from "apollo-link-http";
-import { WebSocketLink } from "apollo-link-ws";
 import { setContext } from "apollo-link-context";
+import { WebSocketLink } from "apollo-link-ws";
+import "babel-polyfill";
 import gql from "graphql-tag";
 import * as React from "react";
-import { ApolloProvider, Query, QueryResult, Subscription, SubscriptionResult, Mutation, MutationFunc } from "react-apollo";
+import { ApolloProvider, Mutation, MutationFunc, Query, QueryResult } from "react-apollo";
 import * as ReactDOM from "react-dom";
-import { Contest } from "./__generated__/Contest";
-import { EvaluationEvents } from "./__generated__/EvaluationEvents";
 import { EvaluationComponent } from "./evaluation_component";
-import "babel-polyfill";
-import { Submit } from "./__generated__/Submit";
 import { SubmissionFormView } from "./submission_form";
+import { Contest } from "./__generated__/Contest";
+import { Submit } from "./__generated__/Submit";
+import { Main } from "./__generated__/Main";
+
+const user_id = "site1/user1";
 
 const authLink = setContext((_, { headers }) => {
   const token = localStorage.getItem('token');
@@ -56,18 +57,22 @@ function loadEvents(evaluation_id: string) {
 const App = () => (
   <ApolloProvider client={client}>
     <Query query={gql`
-      query Contest($user_id: ID!) {
-        site(id: "site1") {
-          id
-          default_contest {
-            id
-            tasks {
+      query Main($user_id: ID!) {
+        user(id: $user_id) {
+          display_name
+          participation_in_default_contest {
+            contest {
               id
-              metadata_json
             }
-            participation_of_user(user_id: $user_id) {
-              task_participations {
-                task {
+            task_participations {
+              task {
+                id
+                metadata_json
+              }
+              submissions(query: { last: 1 }) {
+                id
+                timestamp
+                official_evaluation {
                   id
                 }
               }
@@ -75,37 +80,53 @@ const App = () => (
           }
         }
       }
-    `} variables={{ user_id: "site1/user1" }}>
-      {({ loading, error, data }: QueryResult<Contest>) => (
-        loading ? "Loading..." :
-          error ? error.message :
-            data ?
+    `} variables={{ user_id }}>
+      {({ loading, error, data }: QueryResult<Main>) => (
+        <React.Fragment>
+          {
+            data && data.user && (({ contest, task_participations }) => (
               <React.Fragment>
-                <h1>{data.site.default_contest!.id}</h1>
-                <Mutation mutation={gql`
-                    mutation Submit($task_id: ID!, $files: [SubmissionFileInput!]!) {
-                      submit(task_id: $task_id, user_id: "site1/user1", files: $files) {
-                        id
-                        official_evaluation {
+                <h1><code>{contest.id}</code></h1>
+                {task_participations.map(({ task, submissions }, i) => (
+                  <div>
+                    <h2><code>{task.id}</code></h2>
+                    <p>TODO: statement</p>
+                    <Mutation mutation={gql`
+                      mutation Submit($task_id: ID!, $user_id: ID!, $files: [SubmissionFileInput!]!) {
+                        submit(task_id: $task_id, user_id: $user_id, files: $files) {
                           id
+                          official_evaluation {
+                            id
+                          }
                         }
                       }
+                    `} variables={{ task_id: task.id, user_id }}>
+                      {(submit: MutationFunc<Submit>, { data: submitData }) => (
+                        <React.Fragment>
+                          <SubmissionFormView
+                            form={JSON.parse(task.metadata_json).submission_form}
+                            onSubmit={(files) => submit({ variables: { files } })} />
+                          {submitData ? <EvaluationComponent events={loadEvents(submitData.submit.official_evaluation.id)} metadata={JSON.parse(task.metadata_json)} /> : null}
+                        </React.Fragment>
+                      )}
+                    </Mutation>
+                    <p>Latest submissions:</p>
+                    {
+                      submissions.map((submission) => (
+                        <EvaluationComponent events={loadEvents(submission.official_evaluation.id)} metadata={JSON.parse(task.metadata_json)} />
+                      ))
                     }
-                  `}>
-                  {(mutate: MutationFunc<Submit>, { data: submitData }) => (
-                    <div>
-                      <SubmissionFormView
-                        form={JSON.parse(data.site.default_contest.tasks[0].metadata_json).submission_form}
-                        onSubmit={(files) => mutate({
-                          variables: { files, task_id: data.site.default_contest!.tasks[0].id }
-                        })} />
-                      {submitData ? <EvaluationComponent events={loadEvents(submitData.submit.official_evaluation.id)} metadata={JSON.parse(data.site.default_contest.tasks[0].metadata_json)} /> : null}
-                    </div>
-                  )
-                  }
-                </Mutation>
+                  </div>
+                ))}
               </React.Fragment>
-              : null
+            ))({
+              contest: data.user.participation_in_default_contest.contest,
+              task_participations: data.user.participation_in_default_contest.task_participations
+            })
+          }
+          {loading && <p>Loading...</p>}
+          {error && <p>{error.message}</p>}
+        </React.Fragment>
       )}
     </Query>
   </ApolloProvider>
