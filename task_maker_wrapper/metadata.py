@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import sys
 import json
 import subprocess
 
@@ -57,7 +56,7 @@ def generate_metadata(*, task_dir):
             "--task-info",
         ])
     except subprocess.CalledProcessError:
-        raise RuntimeError("Error calling task maker")
+        raise RuntimeError("error calling task maker")
 
     metadata = json.loads(output)
 
@@ -66,22 +65,3 @@ def generate_metadata(*, task_dir):
         "title": metadata["title"],
         "table": generate_table(metadata),
     }
-
-
-def main():
-    if len(sys.argv) != 2:
-        print(f"Usage: {sys.argv[0]} <task_dir>", file=sys.stderr)
-        exit(1)
-
-    try:
-        metadata = generate_metadata(
-            task_dir=sys.argv[1],
-        )
-        print(json.dumps(metadata))
-    except RuntimeError as e:
-        print(e, file=sys.stderr)
-        exit(1)
-
-
-if __name__ == "__main__":
-    main()

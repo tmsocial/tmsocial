@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import os
-import sys
 import json
 import subprocess
 
@@ -45,9 +44,8 @@ def process_event(event, source):
         yield from process_result(event, source)
 
 
-def evaluate_submission(*, task_dir, submission_dir, evaluation_dir):
-    files_dir = os.path.join(submission_dir, "files")
-    submitted_files = list(os.path.abspath(os.path.join(files_dir, f)) for f in os.listdir(files_dir))
+def evaluate_submission(*, task_dir, files, evaluation_dir):
+    files = list(map(os.path.abspath, files))
 
     stderr_file = os.path.join(evaluation_dir, "stderr.log")
     stdout_file = os.path.join(evaluation_dir, "stdout.log")
@@ -57,30 +55,18 @@ def evaluate_submission(*, task_dir, submission_dir, evaluation_dir):
             TASK_MAKER,
             "--ui", "json",
             "--task-dir", task_dir,
-            *submitted_files
+            "--dry-run",
+            "--no-sanity-checks",
+            "--cache", "reevaluate",
+            *files
         ], stdout=subprocess.PIPE, stderr=stderr) as p:
 
             for line in p.stdout:
                 print(line.decode("utf-8"), file=stdout, end="")
-                for e in process_event(json.loads(line), os.path.split(submitted_files[0])[1]):
+                for e in process_event(json.loads(line), os.path.split(files[0])[1]):
                     print(json.dumps(e), file=out)
 
         print(json.dumps({
             "type": "end",
             "return_code": p.returncode,
         }), file=out)
-
-
-def main():
-    if len(sys.argv) < 4:
-        print(f"Usage: {sys.argv[0]} <task_dir> <submission_dir> <evaluation_dir>", file=sys.stderr)
-        exit(1)
-    evaluate_submission(
-        task_dir=sys.argv[1],
-        submission_dir=sys.argv[2],
-        evaluation_dir=sys.argv[3],
-    )
-
-
-if __name__ == "__main__":
-    main()
