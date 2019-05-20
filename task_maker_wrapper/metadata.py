@@ -69,6 +69,14 @@ def generate_metadata(*, task_dir):
         "evaluation_sections": [
             generate_table(metadata),
         ],
+        "submission_form": dict(fields=[
+            dict(id="solution", title=dict(default="Solution"), types=[
+                dict(id="cpp", title=dict(default="C++"), extensions=[".cpp", ".cc"]),
+                dict(id="pas", title=dict(default="Pascal"), extensions=[".pas"]),
+                dict(id="python3.py", title=dict(default="Python 3"), extensions=[".py"]),
+                dict(id="python2.py", title=dict(default="Python 2"), extensions=[".py"]),
+            ], required=True)
+        ])
     }
 
 

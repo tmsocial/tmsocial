@@ -12,6 +12,7 @@ import { EvaluationEvents } from "./__generated__/EvaluationEvents";
 import { EvaluationComponent } from "./evaluation_component";
 import "babel-polyfill";
 import { Submit } from "./__generated__/Submit";
+import { SubmissionFormView } from "./submission_form";
 
 const authLink = setContext((_, { headers }) => {
   const token = localStorage.getItem('token');
@@ -82,14 +83,8 @@ const App = () => (
               <React.Fragment>
                 <h1>{data.site.default_contest!.id}</h1>
                 <Mutation mutation={gql`
-                    mutation Submit {
-                      submit(task_id: "site1/default/easy1", user_id: "site1/user1", files: [
-                        {
-                          field: "solution"
-                          type: "cpp"
-                          content_base64: "I2luY2x1ZGUgPGNzdGRpbz4KaW50IG1haW4oKSB7CiNpZmRlZiBFVkFMCiAgICBmcmVvcGVuKCJpbnB1dC50eHQiLCAiciIsIHN0ZGluKTsKICAgIGZyZW9wZW4oIm91dHB1dC50eHQiLCAidyIsIHN0ZG91dCk7CiNlbmRpZgogICAgaW50IE4sIG1heDsKICAgIHNjYW5mKCIlZCIsICZOKTsKICAgIGZvciAoaW50IGk9MDsgaTxOOyBpKyspIHsKICAgICAgICBpbnQgeDsKICAgICAgICBzY2FuZigiJWQiLCAmeCk7CiAgICAgICAgaWYgKGkgPT0gMCB8fCB4ID4gbWF4KQogICAgICAgICAgICBtYXggPSB4OwogICAgfQogICAgcHJpbnRmKCIlZFxuIiwgbWF4KTsKfQo="
-                        }
-                      ]) {
+                    mutation Submit($files: [SubmissionFileInput!]!) {
+                      submit(task_id: "site1/default/easy1", user_id: "site1/user1", files: $files) {
                         id
                         official_evaluation {
                           id
@@ -99,15 +94,12 @@ const App = () => (
                   `}>
                   {(mutate: MutationFunc<Submit>, { data: submitData }) => (
                     <div>
+                      <SubmissionFormView
+                        form={JSON.parse(data.site.default_contest.tasks[0].metadata_json).submission_form}
+                        onSubmit={(files) => mutate({
+                          variables: { files }
+                        })} />
                       {submitData ? <EvaluationComponent events={loadEvents(submitData.submit.official_evaluation.id)} metadata={JSON.parse(data.site.default_contest.tasks[0].metadata_json)} /> : null}
-                      <form
-                        onSubmit={e => {
-                          e.preventDefault();
-                          mutate();
-                        }}
-                      >
-                        <button type="submit">Submit</button>
-                      </form>
                     </div>
                   )
                   }
