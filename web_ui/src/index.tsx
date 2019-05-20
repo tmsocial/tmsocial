@@ -12,6 +12,7 @@ import { SubmissionFormView } from "./submission_form";
 import { Contest } from "./__generated__/Contest";
 import { Submit } from "./__generated__/Submit";
 import { Main } from "./__generated__/Main";
+import { StatementView } from "./statement_view";
 
 const user_id = "site1/user1";
 
@@ -90,7 +91,7 @@ const App = () => (
                 {task_participations.map(({ task, submissions }, i) => (
                   <div>
                     <h2><code>{task.id}</code></h2>
-                    <p>TODO: statement</p>
+                    <StatementView statement={JSON.parse(task.metadata_json).statement} />
                     <Mutation mutation={gql`
                       mutation Submit($task_id: ID!, $user_id: ID!, $files: [SubmissionFileInput!]!) {
                         submit(task_id: $task_id, user_id: $user_id, files: $files) {

@@ -2,6 +2,7 @@ import json
 import subprocess
 
 from common import TASK_MAKER_EXE
+from statement import generate_statement
 
 
 def gen_path(subtask, testcase, field):
@@ -59,18 +60,18 @@ def generate_metadata(*, task_dir):
 
     metadata = json.loads(output)
 
-    return {
-        "name": metadata["name"],
-        "title": metadata["title"],
-        "evaluation_sections": [
-            generate_table(metadata),
-        ],
-        "submission_form": dict(fields=[
+    return dict(
+        title=dict(default=metadata["title"]),
+        statement=generate_statement(task_dir=task_dir),
+        submission_form=dict(fields=[
             dict(id="solution", title=dict(default="Solution"), types=[
                 dict(id="cpp", title=dict(default="C++"), extensions=[".cpp", ".cc"]),
                 dict(id="pas", title=dict(default="Pascal"), extensions=[".pas"]),
                 dict(id="python3.py", title=dict(default="Python 3"), extensions=[".py"]),
                 dict(id="python2.py", title=dict(default="Python 2"), extensions=[".py"]),
             ], required=True)
-        ])
-    }
+        ]),
+        evaluation_sections=[
+            generate_table(metadata),
+        ],
+    )

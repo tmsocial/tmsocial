@@ -1,6 +1,6 @@
 import * as React from "react";
 import { SubmissionForm } from "./metadata";
-import { localize } from "./section_view";
+import { localize } from "./l10n";
 import { SubmissionFile } from "./submission";
 
 function fileToBase64(file: File): Promise<string> {

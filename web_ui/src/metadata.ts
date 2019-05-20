@@ -1,16 +1,10 @@
 import { EvaluationSection } from "./section";
+import { Localized } from "./l10n";
 
-export interface PdfStatement {
-    type: "pdf";
-    url: Localized<string>;
+export interface Statement {
+    pdf_base64?: Localized<string>;
+    html?: Localized<string>;
 }
-
-export interface HtmlStatement {
-    type: "html";
-    html: Localized<string>;
-}
-
-export type Statement = PdfStatement | HtmlStatement;
 
 export interface FileInfo {
     // mimics https://developer.mozilla.org/en-US/docs/Web/API/File

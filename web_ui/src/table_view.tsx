@@ -2,8 +2,9 @@ import * as React from "react";
 import { EvaluationValue, MemoryUsage, TimeUsage, Fraction, Outcome, Message } from "./evaluation";
 import { EvaluationSummary } from "./evaluation_process";
 import { EvaluationSection } from "./section";
-import { evaluateExpression, localize } from "./section_view";
+import { evaluateExpression } from "./section_view";
 import { Cell, Column, MemoryUsageColumn, PercentageColumn, RowGroup, RowNameCell, RowNameColumn, RowNumberCell, RowNumberColumn, ScoreCell, ScoreColumn, Table, TimeUsageColumn, ValueCell, OutcomeColumn, MessageColumn } from "./table";
+import { localize } from "./l10n";
 
 export interface EvaluationSectionViewProps<T extends EvaluationSection> {
     section: T,

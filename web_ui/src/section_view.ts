@@ -2,13 +2,6 @@ import { EvaluationValue } from "./evaluation";
 import { EvaluationSummary } from "./evaluation_process";
 import { ValueExpression } from "./evaluation_model";
 
-export function localize<T>(data: Localized<T>) {
-    if ("default" in data) {
-        return data.default;
-    }
-    return data["en"];
-}
-
 export function evaluateExpression<U extends EvaluationValue>(summary: EvaluationSummary, expr: ValueExpression<U>): U | null {
     switch (expr.type) {
         case "constant":
