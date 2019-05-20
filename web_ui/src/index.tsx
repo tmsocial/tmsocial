@@ -15,6 +15,7 @@ import { SubmissionFormView } from "./submission_form";
 import { Main } from "./__generated__/Main";
 import { Submit } from "./__generated__/Submit";
 import ReactModal from 'react-modal';
+import { DateTime } from 'luxon';
 
 const authLink = setContext((_, { headers }) => {
   const token = localStorage.getItem('token');
@@ -173,9 +174,14 @@ class App extends React.Component<{}, {
                         {task_participations.filter(({ task }) => task.id === current_task_id).map(({ task, submissions }, i) => (
                           <main className="task_main">
                             <h2 className="task_title">{localize(metadata(task).title)}</h2>
-                            {submissions.length > 0 && (
+                            {submissions.length > 0 && (({ last_submission }) => (
                               <div className="task_last_submission_container">
-                                Last submission: <span>{submissions.reverse()[0].timestamp}</span>. (<a href="#" onClick={(e) => {
+                                <span className="task_last_submission_label">Last submission: </span>
+                                <abbr className="task_last_submission_timestamp"
+                                  title={DateTime.fromISO(last_submission.timestamp).toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)}>
+                                  {DateTime.fromISO(last_submission.timestamp).toRelative()}
+                                </abbr>.
+                                (<a className="task_explore_submissions" href="#" onClick={(e) => {
                                   e.preventDefault();
                                   this.setState({ submissions_modal_open: true });
                                 }}>explore submissions</a>)
@@ -213,7 +219,9 @@ class App extends React.Component<{}, {
                                   </ReactModal>
                                 ))}
                               </div>
-                            )}
+                            ))({
+                              last_submission: submissions[submissions.length - 1],
+                            })}
                             <div className="task_submit_container">
                               <a href="#" onClick={e => {
                                 e.preventDefault();
