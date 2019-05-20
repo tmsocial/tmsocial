@@ -1,3 +1,17 @@
+* {
+    box-sizing: border-box;
+}
+
+div {
+    margin: 0;
+    padding: 0;
+}
+
+a {
+    color: #007bff;
+    text-decoration: none;
+}
+
 html {
     min-height: 100%;
 }
@@ -42,6 +56,12 @@ body {
     white-space: nowrap;
 }
 
+.contest_title > a {
+    color: white;
+    text-decoration: none;
+    background-color: transparent;
+}
+
 .user_display_name, .logout {
     margin-right: 1em;
 }
@@ -52,19 +72,64 @@ body {
 
 .contest_nav {
     flex: 0 0 auto;
-    padding: 16px 0 0;
+    padding: 16px;
     order: -1;
     width: 16em;
     background-color: #f8f9fa!important;
-    padding-left: 16px;
 }
 
 .contest_nav h2 {
     text-transform: uppercase;
     font-size: 1.25rem;
-    margin-bottom: .5rem;
+    margin: .5rem 0;
     font-weight: 500;
     line-height: 1.2;
+}
+
+.contest_nav ol {
+    padding: 0;
+    list-style: none;
+}
+
+.contest_remaining_time {
+    font-size: large;
+    text-align: right;
+    margin-bottom: 1rem;
+}
+
+.task_link {
+    display: block;
+    text-transform: uppercase;
+    margin: 0 -16px;
+    padding: .5rem 16px; 
+}
+
+.task_link.active {
+    color: #fff;
+    background-color: #007bff;
+}
+
+.task_badge {
+    display: block;
+    float: right;
+    margin-top: .2rem;
+
+    color: #fff;
+    background-color: #dc3545;
+
+    padding-right: .6em;
+    padding-left: .6em;
+    border-radius: 10rem;
+
+    padding: .25em .4em;
+    font-size: 75%;
+    font-weight: 700;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,-webkit-box-shadow .15s ease-in-out;
+    transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+    transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out,-webkit-box-shadow .15s ease-in-out;
 }
 
 .task_main {
@@ -77,8 +142,27 @@ body {
     font-size: large;
 }
 
+.task_title {
+    font-size: 2.5rem;
+    margin: .5rem 0;
+    font-weight: 500;
+    line-height: 1.2;
+}
+
 .task_statement_html {
     flex: 1 1 auto;
+}
+
+.contest_score_container {
+    text-align: right;
+}
+
+.contest_score_display {
+    font-size: 2rem;
+}
+
+.contest_score {
+    font-size: 4rem;
 }
 
 .message_cell {

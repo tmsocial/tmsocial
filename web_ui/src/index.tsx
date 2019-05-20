@@ -136,53 +136,49 @@ class App extends React.Component<{}, {
                 }) => (
                     <React.Fragment>
                       <nav className="nav">
-                        <h1 className="contest_title">{contest.id}</h1>
+                        <h1 className="contest_title"><a href="#" onClick={(e) => {
+                          e.preventDefault();
+                          this.setState({ current_task_id: null });
+                        }} >{contest.id}</a></h1>
                         <span className="user_display_name">{user.display_name}</span>
                         <button className="logout">Logout</button>
                       </nav>
                       <div className="contest_main">
                         <nav className="contest_nav">
-                          <a href="#" onClick={(e) => {
-                            e.preventDefault();
-                            this.setState({ current_task_id: null });
-                          }} >Home</a>
+                          <h2>Score</h2>
                           <div className="contest_score_container">
-                            <h2>Score</h2>
-                            <span className="contest_score">
-                              <span className="contest_score_value">{42}</span>
+                            <span className="contest_score_display">
+                              <span className="contest_score">{42}</span>
                               {" / "}
-                              <span className="contest_max_score_value">{42}</span>
+                              <span className="contest_max_score">{42}</span>
                             </span>
                           </div>
-                          <div className="contest_remaining_time_container">
-                            <h2>Remaining Time</h2>
-                            <span className="contest_remaining_time">
-                              02:49:53
-                            </span>
+                          <h2>Remaining Time</h2>
+                          <div className="contest_remaining_time">
+                            02:49:53
                           </div>
-                          <div className="contest_tasks_nav_container">
-                            <h2>Tasks</h2>
-                            <ol>
-                              {task_participations.map(({ task }, i) => (
-                                <li><a href="#" onClick={(e) => {
-                                  e.preventDefault();
-                                  this.setState({ current_task_id: task.id })
-                                }} className="task_link">{localize(metadata(task).title)}</a></li>
-                              ))}
-                            </ol>
-                          </div>
+                          <h2>Tasks</h2>
+                          <ol className="contest_tasks_nav_container">
+                            {task_participations.map(({ task }, i) => (
+                              <li className="task_list_item"><a href="#" onClick={(e) => {
+                                e.preventDefault();
+                                this.setState({ current_task_id: task.id })
+                              }} className={task.id === current_task_id ? "task_link active" : "task_link"}>
+                                {localize(metadata(task).title)}
+                                <span className="task_badge">42/42</span>
+                              </a></li>
+                            ))}
+                          </ol>
                         </nav>
                         {task_participations.filter(({ task }) => task.id === current_task_id).map(({ task, submissions }, i) => (
                           <main className="task_main">
-                            <h2>{localize(metadata(task).title)}</h2>
+                            <h2 className="task_title">{localize(metadata(task).title)}</h2>
                             {submissions.length > 0 && (
                               <div className="task_last_submission_container">
-                                <p>
-                                  Last submission: <span>{submissions.reverse()[0].timestamp}</span>. (<a href="#" onClick={(e) => {
-                                    e.preventDefault();
-                                    this.setState({ submissions_modal_open: true });
-                                  }}>explore submissions</a>)
-                                </p>
+                                Last submission: <span>{submissions.reverse()[0].timestamp}</span>. (<a href="#" onClick={(e) => {
+                                  e.preventDefault();
+                                  this.setState({ submissions_modal_open: true });
+                                }}>explore submissions</a>)
                                 <ReactModal isOpen={submissions_modal_open} onRequestClose={() => {
                                   this.setState({ submissions_modal_open: false })
                                 }}>
