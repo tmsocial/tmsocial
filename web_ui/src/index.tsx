@@ -218,17 +218,27 @@ class App extends React.Component<{}, {
                                 ))}
                               </div>
                             )}
+                            <div className="task_submit_container">
+                              <a href="#" onClick={e => {
+                                e.preventDefault();
+                                this.setState({ submit_modal_open: true });
+                              }} className="task_submit_start">Submit a solution</a>
+                            </div>
+                            <ReactModal isOpen={submit_modal_open} onRequestClose={() => {
+                              this.setState({ submit_modal_open: false })
+                            }}>
+                              <Mutation mutation={submitQuery} variables={{ task_id: task.id, user_id }}>
+                                {(submit: MutationFunc<Submit>, { data: submitData }) => (
+                                  <React.Fragment>
+                                    <SubmissionFormView
+                                      form={metadata(task).submission_form}
+                                      onSubmit={(files) => submit({ variables: { files } })} />
+                                    {submitData ? <EvaluationComponent events={loadEvents(submitData.submit.official_evaluation.id)} metadata={metadata(task)} /> : null}
+                                  </React.Fragment>
+                                )}
+                              </Mutation>
+                            </ReactModal>
                             <StatementView statement={metadata(task).statement} />
-                            <Mutation mutation={submitQuery} variables={{ task_id: task.id, user_id }}>
-                              {(submit: MutationFunc<Submit>, { data: submitData }) => (
-                                <React.Fragment>
-                                  <SubmissionFormView
-                                    form={metadata(task).submission_form}
-                                    onSubmit={(files) => submit({ variables: { files } })} />
-                                  {submitData ? <EvaluationComponent events={loadEvents(submitData.submit.official_evaluation.id)} metadata={metadata(task)} /> : null}
-                                </React.Fragment>
-                              )}
-                            </Mutation>
                           </main>
                         ))}
                       </div>
