@@ -25,19 +25,19 @@ const wrapValue = <T extends EvaluationValue, U>(value: T | null, mapper: (value
 )
 
 const NamedColumnHeaderView = ({ column }: ColumnViewProps<TimeUsageColumn>) => (
-    <th>{column.name && localize(column.name)}</th>
+    <th className="named_column_header">{column.name && localize(column.name)}</th>
 )
 
 const RowNameCellView = ({ cell }: CellViewProps<RowNameColumn, RowNameCell>) => (
-    <th>{cell.name && localize(cell.name)}</th>
+    <th className="row_name_cell">{cell.name && localize(cell.name)}</th>
 )
 
 const RowNumberCellView = ({ cell }: CellViewProps<RowNumberColumn, RowNumberCell>) => (
-    <th>{cell.number}</th>
+    <th className="row_number_cell">{cell.number}</th>
 )
 
 const OutcomeCellView = ({ cell, summary }: CellViewProps<OutcomeColumn, ValueCell<Outcome>>) => (
-    <td>
+    <td className="outcome_cell">
         {wrapValue(evaluateExpression(summary, cell.value), v => (
             <React.Fragment>{v.outcome}</React.Fragment>
         ))}
@@ -45,7 +45,7 @@ const OutcomeCellView = ({ cell, summary }: CellViewProps<OutcomeColumn, ValueCe
 )
 
 const MessageCellView = ({ cell, summary }: CellViewProps<MessageColumn, ValueCell<Message>>) => (
-    <td>
+    <td className="message_cell">
         {wrapValue(evaluateExpression(summary, cell.value), v => (
             <React.Fragment>{localize(v.message)}</React.Fragment>
         ))}
@@ -53,7 +53,7 @@ const MessageCellView = ({ cell, summary }: CellViewProps<MessageColumn, ValueCe
 )
 
 const TimeUsageCellView = ({ cell, summary }: CellViewProps<TimeUsageColumn, ValueCell<TimeUsage>>) => (
-    <td>
+    <td className="time_usage_cell">
         {wrapValue(evaluateExpression(summary, cell.value), v => (
             <React.Fragment>{v.time_usage_seconds.toFixed(3)} s</React.Fragment>
         ))}
@@ -61,7 +61,7 @@ const TimeUsageCellView = ({ cell, summary }: CellViewProps<TimeUsageColumn, Val
 )
 
 const MemoryUsageCellView = ({ cell, summary }: CellViewProps<MemoryUsageColumn, ValueCell<MemoryUsage>>) => (
-    <td>
+    <td className="memory_usage_cell">
         {wrapValue(evaluateExpression(summary, cell.value), v => (
             <React.Fragment>{(v.memory_usage_bytes / 1e3).toFixed()} KB</React.Fragment>
         ))}
@@ -69,7 +69,7 @@ const MemoryUsageCellView = ({ cell, summary }: CellViewProps<MemoryUsageColumn,
 )
 
 const ScoreCellView = ({ column, cell, summary }: CellViewProps<ScoreColumn, ScoreCell>) => (
-    <td>
+    <td className="score_cell">
         {wrapValue(evaluateExpression(summary, cell.value), v => (
             <React.Fragment>{v.score.toFixed("score_precision" in column ? column.score_precision : 0)}</React.Fragment>
         ))}{
@@ -93,7 +93,7 @@ const DummyCellView = ({ column, cell, summary }: CellViewProps<Column, Cell>) =
 )
 
 const PercentageCellView = ({ column, cell, summary }: CellViewProps<PercentageColumn, ValueCell<Fraction>>) => (
-    <td>
+    <td className="percentage_cell">
         {wrapValue(evaluateExpression(summary, cell.value), v => (
             <React.Fragment>{(v.fraction * 100).toFixed(column.precision || 0)}%</React.Fragment>
         ))}
@@ -124,9 +124,9 @@ const GroupHeaderView = ({ section, group }: { section: Table, group: RowGroup }
     <React.Fragment>
         {
             "header" in group &&
-            <tr><th colSpan={section.columns.length}>{localize(group.header.title)}</th></tr>
+            <tr><th colSpan={section.columns.length}>{localize(group.header!.title)}</th></tr>
         }
-        <tr>
+        <tr className="group_header_row">
             {section.columns.map((column, i) => (
                 React.createElement(columnViews[column.type].header, { key: i, column })
             ))}
@@ -135,12 +135,12 @@ const GroupHeaderView = ({ section, group }: { section: Table, group: RowGroup }
 )
 
 export const TableView = ({ section, summary }: EvaluationSectionViewProps<Table>) => (
-    <table>
+    <table className="evaluation_table">
         {section.groups.map((group, i) => (
-            <tbody key={i}>
+            <tbody key={i} className="evaluation_group">
                 <GroupHeaderView section={section} group={group} />
                 {group.rows.map((row, j) => (
-                    <tr key={j}>
+                    <tr key={j} className="evaluation_row">
                         {row.cells.map((cell, k) => (
                             React.createElement(columnViews[section.columns[k].type].cell, { key: k, column: section.columns[k], cell, summary, })
                         ))}
