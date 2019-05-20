@@ -1,9 +1,9 @@
 import * as React from "react";
-import { EvaluationValue, MemoryUsage, TimeUsage, Fraction } from "./evaluation";
+import { EvaluationValue, MemoryUsage, TimeUsage, Fraction, Outcome, Message } from "./evaluation";
 import { EvaluationSummary } from "./evaluation_process";
 import { EvaluationSection } from "./section";
 import { evaluateExpression, localize } from "./section_view";
-import { Cell, Column, MemoryUsageColumn, PercentageColumn, RowGroup, RowNameCell, RowNameColumn, RowNumberCell, RowNumberColumn, ScoreCell, ScoreColumn, Table, TimeUsageColumn, ValueCell } from "./table";
+import { Cell, Column, MemoryUsageColumn, PercentageColumn, RowGroup, RowNameCell, RowNameColumn, RowNumberCell, RowNumberColumn, ScoreCell, ScoreColumn, Table, TimeUsageColumn, ValueCell, OutcomeColumn, MessageColumn } from "./table";
 
 export interface EvaluationSectionViewProps<T extends EvaluationSection> {
     section: T,
@@ -33,6 +33,22 @@ const RowNameCellView = ({ cell }: CellViewProps<RowNameColumn, RowNameCell>) =>
 
 const RowNumberCellView = ({ cell }: CellViewProps<RowNumberColumn, RowNumberCell>) => (
     <th>{cell.number}</th>
+)
+
+const OutcomeCellView = ({ cell, summary }: CellViewProps<OutcomeColumn, ValueCell<Outcome>>) => (
+    <td>
+        {wrapValue(evaluateExpression(summary, cell.value), v => (
+            <React.Fragment>{v.outcome}</React.Fragment>
+        ))}
+    </td>
+)
+
+const MessageCellView = ({ cell, summary }: CellViewProps<MessageColumn, ValueCell<Message>>) => (
+    <td>
+        {wrapValue(evaluateExpression(summary, cell.value), v => (
+            <React.Fragment>{localize(v.message)}</React.Fragment>
+        ))}
+    </td>
 )
 
 const TimeUsageCellView = ({ cell, summary }: CellViewProps<TimeUsageColumn, ValueCell<TimeUsage>>) => (
@@ -72,14 +88,14 @@ const ScoreCellView = ({ column, cell, summary }: CellViewProps<ScoreColumn, Sco
 )
 
 const DummyCellView = ({ column, cell, summary }: CellViewProps<Column, Cell>) => (
-    <td>{column.type}</td>
+    <td>?</td>
 )
 
 const PercentageCellView = ({ column, cell, summary }: CellViewProps<PercentageColumn, ValueCell<Fraction>>) => (
     <td>
         {wrapValue(evaluateExpression(summary, cell.value), v => (
             <React.Fragment>{(v.fraction * 100).toFixed(column.precision || 0)}%</React.Fragment>
-            ))}
+        ))}
     </td>
 )
 
@@ -95,16 +111,12 @@ const columnViews: {
     memory_usage: { header: NamedColumnHeaderView, cell: MemoryUsageCellView },
     percentage: { header: NamedColumnHeaderView, cell: PercentageCellView },
     score: { header: NamedColumnHeaderView, cell: ScoreCellView },
-    // row_name: { header: NamedColumnHeaderView, cell: DummyCellView },
-    // row_number: { header: NamedColumnHeaderView, cell: DummyCellView },
-    // time_usage: { header: NamedColumnHeaderView, cell: DummyCellView },
-    // memory_usage: { header: NamedColumnHeaderView, cell: DummyCellView },
-    // percentage: { header: NamedColumnHeaderView, cell: DummyCellView },
-    // score: { header: NamedColumnHeaderView, cell: DummyCellView },
-    outcome: { header: NamedColumnHeaderView, cell: DummyCellView },
+    outcome: { header: NamedColumnHeaderView, cell: OutcomeCellView },
+    message: { header: NamedColumnHeaderView, cell: MessageCellView },
+
+    // unsupported
     signal: { header: NamedColumnHeaderView, cell: DummyCellView },
     return_code: { header: NamedColumnHeaderView, cell: DummyCellView },
-    message: { header: NamedColumnHeaderView, cell: DummyCellView },
 };
 
 const GroupHeaderView = ({ section, group }: { section: Table, group: RowGroup }) => (

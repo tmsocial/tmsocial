@@ -38,13 +38,13 @@ def generate_table(metadata):
         type="table",
         columns=[
             dict(type="row_number", name=dict(default="Test Case")),
-            dict(type="outcome"),
+            dict(type="outcome", name=dict(default="Outcome")),
             dict(type="score", name=dict(default="Score")),
             dict(type="memory_usage", name=dict(default="Memory Usage")),
             dict(type="time_usage", name=dict(default="Time Usage")),
-            dict(type="signal"),
-            dict(type="return_code"),
-            dict(type="message"),
+            dict(type="signal", name=dict(default="Exit signal")),
+            dict(type="return_code", name=dict(default="Return code")),
+            dict(type="message", name=dict(default="Message")),
         ],
         groups=list(generate_subtasks(metadata)),
     )

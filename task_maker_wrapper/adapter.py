@@ -22,9 +22,8 @@ def process_testcase_outcome(event):
     data = event["data"]
     path = f"subtask.{data['subtask']}.testcase.{data['testcase']}."
     yield from generate_value_event(path + "score", dict(type="score", score=data["score"]))
-    yield from generate_value_event(path + "status", dict(type="outcome", outcome=STATUS_MAP.get(data["status"], "done")))
-    # TODO: not implemented in UI
-    yield from generate_value_event(path + "message", data["message"])
+    yield from generate_value_event(path + "outcome", dict(type="outcome", outcome=STATUS_MAP.get(data["status"], "done")))
+    yield from generate_value_event(path + "message", dict(type="message", message=dict(default=data["message"])))
 
 
 def process_result(event, source):
