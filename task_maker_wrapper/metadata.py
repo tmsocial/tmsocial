@@ -15,7 +15,7 @@ def gen_path(subtask, testcase, field):
 def generate_cells(subtask, testcase):
     yield dict(number=testcase)
     yield dict(value=dict(type="ref", ref=gen_path(subtask, testcase, "outcome")), type="outcome")
-    yield dict(value=dict(type="ref", ref=gen_path(subtask, testcase, "total_score")), type="score")
+    yield dict(value=dict(type="ref", ref=gen_path(subtask, testcase, "score")), type="score")
     yield dict(value=dict(type="ref", ref=gen_path(subtask, testcase, "memory_usage")), type="memory_usage")
     yield dict(value=dict(type="ref", ref=gen_path(subtask, testcase, "time_usage")), type="time_usage")
     yield dict(value=dict(type="ref", ref=gen_path(subtask, testcase, "signal")), type="signal")

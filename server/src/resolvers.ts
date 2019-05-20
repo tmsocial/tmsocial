@@ -181,6 +181,7 @@ export const resolvers = {
 
       const evaluation = DateTime.utc().toISO();
       mkdirSync(join(DATA_DIRECTORY, submissionPath, 'evaluations', evaluation), { recursive: true });
+      writeFileSync(join(DATA_DIRECTORY, submissionPath, 'evaluations', evaluation, 'events.jsonl'), Buffer.from([]));
 
       const process = execFile("../task_maker_wrapper/adapter.py", [
         join(CONFIG_DIRECTORY, site, 'contests', contest, 'tasks', task),

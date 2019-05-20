@@ -8,6 +8,11 @@ import subprocess
 
 TASK_MAKER = "task-maker"
 
+STATUS_MAP = {
+    "ACCEPTED": "success",
+    "SKIPPED": "skip",
+}
+
 
 def generate_value_event(key, value):
     yield dict(type="value", key=key, value=value)
@@ -17,8 +22,8 @@ def process_testcase_outcome(event):
     data = event["data"]
     path = f"subtask.{data['subtask']}.testcase.{data['testcase']}."
     yield from generate_value_event(path + "score", dict(type="score", score=data["score"]))
+    yield from generate_value_event(path + "status", dict(type="outcome", outcome=STATUS_MAP.get(data["status"], "done")))
     # TODO: not implemented in UI
-    yield from generate_value_event(path + "status", data["status"])
     yield from generate_value_event(path + "message", data["message"])
 
 

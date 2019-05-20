@@ -39,15 +39,16 @@ const client = new ApolloClient({
   cache: new InMemoryCache(),
 });
 
-function loadEvents(id: string) {
+function loadEvents(evaluation_id: string) {
   return client.subscribe({
     query: gql`
-    subscription EvaluationEvents {
-      evaluation_events(evaluation_id: "site1/default/user1/easy1/2019-05-19T23:53:22.357Z/2019-05-19T23:53:22.359Z") {
-        json
+      subscription EvaluationEvents($evaluation_id: ID!) {
+        evaluation_events(evaluation_id: $evaluation_id) {
+          json
+        }
       }
-    }
-  `,
+    `,
+    variables: { evaluation_id },
   }).map(e => JSON.parse(e.data.evaluation_events.json));
 }
 
