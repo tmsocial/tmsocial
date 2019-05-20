@@ -13,6 +13,7 @@ def gen_path(subtask, testcase, field):
 
 
 def generate_cells(subtask, testcase):
+    yield dict(number=testcase)
     yield dict(value=dict(type="ref", ref=gen_path(subtask, testcase, "outcome")), type="outcome")
     yield dict(value=dict(type="ref", ref=gen_path(subtask, testcase, "total_score")), type="score")
     yield dict(value=dict(type="ref", ref=gen_path(subtask, testcase, "memory_usage")), type="memory_usage")
@@ -36,10 +37,11 @@ def generate_table(metadata):
     return dict(
         type="table",
         columns=[
+            dict(type="row_number", name=dict(default="Test Case")),
             dict(type="outcome"),
-            dict(type="score"),
-            dict(type="memory_usage"),
-            dict(type="time_usage"),
+            dict(type="score", name=dict(default="Score")),
+            dict(type="memory_usage", name=dict(default="Memory Usage")),
+            dict(type="time_usage", name=dict(default="Time Usage")),
             dict(type="signal"),
             dict(type="return_code"),
             dict(type="message"),
