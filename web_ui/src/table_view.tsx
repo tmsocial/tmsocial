@@ -75,7 +75,7 @@ const ScoreCellView = ({ column, cell, summary }: CellViewProps<ScoreColumn, Sco
         ))}{
             "max_score" in cell
                 ? <React.Fragment> / {
-                    cell.max_score.toFixed(
+                    cell.max_score!.toFixed(
                         "max_score_precision" in column
                             ? column.max_score_precision
                             : "score_precision" in column
