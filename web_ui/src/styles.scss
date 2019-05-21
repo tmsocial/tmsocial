@@ -217,6 +217,27 @@ body {
     @extend .btn, .btn-primary;
 }
 
+.submission_file_info {
+    display: flex;
+    flex-flow: row wrap;
+}
+
+.submission_file_info > dt {
+    margin-bottom: 0px;
+    min-width: 6rem;
+}
+
+.submission_file_info > dd {
+    margin-bottom: 0px;
+    margin-left: -6rem;
+    padding-left: 8rem;
+    flex: 1 1 100%;
+}
+
+.submission_file_type_suggested_option {
+    margin-right: 1rem;
+}
+
 .modal-body {
     max-height: calc(100vh - 260px);
     overflow-y: auto;
