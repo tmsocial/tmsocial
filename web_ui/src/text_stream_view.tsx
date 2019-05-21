@@ -1,5 +1,5 @@
 import * as React from "react";
-import { EvaluationSectionViewProps } from "./table_view";
+import { EvaluationSectionViewProps } from "./evaluation_table_view";
 import { TextStream } from "./text_stream";
 
 export const TextStreamView = ({ section, summary }: EvaluationSectionViewProps<TextStream>) => {

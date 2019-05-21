@@ -11,13 +11,13 @@ def gen_path(subtask, testcase, field):
 
 def generate_cells(subtask, testcase):
     yield dict(number=testcase)
-    yield dict(value=dict(type="ref", ref=gen_path(subtask, testcase, "outcome")), type="outcome")
-    yield dict(value=dict(type="ref", ref=gen_path(subtask, testcase, "score")), type="score")
-    yield dict(value=dict(type="ref", ref=gen_path(subtask, testcase, "memory_usage")), type="memory_usage")
-    yield dict(value=dict(type="ref", ref=gen_path(subtask, testcase, "time_usage")), type="time_usage")
-    yield dict(value=dict(type="ref", ref=gen_path(subtask, testcase, "signal")), type="signal")
-    yield dict(value=dict(type="ref", ref=gen_path(subtask, testcase, "return_code")), type="return_code")
-    yield dict(value=dict(type="ref", ref=gen_path(subtask, testcase, "message")), type="message")
+    yield dict(value=dict(type="ref", ref=gen_path(subtask, testcase, "status")))
+    yield dict(value=dict(type="ref", ref=gen_path(subtask, testcase, "memory_usage")))
+    yield dict(value=dict(type="ref", ref=gen_path(subtask, testcase, "time_usage")))
+    yield dict(value=dict(type="ref", ref=gen_path(subtask, testcase, "signal")))
+    yield dict(value=dict(type="ref", ref=gen_path(subtask, testcase, "return_code")))
+    yield dict(value=dict(type="ref", ref=gen_path(subtask, testcase, "message")))
+    yield dict(value=dict(type="ref", ref=gen_path(subtask, testcase, "score")))
 
 
 def generate_testcases(subtask, data):
@@ -35,13 +35,13 @@ def generate_table(metadata):
         type="table",
         columns=[
             dict(type="row_number", name=dict(default="Test Case")),
-            dict(type="outcome", name=dict(default="Outcome")),
-            dict(type="score", name=dict(default="Score")),
+            dict(type="row_status"),
             dict(type="memory_usage", name=dict(default="Memory Usage")),
             dict(type="time_usage", name=dict(default="Time Usage")),
             dict(type="signal", name=dict(default="Exit signal")),
             dict(type="return_code", name=dict(default="Return code")),
             dict(type="message", name=dict(default="Message")),
+            dict(type="score", name=dict(default="Score")),
         ],
         groups=list(generate_subtasks(metadata)),
     )

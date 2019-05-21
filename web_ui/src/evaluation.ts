@@ -1,13 +1,13 @@
-export type OutcomeValue = "done" | "success" | "fail" | "partial" | "skip";
+export type StatusValue = "done" | "success" | "fail" | "partial" | "skip";
 
 export interface Message {
     type: "message";
     message: Localized<string>;
 }
 
-export interface Outcome {
-    type: "outcome";
-    outcome: OutcomeValue;
+export interface Status {
+    type: "status";
+    status: StatusValue;
 }
 
 export interface Score {
@@ -30,7 +30,7 @@ export interface MemoryUsage {
     memory_usage_bytes: number;
 }
 
-export type EvaluationValue = Outcome | Score | Fraction | TimeUsage | MemoryUsage | Message;
+export type EvaluationValue = Status | Score | Fraction | TimeUsage | MemoryUsage | Message;
 
 export interface ValueEvent<T extends EvaluationValue> {
     type: "value";

@@ -204,35 +204,46 @@ class App extends React.Component<{}, {
                                       e.preventDefault();
                                       this.setState({ submissions_modal_open: true });
                                     }}>explore submissions</a>)
-                                <ReactModal isOpen={submissions_modal_open} onRequestClose={() => {
+                                    <ReactModal isOpen={submissions_modal_open && submission_detail_modal_open_for_id === null} onRequestClose={() => {
                                       this.setState({ submissions_modal_open: false })
                                     }}>
-                                      <table className="submission_table">
-                                        <thead>
-                                          <tr>
-                                            <th>Timestamp</th>
-                                            <th>Score</th>
-                                          </tr>
-                                        </thead>
-                                        <tbody>
-                                          {submissions.map((submission) => (
+                                      <div className="submissions_modal_header">
+                                        Submissions
+                                      </div>
+                                      <div className="submissions_modal_body">
+                                        <table className="submission_table">
+                                          <thead className="submission_table_header">
                                             <tr>
-                                              <td><a href="#" onClick={(e) => {
-                                                e.preventDefault();
-                                                this.setState({
-                                                  submission_detail_modal_open_for_id: submission.id
-                                                });
-                                              }}>{submission.timestamp}</a></td>
+                                              <th>Timestamp</th>
+                                              <th>Score</th>
                                             </tr>
-                                          ))}
-                                        </tbody>
-                                      </table>
+                                          </thead>
+                                          <tbody className="submission_table_body">
+                                            {submissions.map((submission) => (
+                                              <tr>
+                                                <td><a href="#" onClick={(e) => {
+                                                  e.preventDefault();
+                                                  this.setState({
+                                                    submission_detail_modal_open_for_id: submission.id
+                                                  });
+                                                }}>{submission.timestamp}</a></td>
+                                                <td>42 / 42</td>
+                                              </tr>
+                                            ))}
+                                          </tbody>
+                                        </table>
+                                      </div>
                                     </ReactModal>
                                     {submissions.map((submission) => (
                                       <ReactModal isOpen={submission.id === submission_detail_modal_open_for_id} onRequestClose={() => {
                                         this.setState({ submission_detail_modal_open_for_id: null })
                                       }}>
-                                        <EvaluationComponent events={loadEvents(submission.official_evaluation.id)} metadata={metadata(task)} />
+                                        <div className="evaluation_modal_header">
+                                          Evaluation
+                                        </div>
+                                        <div className="evaluation_modal_body">
+                                          <EvaluationComponent events={loadEvents(submission.official_evaluation.id)} metadata={metadata(task)} />
+                                        </div>
                                       </ReactModal>
                                     ))}
                                   </span>
@@ -248,9 +259,16 @@ class App extends React.Component<{}, {
                                 {(submit: MutationFunc<Submit>, { data: submitData }) => (
                                   <div className="modal_container">
                                     {submitData && (
-                                      <EvaluationComponent
-                                        events={loadEvents(submitData.submit.official_evaluation.id)}
-                                        metadata={metadata(task)} />
+                                      <React.Fragment>
+                                        <div className="evaluation_modal_header">
+                                          Evaluation
+                                        </div>
+                                        <div className="evaluation_modal_body">
+                                          <EvaluationComponent
+                                            events={loadEvents(submitData.submit.official_evaluation.id)}
+                                            metadata={metadata(task)} />
+                                        </div>
+                                      </React.Fragment>
                                     )}
                                     {!submitData &&
                                       <SubmissionFormView

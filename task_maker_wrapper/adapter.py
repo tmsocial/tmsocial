@@ -6,6 +6,7 @@ from common import TASK_MAKER_EXE
 
 STATUS_MAP = {
     "ACCEPTED": "success",
+    "WRONG_ANSWER": "fail",
     "SKIPPED": "skip",
 }
 
@@ -18,7 +19,7 @@ def process_testcase_outcome(event):
     data = event["data"]
     path = f"subtask.{data['subtask']}.testcase.{data['testcase']}."
     yield from generate_value_event(path + "score", dict(type="score", score=data["score"]))
-    yield from generate_value_event(path + "outcome", dict(type="outcome", outcome=STATUS_MAP.get(data["status"], "done")))
+    yield from generate_value_event(path + "status", dict(type="status", status=STATUS_MAP.get(data["status"], data["status"])))
     yield from generate_value_event(path + "message", dict(type="message", message=dict(default=data["message"])))
 
 

@@ -1,4 +1,4 @@
-import { EvaluationValue, Score, Fraction, TimeUsage, MemoryUsage, Outcome } from "./evaluation";
+import { EvaluationValue, Score, Fraction, TimeUsage, MemoryUsage, Status } from "./evaluation";
 
 export interface ValueReference {
     type: "ref";

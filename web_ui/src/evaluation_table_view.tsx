@@ -1,9 +1,9 @@
 import * as React from "react";
-import { EvaluationValue, MemoryUsage, TimeUsage, Fraction, Outcome, Message } from "./evaluation";
+import { EvaluationValue, MemoryUsage, TimeUsage, Fraction, Status, Message } from "./evaluation";
 import { EvaluationSummary } from "./evaluation_process";
 import { EvaluationSection } from "./section";
 import { evaluateExpression } from "./section_view";
-import { Cell, Column, MemoryUsageColumn, PercentageColumn, RowGroup, RowNameCell, RowNameColumn, RowNumberCell, RowNumberColumn, ScoreCell, ScoreColumn, Table, TimeUsageColumn, ValueCell, OutcomeColumn, MessageColumn } from "./table";
+import { Cell, Column, MemoryUsageColumn, PercentageColumn, RowGroup, RowNameCell, RowNameColumn, RowNumberCell, RowNumberColumn, ScoreCell, ScoreColumn, Table, TimeUsageColumn, ValueCell, StatusColumn, MessageColumn, NamedColumn, RowStatusColumn } from "./table";
 import { localize } from "./l10n";
 
 export interface EvaluationSectionViewProps<T extends EvaluationSection> {
@@ -11,7 +11,7 @@ export interface EvaluationSectionViewProps<T extends EvaluationSection> {
     summary: EvaluationSummary,
 }
 
-interface ColumnViewProps<T extends Column> {
+interface ColumnViewProps<T> {
     column: T;
 }
 
@@ -24,22 +24,26 @@ const wrapValue = <T extends EvaluationValue, U>(value: T | null, mapper: (value
     value !== null ? mapper(value) : null
 )
 
-const NamedColumnHeaderView = ({ column }: ColumnViewProps<TimeUsageColumn>) => (
+const NamedColumnHeaderView = ({ column }: ColumnViewProps<NamedColumn>) => (
     <th className="named_column_header">{column.name && localize(column.name)}</th>
 )
 
+const EmptyView = () => (
+    <React.Fragment></React.Fragment>
+)
+
 const RowNameCellView = ({ cell }: CellViewProps<RowNameColumn, RowNameCell>) => (
-    <th className="row_name_cell">{cell.name && localize(cell.name)}</th>
+    <th className="row_name_cell" scope="row">{cell.name && localize(cell.name)}</th>
 )
 
 const RowNumberCellView = ({ cell }: CellViewProps<RowNumberColumn, RowNumberCell>) => (
-    <th className="row_number_cell">{cell.number}</th>
+    <th className="row_number_cell" scope="row">{cell.number}</th>
 )
 
-const OutcomeCellView = ({ cell, summary }: CellViewProps<OutcomeColumn, ValueCell<Outcome>>) => (
-    <td className="outcome_cell">
+const StatusCellView = ({ cell, summary }: CellViewProps<StatusColumn, ValueCell<Status>>) => (
+    <td className="status_cell">
         {wrapValue(evaluateExpression(summary, cell.value), v => (
-            <React.Fragment>{v.outcome}</React.Fragment>
+            <React.Fragment>{v.status}</React.Fragment>
         ))}
     </td>
 )
@@ -100,21 +104,28 @@ const PercentageCellView = ({ column, cell, summary }: CellViewProps<PercentageC
     </td>
 )
 
+const RowStatusClasses = ({ summary, cell }: CellViewProps<RowStatusColumn, ValueCell<Status>>) => {
+    const value = evaluateExpression(summary, cell.value);
+    if (value !== null) return ["row_status", value.status];
+    else return ["row_status"];
+}
+
 const columnViews: {
     [K in Column["type"]]: {
         header: React.JSXElementConstructor<ColumnViewProps<any>>,
         cell: React.JSXElementConstructor<CellViewProps<any, any>>,
+        row_classes?: (props: CellViewProps<any, any>) => string[],
     }
 } = {
     row_name: { header: NamedColumnHeaderView, cell: RowNameCellView },
     row_number: { header: NamedColumnHeaderView, cell: RowNumberCellView },
+    row_status: { header: EmptyView, cell: EmptyView, row_classes: RowStatusClasses },
     time_usage: { header: NamedColumnHeaderView, cell: TimeUsageCellView },
     memory_usage: { header: NamedColumnHeaderView, cell: MemoryUsageCellView },
     percentage: { header: NamedColumnHeaderView, cell: PercentageCellView },
     score: { header: NamedColumnHeaderView, cell: ScoreCellView },
-    outcome: { header: NamedColumnHeaderView, cell: OutcomeCellView },
+    status: { header: NamedColumnHeaderView, cell: StatusCellView },
     message: { header: NamedColumnHeaderView, cell: MessageCellView },
-
     // unsupported
     signal: { header: NamedColumnHeaderView, cell: DummyCellView },
     return_code: { header: NamedColumnHeaderView, cell: DummyCellView },
@@ -140,9 +151,12 @@ export const TableView = ({ section, summary }: EvaluationSectionViewProps<Table
             <tbody key={i} className="evaluation_group">
                 <GroupHeaderView section={section} group={group} />
                 {group.rows.map((row, j) => (
-                    <tr key={j} className="evaluation_row">
+                    <tr key={j} className={["evaluation_row", ...row.cells.map((cell, k) => {
+                        const row_classes = columnViews[section.columns[k].type].row_classes;
+                        return row_classes && row_classes({ column: section.columns[k], cell, summary }).join(" ");
+                    }).filter(c => c)].join(" ")}>
                         {row.cells.map((cell, k) => (
-                            React.createElement(columnViews[section.columns[k].type].cell, { key: k, column: section.columns[k], cell, summary, })
+                            React.createElement(columnViews[section.columns[k].type].cell, { key: k, column: section.columns[k], cell, summary })
                         ))}
                     </tr>
                 ))}

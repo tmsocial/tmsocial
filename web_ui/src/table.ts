@@ -1,5 +1,6 @@
 import { EvaluationValue, Score } from "./evaluation";
 import { ValueExpression } from "./evaluation_model";
+import { Localized } from "./l10n";
 
 export interface Table {
     type: "table";
@@ -14,7 +15,8 @@ export interface HeaderColumn {
 export type Column =
     | RowNameColumn
     | RowNumberColumn
-    | OutcomeColumn
+    | RowStatusColumn
+    | StatusColumn
     | MessageColumn
     | MemoryUsageColumn
     | TimeUsageColumn
@@ -54,6 +56,10 @@ export interface RowNumberColumn extends NamedColumn {
     type: "row_number";
 }
 
+export interface RowStatusColumn {
+    type: "row_status";
+}
+
 export interface MemoryUsageColumn extends NamedColumn {
     type: "memory_usage";
 }
@@ -62,8 +68,8 @@ export interface TimeUsageColumn extends NamedColumn {
     type: "time_usage";
 }
 
-export interface OutcomeColumn extends NamedColumn {
-    type: "outcome";
+export interface StatusColumn extends NamedColumn {
+    type: "status";
 }
 
 export interface MessageColumn extends NamedColumn {

@@ -108,7 +108,7 @@ body {
 .contest_nav h2 {
     text-transform: uppercase;
     font-size: 1.25rem;
-    margin: 0;
+    margin: 0 0 .5rem;
     font-weight: 500;
     line-height: 1.2;
 }
@@ -217,14 +217,13 @@ body {
     @extend .btn, .btn-primary;
 }
 
-.modal_size_limit {
+.modal-body {
     max-height: calc(100vh - 260px);
     overflow-y: auto;
 }
 
 .submission_form_body {
     @extend .modal-body;
-    @extend .modal_size_limit;
 }
 
 .submission_form_footer {
@@ -235,8 +234,30 @@ body {
     @extend .btn, .btn-success;
 }
 
-.modal_container {
-    @extend .modal_size_limit;
+.submissions_modal_header {
+    @extend .modal-header;
+}
+
+.submissions_modal_body {
+    @extend .modal-body;
+    padding: 0;
+}
+
+.submission_table {
+    @extend .table;
+}
+
+.evaluation_modal_header {
+    @extend .modal-header;
+}
+
+.evaluation_modal_body {
+    @extend .modal-body;
+    padding: 0;
+}
+
+.evaluation_table {
+    @extend .table;
 }
 
 .message_cell {
@@ -245,4 +266,16 @@ body {
 
 .score_cell {
     font-weight: bold;
+}
+
+.row_status.success {
+    @extend .table-success;
+}
+
+.row_status.fail {
+    @extend .table-danger;
+}
+
+.row_status.skip {
+    @extend .table-secondary;
 }

@@ -3,7 +3,7 @@ import { EvaluationEvent } from "./evaluation";
 import { EvaluationReducer } from './evaluation_process';
 import { TaskMetadata } from './metadata';
 import { EvaluationSection } from './section';
-import { TableView } from './table_view';
+import { TableView } from './evaluation_table_view';
 import { TextStreamView } from './text_stream_view';
 import { Subscription } from 'react-apollo';
 import { Observable } from 'apollo-link';
