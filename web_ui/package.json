@@ -2,6 +2,7 @@
   "scripts": {
     "prestart": "npm run apollo:codegen",
     "start": "parcel index.html",
+    "build": "npm run apollo:codegen && parcel build index.html",
     "apollo:codegen": "apollo client:codegen --target typescript --globalTypesFile src/__generated__/globalTypes.ts"
   },
   "devDependencies": {
