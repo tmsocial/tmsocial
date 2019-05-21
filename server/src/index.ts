@@ -2,7 +2,7 @@ import 'core-js/modules/es.symbol.async-iterator';
 import * as express from 'express';
 import * as http from 'http';
 import { ApolloServer } from "apollo-server-express";
-import { resolvers } from './resolvers';
+import { resolvers, rootValue } from './resolvers';
 import { typeDefs } from './api-loader';
 
 export const config = {
@@ -13,6 +13,7 @@ export const config = {
 const apollo = new ApolloServer({
   typeDefs,
   resolvers,
+  rootValue,
   debug: true,
   subscriptions: {
     onConnect(connectionParams: any) {
