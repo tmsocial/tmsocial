@@ -140,8 +140,9 @@ export const resolvers = {
       return await taskManager.load({ site, contest });
     },
     async metadata_json({ path }: Node) {
-      const metadata = execFileSync("../task_maker_wrapper/cli.py", [
-        'metadata',
+      const metadata = execFileSync("task-maker", [
+        '--ui', 'tmsocial',
+        '--task-info',
         '--task-dir', join(CONFIG_DIRECTORY, path)
       ], {
           encoding: 'utf8',
