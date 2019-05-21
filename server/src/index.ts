@@ -5,6 +5,11 @@ import { ApolloServer } from "apollo-server-express";
 import { resolvers } from './resolvers';
 import { typeDefs } from './api-loader';
 
+export const config = {
+  SITES_DIRECTORY: '',
+  DATA_DIRECTORY: '',
+};
+
 const apollo = new ApolloServer({
   typeDefs,
   resolvers,
@@ -41,10 +46,12 @@ let opts = require('yargs')
   .usage('$0 [options]')
   .option('sites-dir', {
     alias: 's',
+    required: true,
     describe: 'path to directory containing sites'
   })
   .option('data-dir', {
     alias: 'd',
+    required: true,
     describe: 'path to directory containing data'
   })
   .option('host', {
@@ -56,8 +63,10 @@ let opts = require('yargs')
     describe: 'port where to listen to'
   })
   .help()
-  .argv
+  .argv;
 
+config.SITES_DIRECTORY = opts["sites-dir"];
+config.DATA_DIRECTORY = opts["data-dir"];
 
 server.listen({ host: opts.host, port: opts.port }, () => {
   console.log('🚀 Server ready at:');

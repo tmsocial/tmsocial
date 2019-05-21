@@ -1,65 +1,24 @@
 import { join } from "path";
-import { readFileSync, existsSync } from "fs";
-
-export const CONFIG_DIRECTORY = '../test_site/config';
-export const DATA_DIRECTORY = '../test_site/data';
 
 export interface IdParts {
     [name: string]: string
-}
-
-export interface Node {
-    id: string,
-    id_parts: IdParts
-    path: string
 }
 
 interface IdSegment { type: "id", name: string };
 interface ConstantSegment { type: "path", path: string };
 type PathSegment = IdSegment | ConstantSegment;
 
-export class NodeManager {
+export class PathManager {
     constructor(
         readonly segments: PathSegment[],
     ) { }
 
     appendPath(path: string) {
-        return new NodeManager([...this.segments, { type: "path", path }])
+        return new PathManager([...this.segments, { type: "path", path }])
     }
 
     appendId(name: string) {
-        return new NodeManager([...this.segments, { type: "id", name }])
-    }
-
-    async load(idOrIdParts: string | IdParts, { loadDataIn }: {
-        loadDataIn?: string,
-    } = {}): Promise<Node & object> {
-        let id;
-        if(typeof idOrIdParts === "string") {
-            id = idOrIdParts;
-        } else {
-            id = this.formatId(idOrIdParts);
-        }
-        const id_parts = this.parseId(id);
-
-        const path = this.path(id);
-        let data;
-        if (loadDataIn !== undefined) {
-            const dataFilePath = join(loadDataIn, path, 'data.json')
-            if(existsSync(dataFilePath)) {
-                data = JSON.parse(readFileSync(dataFilePath, 'utf8'));
-            } else {
-                throw new Error(`id '${id}' not found`);
-            }
-        } else {
-            data = {};
-        }
-        return {
-            id,
-            id_parts,
-            path,
-            ...data,
-        };
+        return new PathManager([...this.segments, { type: "id", name }])
     }
 
     parseId(id: string) {
@@ -77,16 +36,15 @@ export class NodeManager {
         return parsed;
     }
 
-    formatId(parts: IdParts) {
+    buildId(parts: IdParts) {
         return this.segments.filter(s => s.type === "id").map((segment, i) => parts[(segment as IdSegment).name]).join("/");
     }
 
-    path(id: string) {
-        const idParts = this.parseId(id);
+    buildPath(id_parts: IdParts) {
         const pathParts = [];
         for (const segment of this.segments) {
             if (segment.type === "id") {
-                pathParts.push(idParts[segment.name]);
+                pathParts.push(id_parts[segment.name]);
             }
             if (segment.type === "path") {
                 pathParts.push(segment.path);
