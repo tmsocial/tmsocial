@@ -42,17 +42,17 @@ const authLink = setContext((_, { headers }) => {
 });
 
 // https://stackoverflow.com/questions/10406930/how-to-construct-a-websocket-uri-relative-to-the-page-uri
-var loc = window.location, new_uri;
-if (loc.protocol === "https:") {
-    new_uri = "wss:";
+let graphqlProtocol;
+if (window.location.protocol === "https:") {
+  graphqlProtocol = "wss:";
 } else {
-    new_uri = "ws:";
+  graphqlProtocol = "ws:";
 }
-new_uri += "//" + loc.host + loc.pathname;
+const graphqlUrl = `${graphqlProtocol}//${window.location.host}${window.location.pathname}graphql`
 
 const client = new ApolloClient({
   link: authLink.concat(new WebSocketLink({
-    uri: new_uri + "/graphql",
+    uri: window.location.toString() === "http://localhost:1234/" ? "ws://localhost:4000/graphql" : graphqlUrl,
     options: {
       connectionParams: () => {
         const token = localStorage.getItem('token');
