@@ -1,3 +1,5 @@
+@import "node_modules/bootstrap/scss/bootstrap";
+
 * {
     box-sizing: border-box;
 }
@@ -10,6 +12,20 @@ div {
 a {
     color: #007bff;
     text-decoration: none;
+}
+
+a:hover {
+    color: #0056b3;
+}
+
+hr {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    border: 0;
+    border-top: 1px solid rgba(0,0,0,.1);
+    box-sizing: content-box;
+    height: 0;
+    overflow: visible;
 }
 
 abbr {
@@ -77,18 +93,22 @@ body {
     margin-left: auto;
 }
 
+.logout {
+    @extend .btn, .btn-sm, .btn-light;
+}
+
 .contest_nav {
     flex: 0 0 auto;
     padding: 16px;
     order: -1;
     width: 16em;
-    background-color: #f8f9fa!important;
+    background-color: #f8f9fa;
 }
 
 .contest_nav h2 {
     text-transform: uppercase;
     font-size: 1.25rem;
-    margin: .5rem 0;
+    margin: 0;
     font-weight: 500;
     line-height: 1.2;
 }
@@ -117,47 +137,60 @@ body {
 }
 
 .task_badge {
+    @extend .badge, .badge-danger;
+
+    border-radius: 10rem;
+
     display: block;
     float: right;
     margin-top: .2rem;
-
-    color: #fff;
-    background-color: #dc3545;
-
-    padding-right: .6em;
-    padding-left: .6em;
-    border-radius: 10rem;
-
-    padding: .25em .4em;
-    font-size: 75%;
-    font-weight: 700;
-    line-height: 1;
-    text-align: center;
-    white-space: nowrap;
-    transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,-webkit-box-shadow .15s ease-in-out;
-    transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
-    transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out,-webkit-box-shadow .15s ease-in-out;
 }
 
 .task_main {
     flex: 1 1 auto;
-
     display: flex;
     flex-direction: column;
+    font-size: large;
+}
 
+.task_header {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
     padding: 16px;
     font-size: large;
+    background-color: #f8f9fa;
 }
 
 .task_title {
     font-size: 2.5rem;
-    margin: .5rem 0;
+    margin: 0 0 .5rem;
     font-weight: 500;
     line-height: 1.2;
 }
 
+.task_submit_container {
+    display: flex;
+    align-items: baseline;
+}
+
+.task_last_submission {
+    font-size: 100%;
+}
+
+.task_submit_start {
+    @extend .btn, .btn-success;
+}
+
 .task_statement_html {
-    flex: 1 1 auto;
+    flex: 1 1 100%;
+    align-items: stretch;
+    border: none;
+    box-shadow: inset 4px 4px 4px -2px rgba(0, 0, 0, 0.1);
+}
+
+.task_last_submission_label {
+    font-weight: bold;
 }
 
 .contest_score_container {
@@ -170,6 +203,40 @@ body {
 
 .contest_score {
     font-size: 4rem;
+}
+
+.submission_file_label {
+    display: block;
+}
+
+.submission_file_input {
+    display: none;
+}
+
+.submission_file_choose_button {
+    @extend .btn, .btn-primary;
+}
+
+.modal_size_limit {
+    max-height: calc(100vh - 260px);
+    overflow-y: auto;
+}
+
+.submission_form_body {
+    @extend .modal-body;
+    @extend .modal_size_limit;
+}
+
+.submission_form_footer {
+    @extend .modal-footer;
+}
+
+.submission_form_submit {
+    @extend .btn, .btn-success;
+}
+
+.modal_container {
+    @extend .modal_size_limit;
 }
 
 .message_cell {

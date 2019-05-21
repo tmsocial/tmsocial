@@ -4,18 +4,29 @@ import { setContext } from "apollo-link-context";
 import { WebSocketLink } from "apollo-link-ws";
 import "babel-polyfill";
 import gql from "graphql-tag";
+import { DateTime } from 'luxon';
 import * as React from "react";
 import { ApolloProvider, Mutation, MutationFunc, Query, QueryResult } from "react-apollo";
 import * as ReactDOM from "react-dom";
+import ReactModal from 'react-modal';
 import { EvaluationComponent } from "./evaluation_component";
 import { localize } from "./l10n";
 import { TaskMetadata } from "./metadata";
-import { StatementView } from "./statement_view";
 import { SubmissionFormView } from "./submission_form";
 import { Main } from "./__generated__/Main";
 import { Submit } from "./__generated__/Submit";
-import ReactModal from 'react-modal';
-import { DateTime } from 'luxon';
+
+// ReactModal.defaultStyles.overlay = {};
+Object.assign(ReactModal.defaultStyles.content, {
+  position: "relative",
+  padding: undefined,
+  top: undefined,
+  bottom: undefined,
+  left: undefined,
+  right: undefined,
+  margin: "3rem auto",
+  maxWidth: "70%",
+});
 
 const authLink = setContext((_, { headers }) => {
   const token = localStorage.getItem('token');
@@ -173,76 +184,92 @@ class App extends React.Component<{}, {
                         </nav>
                         {task_participations.filter(({ task }) => task.id === current_task_id).map(({ task, submissions }, i) => (
                           <main className="task_main">
-                            <h2 className="task_title">{localize(metadata(task).title)}</h2>
-                            {submissions.length > 0 && (({ last_submission }) => (
-                              <div className="task_last_submission_container">
-                                <span className="task_last_submission_label">Last submission: </span>
-                                <abbr className="task_last_submission_timestamp"
-                                  title={DateTime.fromISO(last_submission.timestamp).toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)}>
-                                  {DateTime.fromISO(last_submission.timestamp).toRelative()}
-                                </abbr>.
-                                (<a className="task_explore_submissions" href="#" onClick={(e) => {
+                            <div className="task_header">
+                              <h2 className="task_title">{localize(metadata(task).title)}</h2>
+                              <div className="task_submit_container">
+                                <a href="#" onClick={e => {
                                   e.preventDefault();
-                                  this.setState({ submissions_modal_open: true });
-                                }}>explore submissions</a>)
-                                <ReactModal isOpen={submissions_modal_open} onRequestClose={() => {
-                                  this.setState({ submissions_modal_open: false })
-                                }}>
-                                  {
-                                    <table className="submission_table">
-                                      <thead>
-                                        <tr>
-                                          <th>Timestamp</th>
-                                          <th>Score</th>
-                                        </tr>
-                                      </thead>
-                                      <tbody>
-                                        {submissions.map((submission) => (
-                                          <tr>
-                                            <td><a href="#" onClick={(e) => {
-                                              e.preventDefault();
-                                              this.setState({
-                                                submission_detail_modal_open_for_id: submission.id
-                                              });
-                                            }}>{submission.timestamp}</a></td>
-                                          </tr>
-                                        ))}
-                                      </tbody>
-                                    </table>
-                                  }
-                                </ReactModal>
-                                {submissions.map((submission) => (
-                                  <ReactModal isOpen={submission.id === submission_detail_modal_open_for_id} onRequestClose={() => {
-                                    this.setState({ submission_detail_modal_open_for_id: null })
-                                  }}>
-                                    <EvaluationComponent events={loadEvents(submission.official_evaluation.id)} metadata={metadata(task)} />
-                                  </ReactModal>
-                                ))}
+                                  this.setState({ submit_modal_open: true });
+                                }} className="task_submit_start">Submit a solution</a>
                               </div>
-                            ))({
-                              last_submission: submissions[submissions.length - 1],
-                            })}
-                            <div className="task_submit_container">
-                              <a href="#" onClick={e => {
-                                e.preventDefault();
-                                this.setState({ submit_modal_open: true });
-                              }} className="task_submit_start">Submit a solution</a>
+                              <div className="task_last_submission_container">
+                                {submissions.length > 0 && (({ last_submission }) => (
+                                  <span className="task_last_submission">
+                                    <span className="task_last_submission_label">Last submission: </span>
+                                    <abbr className="task_last_submission_timestamp"
+                                      title={DateTime.fromISO(last_submission.timestamp).toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)}>
+                                      {DateTime.fromISO(last_submission.timestamp).toRelative()}
+                                    </abbr>{" "}
+                                    (<a className="task_explore_submissions" href="#" onClick={(e) => {
+                                      e.preventDefault();
+                                      this.setState({ submissions_modal_open: true });
+                                    }}>explore submissions</a>)
+                                <ReactModal isOpen={submissions_modal_open} onRequestClose={() => {
+                                      this.setState({ submissions_modal_open: false })
+                                    }}>
+                                      <table className="submission_table">
+                                        <thead>
+                                          <tr>
+                                            <th>Timestamp</th>
+                                            <th>Score</th>
+                                          </tr>
+                                        </thead>
+                                        <tbody>
+                                          {submissions.map((submission) => (
+                                            <tr>
+                                              <td><a href="#" onClick={(e) => {
+                                                e.preventDefault();
+                                                this.setState({
+                                                  submission_detail_modal_open_for_id: submission.id
+                                                });
+                                              }}>{submission.timestamp}</a></td>
+                                            </tr>
+                                          ))}
+                                        </tbody>
+                                      </table>
+                                    </ReactModal>
+                                    {submissions.map((submission) => (
+                                      <ReactModal isOpen={submission.id === submission_detail_modal_open_for_id} onRequestClose={() => {
+                                        this.setState({ submission_detail_modal_open_for_id: null })
+                                      }}>
+                                        <EvaluationComponent events={loadEvents(submission.official_evaluation.id)} metadata={metadata(task)} />
+                                      </ReactModal>
+                                    ))}
+                                  </span>
+                                ))({
+                                  last_submission: submissions[submissions.length - 1],
+                                })}
+                              </div>
                             </div>
                             <ReactModal isOpen={submit_modal_open} onRequestClose={() => {
                               this.setState({ submit_modal_open: false })
                             }}>
                               <Mutation mutation={submitQuery} variables={{ task_id: task.id, user_id }}>
                                 {(submit: MutationFunc<Submit>, { data: submitData }) => (
-                                  <React.Fragment>
-                                    <SubmissionFormView
-                                      form={metadata(task).submission_form}
-                                      onSubmit={(files) => submit({ variables: { files } })} />
-                                    {submitData ? <EvaluationComponent events={loadEvents(submitData.submit.official_evaluation.id)} metadata={metadata(task)} /> : null}
-                                  </React.Fragment>
+                                  <div className="modal_container">
+                                    {submitData && (
+                                      <EvaluationComponent
+                                        events={loadEvents(submitData.submit.official_evaluation.id)}
+                                        metadata={metadata(task)} />
+                                    )}
+                                    {!submitData &&
+                                      <SubmissionFormView
+                                        form={metadata(task).submission_form}
+                                        onSubmit={(files) => submit({ variables: { files } })}
+                                      />
+                                    }
+                                  </div>
                                 )}
                               </Mutation>
                             </ReactModal>
-                            <StatementView statement={metadata(task).statement} />
+                            {((statement) => (
+                              <React.Fragment>
+                                {statement.pdf_base64 && <a download href={`data:application/pdf;base64,${localize(statement.pdf_base64)}`}>Download PDF</a>}
+                                {statement.html && (
+                                  <iframe className="task_statement_html" srcDoc={localize(statement.html)} sandbox="allow-scripts" />
+                                )}
+                              </React.Fragment>
+                            ))(metadata(task).statement)}
                           </main>
                         ))}
                       </div>
