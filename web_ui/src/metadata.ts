@@ -1,5 +1,6 @@
 import { EvaluationSection } from "./section";
 import { Localized } from "./l10n";
+import { ValueExpression } from "./evaluation_model";
 
 export interface Statement {
     pdf_base64?: Localized<string>;
@@ -36,10 +37,17 @@ export interface SubmissionForm {
     fields: SubmissionFileField[];
 }
 
+export interface TaskScorable {
+    key: string
+    title: Localized<string>
+    max_score: number
+}
+
 export interface TaskMetadata {
     title: Localized<string>;
     statement: Statement;
     attachments: Localized<Attachment>[];
     submission_form: SubmissionForm;
+    scorables: TaskScorable[];
     evaluation_sections: EvaluationSection[];
 }

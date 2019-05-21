@@ -1,8 +1,8 @@
-import { NodeManager } from "./nodes";
+import { PathManager } from "./nodes";
 
-describe("NodeManager", () => {
+describe("PathManager", () => {
     it("should parse ids", () => {
-        const manager = new NodeManager([]).appendPath("a").appendId("a").appendPath("b").appendId("b");
+        const manager = new PathManager([]).appendPath("a").appendId("a").appendPath("b").appendId("b");
         console.log(manager.parseId("X/Y"));
     })
 })
