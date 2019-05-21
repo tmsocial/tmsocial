@@ -30,6 +30,38 @@ function checkSameSite(site1: string, site2: string) {
   return site1;
 }
 
+async function* evaluationEvents(evaluation_id: string) {
+  const path = join(DATA_DIRECTORY, evaluationManager.path(evaluation_id), "events.jsonl")
+
+  const tail = new Tail(path, {
+    encoding: 'utf-8',
+    fromBeginning: true,
+  }) as Tail & EventEmitter;
+  // Tail extends EventEmitter but it is not typed as such in @types/tail :(
+
+  const pubSub = new PubSub();
+
+  tail.on("line", (line) => pubSub.publish("line", line));
+
+  try {
+    const iterator = pubSub.asyncIterator<string>("line");
+    while (true) {
+      const { value: line } = await iterator.next();
+      const event = JSON.parse(line);
+      if (event.type === "end") {
+        iterator.return!();
+        break;
+      }
+      yield {
+        json: JSON.stringify(event)
+      };
+    }
+  } finally {
+    tail.unwatch();
+  }
+
+}
+
 interface PageQueryInput {
   // TODO: may be generated using graphqlgen
   before?: string
@@ -167,6 +199,17 @@ export const resolvers = {
       return await evaluationManager.load({ ...id_parts, evaluation });
     }
   },
+  Evaluation: {
+    async events({ id }: Node) {
+      // TODO: make sure evaluation is already complete
+      const events = [];
+      for await (const event of evaluationEvents(id)) {
+        console.log(event);
+        events.push(event);
+      }
+      return events;
+    },
+  },
   Mutation: {
     async login(obj: unknown, { site_id, user, password }: { site_id: string, user: string, password: string }) {
       console.log(await siteManager.load(site_id));
@@ -234,36 +277,11 @@ export const resolvers = {
   Subscription: {
     evaluation_events: {
       async * subscribe(obj: any, { evaluation_id }: { evaluation_id: string }) {
-        const path = join(DATA_DIRECTORY, evaluationManager.path(evaluation_id), "events.jsonl")
-
-        const tail = new Tail(path, {
-          encoding: 'utf-8',
-          fromBeginning: true,
-        }) as Tail & EventEmitter;
-        // Tail extends EventEmitter but it is not typed as such in @types/tail :(
-
-        const pubSub = new PubSub();
-
-        tail.on("line", (line) => pubSub.publish("line", line));
-
-        try {
-          const iterator = pubSub.asyncIterator<string>("line");
-          while (true) {
-            const { value: line } = await iterator.next();
-            const event = JSON.parse(line);
-            if (event.type === "end") {
-              iterator.return!();
-              break;
-            }
-            yield {
-              evaluation_events: {
-                json: JSON.stringify(event)
-              },
-            }
+        for await(const event of evaluationEvents(evaluation_id)) {
+          yield {
+            evaluation_events: event
           }
-        } finally {
-          tail.unwatch();
-        }
+        };
       },
     },
   }

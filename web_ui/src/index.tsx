@@ -6,10 +6,11 @@ import "babel-polyfill";
 import gql from "graphql-tag";
 import { DateTime } from 'luxon';
 import * as React from "react";
-import { ApolloProvider, Mutation, MutationFunc, Query, QueryResult } from "react-apollo";
+import { ApolloProvider, Mutation, MutationFunc, Query, QueryResult, Subscription } from "react-apollo";
 import * as ReactDOM from "react-dom";
 import ReactModal from 'react-modal';
-import { EvaluationComponent } from "./evaluation_component";
+import { EvaluationReducer } from "./evaluation_process";
+import { EvaluationView } from "./evaluation_view";
 import { localize } from "./l10n";
 import { TaskMetadata } from "./metadata";
 import { SubmissionFormView } from "./submission_form";
@@ -66,15 +67,17 @@ const client = new ApolloClient({
   cache: new InMemoryCache(),
 });
 
+const evaluationEventsSubscription = gql`
+  subscription EvaluationEvents($evaluation_id: ID!) {
+    evaluation_events(evaluation_id: $evaluation_id) {
+      json
+    }
+  }
+`
+
 function loadEvents(evaluation_id: string) {
   return client.subscribe({
-    query: gql`
-      subscription EvaluationEvents($evaluation_id: ID!) {
-        evaluation_events(evaluation_id: $evaluation_id) {
-          json
-        }
-      }
-    `,
+    query: evaluationEventsSubscription,
     variables: { evaluation_id },
   }).map(e => JSON.parse(e.data.evaluation_events.json));
 }
@@ -137,6 +140,18 @@ const submitQuery = gql`
 function metadata({ metadata_json }: { metadata_json: string }): TaskMetadata {
   return JSON.parse(metadata_json);
 }
+
+const LiveEvaluationView = ({ reducer, metadata, evaluation_id }: {
+  reducer: EvaluationReducer,
+  metadata: TaskMetadata,
+  evaluation_id: string,
+}) => (
+    <Subscription subscription={evaluationEventsSubscription} variables={{ evaluation_id }} onSubscriptionData={(
+      { subscriptionData: { data: { evaluation_events: { json } } } }
+    ) => reducer.onEvent(JSON.parse(json))}>
+      {() => <EvaluationView metadata={metadata} reducer={reducer} />}
+    </Subscription>
+  )
 
 class App extends React.Component<{}, {
   user_id: string
@@ -296,11 +311,22 @@ class App extends React.Component<{}, {
                                       <ReactModal isOpen={submission.id === submission_detail_modal_open_for_id} onRequestClose={() => {
                                         this.setState({ submission_detail_modal_open_for_id: null })
                                       }}>
+                                        <Subscription subscription={evaluationEventsSubscription} variables={{
+                                          evaluation_id: submission.official_evaluation.id
+                                        }} onSubscriptionComplete={() => null}>
+                                          {({ }, ) => (
+                                            <p></p>
+                                          )}
+                                        </Subscription>
                                         <div className="evaluation_modal_header">
                                           Evaluation
                                         </div>
                                         <div className="evaluation_modal_body">
-                                          <EvaluationComponent events={loadEvents(submission.official_evaluation.id)} metadata={metadata(task)} />
+                                          <LiveEvaluationView
+                                            evaluation_id={submission.official_evaluation.id}
+                                            reducer={new EvaluationReducer()}
+                                            metadata={metadata(task)}
+                                          />
                                         </div>
                                       </ReactModal>
                                     ))}
@@ -322,8 +348,9 @@ class App extends React.Component<{}, {
                                           Evaluation
                                         </div>
                                         <div className="evaluation_modal_body">
-                                          <EvaluationComponent
-                                            events={loadEvents(submitData.submit.official_evaluation.id)}
+                                          <LiveEvaluationView
+                                            evaluation_id={submitData.submit.official_evaluation.id}
+                                            reducer={new EvaluationReducer()}
                                             metadata={metadata(task)} />
                                         </div>
                                       </React.Fragment>

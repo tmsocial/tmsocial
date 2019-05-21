@@ -76,6 +76,7 @@ type Evaluation {
     id: ID!
     total_score: Int!
     partial_scores: [PartialScore!]!
+    events: [EvaluationEvent!]!
 }
 
 type PartialScore {
