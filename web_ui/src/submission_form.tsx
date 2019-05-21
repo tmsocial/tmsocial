@@ -49,7 +49,10 @@ export class SubmissionFileFieldView extends React.Component<{
           id={`${field.id}.file`}
           name={`${field.id}.file`}
           type="file"
-          onChange={(e) => this.setState({ file: e.target.files![0] || null })}
+          onChange={(e) => this.setState({
+            file: e.target.files![0] || null,
+            want_custom_type: false,
+          })}
           required={field.required}
         />
         <label className="submission_file_choose_button" htmlFor={`${field.id}.file`}>Choose file</label>
