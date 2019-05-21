@@ -16,7 +16,10 @@ import { SubmissionFormView } from "./submission_form";
 import { Main } from "./__generated__/Main";
 import { Submit } from "./__generated__/Submit";
 
-// ReactModal.defaultStyles.overlay = {};
+Object.assign(ReactModal.defaultStyles.overlay, {
+  backgroundColor: "rgba(42, 42, 42, 0.75)",
+});
+
 Object.assign(ReactModal.defaultStyles.content, {
   position: "relative",
   padding: undefined,
@@ -134,8 +137,8 @@ class App extends React.Component<{}, {
 
     return (
       <ApolloProvider client={client}>
-        <Query query={mainQuery} variables={{ user_id }}>
-          {({ loading, error, data }: QueryResult<Main>) => (
+        <Query query={mainQuery} variables={{ user_id }} fetchPolicy="cache-and-network">
+          {({ loading, error, data, refetch }: QueryResult<Main>) => (
             <React.Fragment>
               {
                 data && data.user && (({
@@ -219,7 +222,7 @@ class App extends React.Component<{}, {
                                             </tr>
                                           </thead>
                                           <tbody className="submission_table_body">
-                                            {submissions.map((submission) => (
+                                            {submissions.slice().reverse().map((submission) => (
                                               <tr>
                                                 <td><a href="#" onClick={(e) => {
                                                   e.preventDefault();
@@ -273,7 +276,10 @@ class App extends React.Component<{}, {
                                     {!submitData &&
                                       <SubmissionFormView
                                         form={metadata(task).submission_form}
-                                        onSubmit={(files) => submit({ variables: { files } })}
+                                        onSubmit={async (files) => {
+                                          await submit({ variables: { files } });
+                                          await refetch();
+                                        }}
                                       />
                                     }
                                   </div>
