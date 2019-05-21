@@ -6,7 +6,7 @@ RUN true \
     && apt-get -y install g++ gcc git cmake make libdw-dev \
                    python3 python3-setuptools python3-pip \
                    python3-traits python3-ruamel.yaml python3-pytoml \
-                   fpc rustc zip nodejs npm \
+                   fp-compiler rustc zip nodejs npm \
     && apt-get -y clean 
 
 RUN true \
