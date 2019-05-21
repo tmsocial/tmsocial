@@ -56,88 +56,93 @@ const checkSiteDirectoryExists = async (path: string) => {
 
 const rootPath = new PathManager([]);
 
-export const rootValue = {
-    site: ({ id }: { id: string }) => sites.fromId(id),
-    user: ({ id }: { id: string }) => users.fromId(id),
-    contest: ({ id }: { id: string }) => contests.fromId(id),
-    task: ({ id }: { id: string }) => tasks.fromId(id),
-    submission: ({ id }: { id: string }) => submissions.fromId(id),
-    evaluation: ({ id }: { id: string }) => evaluations.fromId(id),
+export const resolvers = {
+    Query: {
+        site: (root: unknown, { id }: { id: string }) => sites.fromId(id),
+        user: (root: unknown, { id }: { id: string }) => users.fromId(id),
+        contest: (root: unknown, { id }: { id: string }) => contests.fromId(id),
+        task: (root: unknown, { id }: { id: string }) => tasks.fromId(id),
+        submission: (root: unknown, { id }: { id: string }) => submissions.fromId(id),
+        evaluation: (root: unknown, { id }: { id: string }) => evaluations.fromId(id),
 
-    async participation({ user_id, contest_id }: { user_id: string, contest_id: string }) {
-        const { id_parts: { site: site1, user } } = await users.fromId(user_id);
-        const { id_parts: { site: site2, contest } } = await contests.fromId(contest_id);
-        const site = checkSameSite(site1, site2);
-        return await participations.fromIdParts({ site, user, contest });
+        async participation(root: unknown, { user_id, contest_id }: { user_id: string, contest_id: string }) {
+            const { id_parts: { site: site1, user } } = await users.fromId(user_id);
+            const { id_parts: { site: site2, contest } } = await contests.fromId(contest_id);
+            const site = checkSameSite(site1, site2);
+            return await participations.fromIdParts({ site, user, contest });
+        },
+        async task_participation(root: unknown, { user_id, task_id }: { user_id: string, task_id: string }) {
+            const { id_parts: { site: site1, user } } = await users.fromId(user_id);
+            const { id_parts: { site: site2, contest, task } } = await tasks.fromId(task_id);
+            const site = checkSameSite(site1, site2);
+            return await taskParticipations.fromIdParts({ site, user, contest, task });
+        },
+
     },
-    async task_participation({ user_id, task_id }: { user_id: string, task_id: string }) {
-        const { id_parts: { site: site1, user } } = await users.fromId(user_id);
-        const { id_parts: { site: site2, contest, task } } = await tasks.fromId(task_id);
-        const site = checkSameSite(site1, site2);
-        return await taskParticipations.fromIdParts({ site, user, contest, task });
+    Mutation: {
+        async login(root: unknown, { site_id, user, password }: { site_id: string, user: string, password: string }) {
+            console.log(await sites.fromId(site_id));
+            const { id_parts: { site } } = await sites.fromId(site_id);
+            const userNode = await users.fromIdParts({ site, user });
+            const { id: user_id } = userNode;
+    
+            console.log(`Logging on ${site} with username ${user} and password: ${password}`);
+    
+            const token = jwt.sign({ user_id }, "SecretKey!");
+            return { user: userNode, token };
+        },
+    
+        async submit(root: unknown, { task_id, user_id, files }: { task_id: string, user_id: string, files: SubmissionFileInput[] }) {
+            const { id_parts: { site: site1, contest, task } } = await tasks.fromId(task_id);
+            const { id_parts: { site: site2, user } } = await users.fromId(user_id);
+    
+            const site = checkSameSite(site1, site2);
+    
+            const submission = DateTime.utc().toISO();
+            const submissionPath = submissions.path.buildPath({ site, contest, user, task, submission });
+    
+            mkdirSync(join(config.DATA_DIRECTORY, submissionPath), { recursive: true });
+            writeFileSync(
+                join(config.DATA_DIRECTORY, submissionPath, "data.json"),
+                JSON.stringify({
+                    timestamp: submission,
+                }), { encoding: 'utf8' },
+            )
+    
+            mkdirSync(join(config.DATA_DIRECTORY, submissionPath, "files"), { recursive: true });
+    
+            const submittedFiles: string[] = [];
+            files.forEach(({ field, type, content_base64 }) => {
+                const file = join(config.DATA_DIRECTORY, submissionPath, 'files', `${field}.${type}`);
+                submittedFiles.push(file);
+                writeFileSync(file, Buffer.from(content_base64, 'base64'));
+            })
+    
+            const evaluation = DateTime.utc().toISO();
+            mkdirSync(join(config.DATA_DIRECTORY, submissionPath, 'evaluations', evaluation), { recursive: true });
+            writeFileSync(join(config.DATA_DIRECTORY, submissionPath, 'evaluations', evaluation, 'events.jsonl'), Buffer.from([]));
+    
+            const process = execFile("../task_maker_wrapper/cli.py", [
+                'evaluate',
+                '--task-dir', join(config.SITES_DIRECTORY, site, 'contests', contest, 'tasks', task),
+                '--evaluation-dir', join(config.DATA_DIRECTORY, submissionPath, 'evaluations', evaluation),
+                ...submittedFiles.flatMap(file => ["--file", file]),
+            ]);
+            process.unref();
+    
+            return await submissions.fromIdParts({ site, contest, user, task, submission });
+        },
     },
-
-    async login({ site_id, user, password }: { site_id: string, user: string, password: string }) {
-        console.log(await sites.fromId(site_id));
-        const { id_parts: { site } } = await sites.fromId(site_id);
-        const userNode = await users.fromIdParts({ site, user });
-        const { id: user_id } = userNode;
-
-        console.log(`Logging on ${site} with username ${user} and password: ${password}`);
-
-        const token = jwt.sign({ user_id }, "SecretKey!");
-        return { user: userNode, token };
-    },
-
-    async submit({ task_id, user_id, files }: { task_id: string, user_id: string, files: SubmissionFileInput[] }) {
-        const { id_parts: { site: site1, contest, task } } = await tasks.fromId(task_id);
-        const { id_parts: { site: site2, user } } = await users.fromId(user_id);
-
-        const site = checkSameSite(site1, site2);
-
-        const submission = DateTime.utc().toISO();
-        const submissionPath = submissions.path.buildPath({ site, contest, user, task, submission });
-
-        mkdirSync(join(config.DATA_DIRECTORY, submissionPath), { recursive: true });
-        writeFileSync(
-            join(config.DATA_DIRECTORY, submissionPath, "data.json"),
-            JSON.stringify({
-                timestamp: submission,
-            }), { encoding: 'utf8' },
-        )
-
-        mkdirSync(join(config.DATA_DIRECTORY, submissionPath, "files"), { recursive: true });
-
-        const submittedFiles: string[] = [];
-        files.forEach(({ field, type, content_base64 }) => {
-            const file = join(config.DATA_DIRECTORY, submissionPath, 'files', `${field}.${type}`);
-            submittedFiles.push(file);
-            writeFileSync(file, Buffer.from(content_base64, 'base64'));
-        })
-
-        const evaluation = DateTime.utc().toISO();
-        mkdirSync(join(config.DATA_DIRECTORY, submissionPath, 'evaluations', evaluation), { recursive: true });
-        writeFileSync(join(config.DATA_DIRECTORY, submissionPath, 'evaluations', evaluation, 'events.jsonl'), Buffer.from([]));
-
-        const process = execFile("../task_maker_wrapper/cli.py", [
-            'evaluate',
-            '--task-dir', join(config.SITES_DIRECTORY, site, 'contests', contest, 'tasks', task),
-            '--evaluation-dir', join(config.DATA_DIRECTORY, submissionPath, 'evaluations', evaluation),
-            ...submittedFiles.flatMap(file => ["--file", file]),
-        ]);
-        process.unref();
-
-        return await submissions.fromIdParts({ site, contest, user, task, submission });
-    },
-
-    evaluation_events: {
-        async * subscribe({ evaluation_id }: { evaluation_id: string }) {
-            const evaluation = await evaluations.fromId(evaluation_id);
-            for await (const event of evaluation.event_stream()) {
-                yield {
-                    evaluation_events: event
-                }
-            };
+    Subscription: {
+        evaluation_events: {
+            async * subscribe(root: unknown, { evaluation_id }: { evaluation_id: string }) {
+                const evaluation = await evaluations.fromId(evaluation_id);
+                for await (const event of evaluation.event_stream()) {
+                    yield {
+                        evaluation_events: event
+                    }
+                };
+            },
         },
     },
 };
@@ -301,5 +306,3 @@ interface PageQueryInput {
     first?: number
     last?: number
 }
-
-export const resolvers = {};
