@@ -1,9 +1,11 @@
 import 'core-js/modules/es.symbol.async-iterator';
-import { ApolloServer } from "apollo-server";
+import * as express from 'express';
+import * as http from 'http';
+import { ApolloServer } from "apollo-server-express";
 import { resolvers } from './resolvers';
 import { typeDefs } from './api-loader';
 
-const server = new ApolloServer({
+const apollo = new ApolloServer({
   typeDefs,
   resolvers,
   debug: true,
@@ -27,6 +29,17 @@ const server = new ApolloServer({
   },
 });
 
-server.listen().then(({ url }) => {
-  console.log(`Server ready at ${url}`);
+const app = express();
+var server = http.createServer(app);
+
+apollo.applyMiddleware({ app });
+apollo.installSubscriptionHandlers(server);
+
+app.use(express.static('../web_ui/dist'));
+
+server.listen({ port: 4000 }, () => {
+  console.log(
+    '🚀 Server ready at',
+    `http://localhost:4000${apollo.graphqlPath}`
+  )
 });
