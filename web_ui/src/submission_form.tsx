@@ -1,5 +1,5 @@
 import * as React from "react";
-import { SubmissionForm, SubmissionFileField } from "./metadata";
+import { SubmissionForm, SubmissionFileField, SubmissionFileType } from "./metadata";
 import { localize } from "./l10n";
 import { SubmissionFile } from "./submission";
 
@@ -35,7 +35,10 @@ export class SubmissionFileFieldView extends React.Component<{
     const { field } = this.props;
     const { file, want_custom_type } = this.state;
 
-    const compatibleTypes = field.types.filter(t => t.extensions.some(ext => file !== null && file.name.endsWith(ext)));
+    const isCompatible = (type: SubmissionFileType) => type.extensions.some(ext => file !== null && file.name.endsWith(ext));
+
+    const compatibleTypes = field.types.filter(t => isCompatible(t));
+    const incompatibleTypes = field.types.filter(t => !isCompatible(t));
 
     const suggestedType = compatibleTypes.length === 1 && !want_custom_type ? compatibleTypes[0] : null;
     const suggestedTypeOptions = compatibleTypes.length > 1 && !want_custom_type ? compatibleTypes : null;
@@ -57,39 +60,46 @@ export class SubmissionFileFieldView extends React.Component<{
         />
         <label className="submission_file_choose_button" htmlFor={`${field.id}.file`}>Choose file</label>
         {file !== null && (
-          <span>{file.name}</span>
-        )}
-        {file !== null && suggestedType && (
-          <div className="submission_file_type_selector">
-            Type: {localize(suggestedType.title)} (<a href="#" onClick={(e) => {
-              e.preventDefault();
-              this.setState({ want_custom_type: true });
-            }}>change</a>)
-            <input type="hidden" name={`${field.id}.type`} value={suggestedType.id} />
-          </div>
-        )}
-        {file !== null && suggestedTypeOptions && (
-          <div className="submission_file_type_selector">
-            {suggestedTypeOptions.map((t, i) => (
-              <label>
-                <input type="radio" name={`${field.id}.type`} value={t.id} />
-                {localize(t.title)}
-              </label>
-            ))}
-            <a href="#" onClick={(e) => {
-              e.preventDefault();
-              this.setState({ want_custom_type: true });
-            }}>more...</a>
-          </div>
-        )}
-        {file !== null && useCustomType && (
-          <div className="submission_file_type_selector">
-            <select name={`${field.id}.type`}>
-              {field.types.map((t, i) => (
-                <option key={t.id} value={t.id}>{localize(t.title)}</option>
-              ))}
-            </select>
-          </div>
+          <dl className="submission_file_info">
+            <dt>Name:</dt>
+            <dd>{file.name}</dd>
+            <dt>Type:</dt>
+            <dd>
+              {suggestedType !== null && (
+                <React.Fragment>
+                  {localize(suggestedType.title)} (<a href="#" className="submission_file_type_change" onClick={(e) => {
+                    e.preventDefault();
+                    this.setState({ want_custom_type: true });
+                  }}>change</a>)
+                <input type="hidden" name={`${field.id}.type`} value={suggestedType.id} />
+                </React.Fragment>
+              )}
+              {suggestedTypeOptions !== null && (
+                <React.Fragment>
+                  {suggestedTypeOptions.map((t, i) => (
+                    <label className="submission_file_type_suggested_option">
+                      <input type="radio" name={`${field.id}.type`} value={t.id} />
+                      {localize(t.title)}
+                    </label>
+                  ))}
+                  <a href="#" className="submission_file_type_more_options" onClick={(e) => {
+                    e.preventDefault();
+                    this.setState({ want_custom_type: true });
+                  }}>more...</a>
+                </React.Fragment>
+              )}
+              {useCustomType && (
+                <select name={`${field.id}.type`} className="submission_file_type_select" >
+                  {compatibleTypes.map((t, i) => (
+                    <option key={t.id} value={t.id}>{localize(t.title)}</option>
+                  ))}
+                  {incompatibleTypes.map((t, i) => (
+                    <option key={t.id} value={t.id}>{localize(t.title)}</option>
+                  ))}
+                </select>
+              )}
+            </dd>
+          </dl>
         )}
       </div>
     );

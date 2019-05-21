@@ -106,17 +106,9 @@ export const resolvers = {
       return await evaluationManager.load(id);
     },
   },
-  Site: {
-    async default_contest({ id_parts: { site } }: Node) {
-      return await contestManager.load({ site, contest: 'default' }, { loadDataIn: config.SITES_DIRECTORY });
-    },
-  },
   User: {
     async site({ id_parts: { site } }: Node) {
       return await siteManager.load({ site });
-    },
-    async participation_in_default_contest({ id_parts: { site, user } }: Node) {
-      return await participationManager.load({ site, contest: 'default', user });
     },
     async participation_in_contest({ id_parts: { site, user } }: Node, { contest_id }: { contest_id: string }) {
       const { id_parts: { site: site2, contest } } = await contestManager.load(contest_id);
@@ -143,9 +135,10 @@ export const resolvers = {
       return await taskManager.load({ site, contest });
     },
     async metadata_json({ path }: Node) {
-      const metadata = execFileSync("../task_maker_wrapper/cli.py", [
-        'metadata',
-        '--task-dir', join(config.SITES_DIRECTORY, path)
+      const metadata = execFileSync("task-maker", [
+        '--ui', 'tmsocial',
+        '--task-info',
+        '--task-dir', join(CONFIG_DIRECTORY, path)
       ], {
           encoding: 'utf8',
         });
