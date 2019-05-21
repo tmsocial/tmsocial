@@ -243,6 +243,14 @@ body {
     padding: 0;
 }
 
+.submissions_modal_footer {
+    @extend .modal-footer;
+}
+
+.submissions_modal_close_button {
+    @extend .btn, .btn-primary;
+}
+
 .submission_table {
     @extend .table;
 }
@@ -254,6 +262,14 @@ body {
 .evaluation_modal_body {
     @extend .modal-body;
     padding: 0;
+}
+
+.evaluation_modal_footer {
+    @extend .modal-footer;
+}
+
+.evaluation_modal_close_button {
+    @extend .btn, .btn-primary;
 }
 
 .evaluation_table {

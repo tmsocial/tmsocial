@@ -75,13 +75,6 @@ const evaluationEventsSubscription = gql`
   }
 `
 
-function loadEvents(evaluation_id: string) {
-  return client.subscribe({
-    query: evaluationEventsSubscription,
-    variables: { evaluation_id },
-  }).map(e => JSON.parse(e.data.evaluation_events.json));
-}
-
 const mainQuery = gql`
   query Main($user_id: ID!, $contest_id: ID!) {
     user(id: $user_id) {
@@ -141,6 +134,13 @@ function metadata({ metadata_json }: { metadata_json: string }): TaskMetadata {
   return JSON.parse(metadata_json);
 }
 
+const RelativeTimeView = ({ timestamp, ...props }: { timestamp: DateTime } & React.HTMLAttributes<HTMLElement>) => (
+  <abbr {...props}
+    title={timestamp.toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)}>
+    {timestamp.toRelative()}
+  </abbr>
+)
+
 const LiveEvaluationView = ({ reducer, metadata, evaluation_id }: {
   reducer: EvaluationReducer,
   metadata: TaskMetadata,
@@ -150,6 +150,19 @@ const LiveEvaluationView = ({ reducer, metadata, evaluation_id }: {
       { subscriptionData: { data: { evaluation_events: { json } } } }
     ) => reducer.onEvent(JSON.parse(json))}>
       {() => <EvaluationView metadata={metadata} reducer={reducer} />}
+    </Subscription>
+  )
+
+
+const StaticEvaluationView = ({ reducer, metadata, evaluation_id }: {
+  reducer: EvaluationReducer,
+  metadata: TaskMetadata,
+  evaluation_id: string,
+}) => (
+    <Subscription subscription={evaluationEventsSubscription} variables={{ evaluation_id }} onSubscriptionData={(
+      { subscriptionData: { data: { evaluation_events: { json } } } }
+    ) => reducer.onEvent(JSON.parse(json))}>
+      {({ loading }) => loading ? <p>Loading...</p> : <EvaluationView metadata={metadata} reducer={reducer} />}
     </Subscription>
   )
 
@@ -241,10 +254,10 @@ class App extends React.Component<{}, {
                                 {submissions.length > 0 && (({ last_submission }) => (
                                   <span className="task_last_submission">
                                     <span className="task_last_submission_label">Last submission: </span>
-                                    <abbr className="task_last_submission_timestamp"
-                                      title={DateTime.fromISO(last_submission.timestamp).toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)}>
-                                      {DateTime.fromISO(last_submission.timestamp).toRelative()}
-                                    </abbr>{" "}
+                                    <RelativeTimeView
+                                      className="task_last_submission_timestamp"
+                                      timestamp={DateTime.fromISO(last_submission.timestamp)}
+                                    />{" "}
                                     (<a className="task_explore_submissions" href="#" onClick={(e) => {
                                       e.preventDefault();
                                       this.setState({ submissions_modal_open: true });
@@ -259,52 +272,68 @@ class App extends React.Component<{}, {
                                         <table className="submission_table">
                                           <thead className="submission_table_header">
                                             <tr>
-                                              <th>Timestamp</th>
+                                              <th>Time</th>
                                               <th>Score</th>
                                             </tr>
                                           </thead>
                                           <tbody className="submission_table_body">
                                             {submissions.slice().reverse().map((submission) => (
                                               <tr>
-                                                <td><a href="#" onClick={(e) => {
-                                                  e.preventDefault();
-                                                  this.setState({
-                                                    submission_detail_modal_open_for_id: submission.id
-                                                  });
-                                                }}>{submission.timestamp}</a></td>
+                                                <td>
+                                                  <RelativeTimeView timestamp={DateTime.fromISO(submission.timestamp)} />
+                                                  <br />
+                                                  <a href="#" onClick={(e) => {
+                                                    e.preventDefault();
+                                                    this.setState({
+                                                      submission_detail_modal_open_for_id: submission.id
+                                                    });
+                                                  }}>
+                                                    details
+                                                  </a>
+                                                </td>
                                                 <td>42 / 42</td>
                                               </tr>
                                             ))}
+                                            <tr>
+                                              <td colSpan={2}>
+                                                <a href="#" onClick={async (e) => {
+                                                  e.preventDefault();
+                                                  await fetchMore({
+                                                    query: moreSubmissionsQuery,
+                                                    variables: {
+                                                      user_id,
+                                                      task_id: task.id,
+                                                      before: submissions[0].cursor,
+                                                    },
+                                                    updateQuery(previousResult, { fetchMoreResult }) {
+                                                      return {
+                                                        ...previousResult,
+                                                        participation: {
+                                                          ...previousResult.participation,
+                                                          task_participations: previousResult.participation.task_participations.map(p => (
+                                                            p.task.id === task.id ? {
+                                                              ...p,
+                                                              submissions: [
+                                                                ...fetchMoreResult.task_participation.submissions,
+                                                                ...p.submissions,
+                                                              ]
+                                                            } : p
+                                                          )),
+                                                        }
+                                                      };
+                                                    }
+                                                  });
+                                                }}>Load more...</a>
+                                              </td>
+                                            </tr>
                                           </tbody>
                                         </table>
-                                        <a href="#" onClick={async (e) => {
-                                          e.preventDefault();
-                                          await fetchMore({
-                                            query: moreSubmissionsQuery,
-                                            variables: {
-                                              user_id,
-                                              task_id: task.id,
-                                              before: submissions[0].cursor,
-                                            },
-                                            updateQuery(previousResult, { fetchMoreResult }) {
-                                              return {
-                                                ...previousResult,
-                                                participation: {
-                                                  ...previousResult.participation,
-                                                  task_participations: previousResult.participation.task_participations.map(p => (
-                                                    p.task.id === task.id ? {
-                                                      ...p,
-                                                      submissions: [
-                                                        ...fetchMoreResult.task_participation.submissions,
-                                                        ...p.submissions,
-                                                      ]
-                                                    } : p
-                                                  )),
-                                                }
-                                              };
-                                            }
-                                          });
-                                        }}>Load more...</a>
+
+                                      </div>
+                                      <div className="submissions_modal_footer">
+                                        <button className="submissions_modal_close_button" onClick={() => {
+                                          this.setState({ submissions_modal_open: false })
+                                        }}>Close</button>
                                       </div>
                                     </ReactModal>
                                     {submissions.map((submission) => (
@@ -322,11 +351,16 @@ class App extends React.Component<{}, {
                                           Evaluation
                                         </div>
                                         <div className="evaluation_modal_body">
-                                          <LiveEvaluationView
+                                          <StaticEvaluationView
                                             evaluation_id={submission.official_evaluation.id}
                                             reducer={new EvaluationReducer()}
                                             metadata={metadata(task)}
                                           />
+                                        </div>
+                                        <div className="evaluation_modal_footer">
+                                          <button onClick={() => {
+                                            this.setState({ submission_detail_modal_open_for_id: null });
+                                          }} className="evaluation_modal_close_button">Close</button>
                                         </div>
                                       </ReactModal>
                                     ))}
@@ -352,6 +386,11 @@ class App extends React.Component<{}, {
                                             evaluation_id={submitData.submit.official_evaluation.id}
                                             reducer={new EvaluationReducer()}
                                             metadata={metadata(task)} />
+                                        </div>
+                                        <div className="evaluation_modal_footer">
+                                          <button onClick={() => {
+                                            this.setState({ submit_modal_open: false });
+                                          }} className="evaluation_modal_close_button">Close</button>
                                         </div>
                                       </React.Fragment>
                                     )}
