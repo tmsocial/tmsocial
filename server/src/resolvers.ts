@@ -85,22 +85,22 @@ export const resolvers = {
             const { id_parts: { site } } = await sites.fromId(site_id);
             const userNode = await users.fromIdParts({ site, user });
             const { id: user_id } = userNode;
-    
+
             console.log(`Logging on ${site} with username ${user} and password: ${password}`);
-    
+
             const token = jwt.sign({ user_id }, "SecretKey!");
             return { user: userNode, token };
         },
-    
+
         async submit(root: unknown, { task_id, user_id, files }: { task_id: string, user_id: string, files: SubmissionFileInput[] }) {
             const { id_parts: { site: site1, contest, task } } = await tasks.fromId(task_id);
             const { id_parts: { site: site2, user } } = await users.fromId(user_id);
-    
+
             const site = checkSameSite(site1, site2);
-    
+
             const submission = DateTime.utc().toISO();
             const submissionPath = submissions.path.buildPath({ site, contest, user, task, submission });
-    
+
             mkdirSync(join(config.DATA_DIRECTORY, submissionPath), { recursive: true });
             writeFileSync(
                 join(config.DATA_DIRECTORY, submissionPath, "data.json"),
@@ -108,20 +108,20 @@ export const resolvers = {
                     timestamp: submission,
                 }), { encoding: 'utf8' },
             )
-    
+
             mkdirSync(join(config.DATA_DIRECTORY, submissionPath, "files"), { recursive: true });
-    
+
             const submittedFiles: string[] = [];
             files.forEach(({ field, type, content_base64 }) => {
                 const file = join(config.DATA_DIRECTORY, submissionPath, 'files', `${field}.${type}`);
                 submittedFiles.push(file);
                 writeFileSync(file, Buffer.from(content_base64, 'base64'));
             })
-    
+
             const evaluation = DateTime.utc().toISO();
             mkdirSync(join(config.DATA_DIRECTORY, submissionPath, 'evaluations', evaluation), { recursive: true });
             writeFileSync(join(config.DATA_DIRECTORY, submissionPath, 'evaluations', evaluation, 'events.jsonl'), Buffer.from([]));
-    
+
             const process = execFile("../task_maker_wrapper/cli.py", [
                 'evaluate',
                 '--task-dir', join(config.SITES_DIRECTORY, site, 'contests', contest, 'tasks', task),
@@ -129,7 +129,7 @@ export const resolvers = {
                 ...submittedFiles.flatMap(file => ["--file", file]),
             ]);
             process.unref();
-    
+
             return await submissions.fromIdParts({ site, contest, user, task, submission });
         },
     },
@@ -230,7 +230,20 @@ const taskParticipations = new NodeManager(
         },
         async scores() {
             const submissions = await this.submissions();
-            // TODO
+
+            const task = await this.task();
+            const metadata = JSON.parse(await task.metadata_json()) as {
+                scorables: {
+                    key: string,
+                }[],
+            };
+
+            const allScores = await Promise.all(submissions.map(s => s.scores()));
+
+            return metadata.scorables.map(({ key }, i) => ({
+                key,
+                score: allScores.map(scores => scores[i].score).reduce((a, b) => Math.max(a, b), 0),
+            }));
         },
     }),
 );
@@ -243,6 +256,10 @@ const submissions = new NodeManager(
             const dir = readdirSync(join(config.DATA_DIRECTORY, path, 'evaluations')).sort();
             const evaluation = dir[dir.length - 1];
             return await evaluations.fromIdParts({ site, contest, user, task, submission, evaluation });
+        },
+        async scores() {
+            const evaluation = await this.official_evaluation();
+            return await evaluation.scores();
         }
     }),
     ({ path }) => loadData(path),
@@ -287,7 +304,30 @@ const evaluations = new NodeManager(
             }
         },
         async scores() {
-            // TODO
+            const submission = await this.submission();
+            const task_participation = await submission.task_participation();
+            const task = await task_participation.task();
+            const metadata = JSON.parse(await task.metadata_json()) as {
+                scorables: {
+                    key: string,
+                }[],
+            };
+
+            const values: any = {};
+            const events = await this.events();
+            for (const eventNode of events) {
+                const event = JSON.parse(eventNode.json);
+                if (event.type === "value") {
+                    values[event.key] = event.value;
+                }
+            }
+
+            console.log(metadata.scorables, values);
+
+            return metadata.scorables.map(({ key }) => ({
+                key,
+                score: values[key] ? values[key].score : 0,
+            }));
         },
     }),
 );
