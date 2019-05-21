@@ -7,9 +7,12 @@
     "test": "jest"
   },
   "dependencies": {
-    "apollo-server": "^2.4.8",
+    "apollo-server": "^2.5.0",
+    "apollo-server-express": "^2.5.0",
     "core-js": "^3.0.1",
+    "express": "^4.17.0",
     "graphql": "^14.2.1",
+    "http": "0.0.0",
     "jsonwebtoken": "^8.5.1",
     "luxon": "^1.12.0",
     "tail": "^2.0.2"
