@@ -91,7 +91,7 @@ const mainQuery = gql`
           id
           metadata_json
         }
-        submissions(query: { last: 2 }) {
+        submissions(query: { last: 5 }) {
           id
           cursor
           timestamp
@@ -107,7 +107,7 @@ const mainQuery = gql`
 const moreSubmissionsQuery = gql`
   query MoreSubmissions($user_id: ID!, $task_id: ID!, $before: ID) {
     task_participation(user_id: $user_id, task_id: $task_id) {
-      submissions(query: { last: 2, before: $before }) {
+      submissions(query: { last: 20, before: $before }) {
         id
         cursor
         timestamp
@@ -141,30 +141,32 @@ const RelativeTimeView = ({ timestamp, ...props }: { timestamp: DateTime } & Rea
   </abbr>
 )
 
-const LiveEvaluationView = ({ reducer, metadata, evaluation_id }: {
-  reducer: EvaluationReducer,
+class LiveEvaluationView extends React.Component<{
   metadata: TaskMetadata,
   evaluation_id: string,
-}) => (
-    <Subscription subscription={evaluationEventsSubscription} variables={{ evaluation_id }} onSubscriptionData={(
-      { subscriptionData: { data: { evaluation_events: { json } } } }
-    ) => reducer.onEvent(JSON.parse(json))}>
-      {() => <EvaluationView metadata={metadata} reducer={reducer} />}
-    </Subscription>
-  )
+  live: boolean,
+}, {
+  done: boolean;
+}> {
+  reducer = new EvaluationReducer();
+  state = {
+    done: false,
+  };
 
+  render() {
+    const { metadata, evaluation_id, live } = this.props;
+    const { done } = this.state;
+    const { reducer } = this;
 
-const StaticEvaluationView = ({ reducer, metadata, evaluation_id }: {
-  reducer: EvaluationReducer,
-  metadata: TaskMetadata,
-  evaluation_id: string,
-}) => (
-    <Subscription subscription={evaluationEventsSubscription} variables={{ evaluation_id }} onSubscriptionData={(
-      { subscriptionData: { data: { evaluation_events: { json } } } }
-    ) => reducer.onEvent(JSON.parse(json))}>
-      {({ loading }) => loading ? <p>Loading...</p> : <EvaluationView metadata={metadata} reducer={reducer} />}
-    </Subscription>
-  )
+    return (
+      <Subscription fetchPolicy="network-only" subscription={evaluationEventsSubscription} variables={{ evaluation_id }} onSubscriptionData={(
+        { subscriptionData: { data: { evaluation_events: { json } } } }
+      ) => reducer.onEvent(JSON.parse(json))} onSubscriptionComplete={() => this.setState({ done: true })}>
+        {() => (done || live) ? <EvaluationView metadata={metadata} reducer={reducer} /> : <p>Loading...</p>}
+      </Subscription>
+    );
+  }
+};
 
 class App extends React.Component<{}, {
   user_id: string
@@ -328,7 +330,6 @@ class App extends React.Component<{}, {
                                             </tr>
                                           </tbody>
                                         </table>
-
                                       </div>
                                       <div className="submissions_modal_footer">
                                         <button className="submissions_modal_close_button" onClick={() => {
@@ -336,25 +337,18 @@ class App extends React.Component<{}, {
                                         }}>Close</button>
                                       </div>
                                     </ReactModal>
-                                    {submissions.map((submission) => (
-                                      <ReactModal isOpen={submission.id === submission_detail_modal_open_for_id} onRequestClose={() => {
+                                    {submissions.filter(submission => submission.id === submission_detail_modal_open_for_id).map((submission) => (
+                                      <ReactModal isOpen={true} onRequestClose={() => {
                                         this.setState({ submission_detail_modal_open_for_id: null })
                                       }}>
-                                        <Subscription subscription={evaluationEventsSubscription} variables={{
-                                          evaluation_id: submission.official_evaluation.id
-                                        }} onSubscriptionComplete={() => null}>
-                                          {({ }, ) => (
-                                            <p></p>
-                                          )}
-                                        </Subscription>
                                         <div className="evaluation_modal_header">
                                           Evaluation
                                         </div>
                                         <div className="evaluation_modal_body">
-                                          <StaticEvaluationView
+                                          <LiveEvaluationView
                                             evaluation_id={submission.official_evaluation.id}
-                                            reducer={new EvaluationReducer()}
                                             metadata={metadata(task)}
+                                            live={false}
                                           />
                                         </div>
                                         <div className="evaluation_modal_footer">
@@ -384,8 +378,9 @@ class App extends React.Component<{}, {
                                         <div className="evaluation_modal_body">
                                           <LiveEvaluationView
                                             evaluation_id={submitData.submit.official_evaluation.id}
-                                            reducer={new EvaluationReducer()}
-                                            metadata={metadata(task)} />
+                                            metadata={metadata(task)}
+                                            live={true}
+                                          />
                                         </div>
                                         <div className="evaluation_modal_footer">
                                           <button onClick={() => {
