@@ -138,7 +138,7 @@ export const resolvers = {
       const metadata = execFileSync("task-maker", [
         '--ui', 'tmsocial',
         '--task-info',
-        '--task-dir', join(CONFIG_DIRECTORY, path)
+        '--task-dir', join(config.SITES_DIRECTORY, path)
       ], {
           encoding: 'utf8',
         });
