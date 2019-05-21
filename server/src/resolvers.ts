@@ -15,6 +15,14 @@ interface SubmissionFileInput {
     content_base64: string
 }
 
+interface PageQueryInput {
+    // TODO: may be generated using graphqlgen
+    before?: string
+    after?: string
+    first?: number
+    last?: number
+}
+
 class NodeManager<T> {
     constructor(
         /** contains how ID/paths are structured */
@@ -337,12 +345,4 @@ function checkSameSite(site1: string, site2: string) {
         throw new Error(`Sites do not match: '${site1}', '${site2}'`)
     }
     return site1;
-}
-
-interface PageQueryInput {
-    // TODO: may be generated using graphqlgen
-    before?: string
-    after?: string
-    first?: number
-    last?: number
 }
