@@ -103,17 +103,9 @@ export const resolvers = {
       return await evaluationManager.load(id);
     },
   },
-  Site: {
-    async default_contest({ id_parts: { site } }: Node) {
-      return await contestManager.load({ site, contest: 'default' }, { loadDataIn: CONFIG_DIRECTORY });
-    },
-  },
   User: {
     async site({ id_parts: { site } }: Node) {
       return await siteManager.load({ site });
-    },
-    async participation_in_default_contest({ id_parts: { site, user } }: Node) {
-      return await participationManager.load({ site, contest: 'default', user });
     },
     async participation_in_contest({ id_parts: { site, user } }: Node, { contest_id }: { contest_id: string }) {
       const { id_parts: { site: site2, contest } } = await contestManager.load(contest_id);

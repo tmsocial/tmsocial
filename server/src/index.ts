@@ -37,9 +37,30 @@ apollo.installSubscriptionHandlers(server);
 
 app.use(express.static('../web_ui/dist'));
 
-server.listen({ port: 4000 }, () => {
-  console.log(
-    '🚀 Server ready at',
-    `http://localhost:4000${apollo.graphqlPath}`
-  )
+let opts = require('yargs')
+  .usage('$0 [options]')
+  .option('sites-dir', {
+    alias: 's',
+    describe: 'path to directory containing sites'
+  })
+  .option('data-dir', {
+    alias: 'd',
+    describe: 'path to directory containing data'
+  })
+  .option('host', {
+    default: 'localhost',
+    describe: 'host where to listen to'
+  })
+  .option('port', {
+    default: '4000',
+    describe: 'port where to listen to'
+  })
+  .help()
+  .argv
+
+
+server.listen({ host: opts.host, port: opts.port }, () => {
+  console.log('🚀 Server ready at:');
+  console.log(`http://${opts.host}:${opts.port}`);
+  console.log(`GraphQL: http://${opts.host}:${opts.port}${apollo.graphqlPath}`);
 });
