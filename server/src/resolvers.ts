@@ -5,8 +5,11 @@ import { mkdirSync, readdirSync, writeFileSync } from "fs";
 import { DateTime } from "luxon";
 import { join } from "path";
 import { Tail } from "tail";
-import { CONFIG_DIRECTORY, DATA_DIRECTORY, Node, NodeManager } from "./nodes";
 import * as jwt from "jsonwebtoken"
+
+import { config } from './index';
+import { Node, NodeManager } from "./nodes";
+
 
 interface SubmissionFileInput {
   field: string
@@ -31,7 +34,7 @@ function checkSameSite(site1: string, site2: string) {
 }
 
 async function* evaluationEvents(evaluation_id: string) {
-  const path = join(DATA_DIRECTORY, evaluationManager.path(evaluation_id), "events.jsonl")
+  const path = join(config.DATA_DIRECTORY, evaluationManager.path(evaluation_id), "events.jsonl")
 
   const tail = new Tail(path, {
     encoding: 'utf-8',
@@ -76,28 +79,28 @@ export const resolvers = {
       return await siteManager.load(id);
     },
     async user(obj: unknown, { id }: { id: string }) {
-      return await userManager.load(id, { loadDataIn: CONFIG_DIRECTORY });
+      return await userManager.load(id, { loadDataIn: config.SITES_DIRECTORY });
     },
     async contest(obj: unknown, { id }: { id: string }) {
-      return await contestManager.load(id, { loadDataIn: CONFIG_DIRECTORY });
+      return await contestManager.load(id, { loadDataIn: config.SITES_DIRECTORY });
     },
     async task(obj: unknown, { id }: { id: string }) {
       return await taskManager.load(id);
     },
     async participation(obj: unknown, { user_id, contest_id }: { user_id: string, contest_id: string }) {
-      const { id_parts: { site: site1, user } } = await userManager.load(user_id, { loadDataIn: CONFIG_DIRECTORY });
-      const { id_parts: { site: site2, contest } } = await contestManager.load(contest_id, { loadDataIn: CONFIG_DIRECTORY });
+      const { id_parts: { site: site1, user } } = await userManager.load(user_id, { loadDataIn: config.SITES_DIRECTORY });
+      const { id_parts: { site: site2, contest } } = await contestManager.load(contest_id, { loadDataIn: config.SITES_DIRECTORY });
       const site = checkSameSite(site1, site2);
       return await participationManager.load(participationManager.formatId({ site, user, contest }));
     },
     async task_participation(obj: unknown, { user_id, task_id }: { user_id: string, task_id: string }) {
-      const { id_parts: { site: site1, user } } = await userManager.load(user_id, { loadDataIn: CONFIG_DIRECTORY });
+      const { id_parts: { site: site1, user } } = await userManager.load(user_id, { loadDataIn: config.SITES_DIRECTORY });
       const { id_parts: { site: site2, contest, task } } = await taskManager.load(task_id);
       const site = checkSameSite(site1, site2);
       return await taskParticipationManager.load({ site, user, contest, task });
     },
     async submission(obj: unknown, { id }: { id: string }) {
-      return await submissionManager.load(id, { loadDataIn: DATA_DIRECTORY });
+      return await submissionManager.load(id, { loadDataIn: config.DATA_DIRECTORY });
     },
     async evaluation(obj: unknown, { id }: { id: string }) {
       return await evaluationManager.load(id);
@@ -105,7 +108,7 @@ export const resolvers = {
   },
   Site: {
     async default_contest({ id_parts: { site } }: Node) {
-      return await contestManager.load({ site, contest: 'default' }, { loadDataIn: CONFIG_DIRECTORY });
+      return await contestManager.load({ site, contest: 'default' }, { loadDataIn: config.SITES_DIRECTORY });
     },
   },
   User: {
@@ -126,7 +129,7 @@ export const resolvers = {
       return await siteManager.load(siteManager.formatId({ site }));
     },
     async tasks({ path, id_parts: { site, contest } }: Node) {
-      const dir = readdirSync(join(CONFIG_DIRECTORY, path, 'tasks'));
+      const dir = readdirSync(join(config.SITES_DIRECTORY, path, 'tasks'));
       return await Promise.all(dir.map(task => taskManager.load({ site, contest, task })));
     },
     async participation_of_user({ id_parts: { site, contest } }: Node, { user_id }: { user_id: string }) {
@@ -142,7 +145,7 @@ export const resolvers = {
     async metadata_json({ path }: Node) {
       const metadata = execFileSync("../task_maker_wrapper/cli.py", [
         'metadata',
-        '--task-dir', join(CONFIG_DIRECTORY, path)
+        '--task-dir', join(config.SITES_DIRECTORY, path)
       ], {
           encoding: 'utf8',
         });
@@ -158,7 +161,7 @@ export const resolvers = {
     },
     async task_participations({ id_parts: { site, contest, user } }: Node) {
       const { path } = await contestManager.load({ site, contest });
-      const dir = readdirSync(join(CONFIG_DIRECTORY, path, 'tasks'));
+      const dir = readdirSync(join(config.SITES_DIRECTORY, path, 'tasks'));
       return await Promise.all(dir.map(task => taskParticipationManager.load({ site, contest, user, task })));
     },
   },
@@ -173,8 +176,8 @@ export const resolvers = {
       { id_parts: { site, contest, user, task }, path }: Node,
       { query: { before = "9999", after = "0000", last = 1e9, first = 1e9 } = {} }: { query?: PageQueryInput } = {}
     ) {
-      mkdirSync(join(DATA_DIRECTORY, path, 'submissions'), { recursive: true });
-      const dir = readdirSync(join(DATA_DIRECTORY, path, 'submissions')).sort();
+      mkdirSync(join(config.DATA_DIRECTORY, path, 'submissions'), { recursive: true });
+      const dir = readdirSync(join(config.DATA_DIRECTORY, path, 'submissions')).sort();
       return await Promise.all(
         dir
           .filter(submission => submission > after && submission < before)
@@ -183,7 +186,7 @@ export const resolvers = {
           .filter((_, i) => i < last)
           .reverse()
           .map(async submission => ({
-            ...await submissionManager.load({ site, contest, user, task, submission }, { loadDataIn: DATA_DIRECTORY }),
+            ...await submissionManager.load({ site, contest, user, task, submission }, { loadDataIn: config.DATA_DIRECTORY }),
             cursor: submission,
           }))
       );
@@ -194,7 +197,7 @@ export const resolvers = {
       return await taskParticipationManager.load({ site, contest, user, task });
     },
     async official_evaluation({ path, id_parts }: Node) {
-      const dir = readdirSync(join(DATA_DIRECTORY, path, 'evaluations')).sort();
+      const dir = readdirSync(join(config.DATA_DIRECTORY, path, 'evaluations')).sort();
       const evaluation = dir[dir.length - 1];
       return await evaluationManager.load({ ...id_parts, evaluation });
     }
@@ -225,7 +228,7 @@ export const resolvers = {
 
     async submit(root: unknown, { task_id, user_id, files }: { task_id: string, user_id: string, files: SubmissionFileInput[] }) {
       const { id_parts: { site: site1, contest, task } } = await taskManager.load(task_id);
-      const { id_parts: { site: site2, user } } = await userManager.load(user_id, { loadDataIn: CONFIG_DIRECTORY });
+      const { id_parts: { site: site2, user } } = await userManager.load(user_id, { loadDataIn: config.SITES_DIRECTORY });
 
       const site = checkSameSite(site1, site2);
 
@@ -234,9 +237,9 @@ export const resolvers = {
       const submissionId = submissionManager.formatId({ site, contest, user, task, submission });
       const submissionPath = submissionManager.path(submissionId);
 
-      mkdirSync(join(DATA_DIRECTORY, submissionPath), { recursive: true });
+      mkdirSync(join(config.DATA_DIRECTORY, submissionPath), { recursive: true });
       writeFileSync(
-        join(DATA_DIRECTORY, submissionPath, "data.json"),
+        join(config.DATA_DIRECTORY, submissionPath, "data.json"),
         JSON.stringify({
           timestamp: submission,
         }), {
@@ -244,23 +247,23 @@ export const resolvers = {
         }
       )
 
-      mkdirSync(join(DATA_DIRECTORY, submissionPath, "files"), { recursive: true });
+      mkdirSync(join(config.DATA_DIRECTORY, submissionPath, "files"), { recursive: true });
 
       const submittedFiles: string[] = [];
       files.forEach(({ field, type, content_base64 }) => {
-        const file = join(DATA_DIRECTORY, submissionPath, 'files', `${field}.${type}`);
+        const file = join(config.DATA_DIRECTORY, submissionPath, 'files', `${field}.${type}`);
         submittedFiles.push(file);
         writeFileSync(file, Buffer.from(content_base64, 'base64'));
       })
 
       const evaluation = DateTime.utc().toISO();
-      mkdirSync(join(DATA_DIRECTORY, submissionPath, 'evaluations', evaluation), { recursive: true });
-      writeFileSync(join(DATA_DIRECTORY, submissionPath, 'evaluations', evaluation, 'events.jsonl'), Buffer.from([]));
+      mkdirSync(join(config.DATA_DIRECTORY, submissionPath, 'evaluations', evaluation), { recursive: true });
+      writeFileSync(join(config.DATA_DIRECTORY, submissionPath, 'evaluations', evaluation, 'events.jsonl'), Buffer.from([]));
 
       const args = [
         'evaluate',
-        '--task-dir', join(CONFIG_DIRECTORY, site, 'contests', contest, 'tasks', task),
-        '--evaluation-dir', join(DATA_DIRECTORY, submissionPath, 'evaluations', evaluation),
+        '--task-dir', join(config.SITES_DIRECTORY, site, 'contests', contest, 'tasks', task),
+        '--evaluation-dir', join(config.DATA_DIRECTORY, submissionPath, 'evaluations', evaluation),
       ];
       submittedFiles.forEach(file => {
         args.push('--file', file);
@@ -271,13 +274,13 @@ export const resolvers = {
       const process = execFile("../task_maker_wrapper/cli.py", args);
       process.unref();
 
-      return await submissionManager.load(submissionId, { loadDataIn: DATA_DIRECTORY });
+      return await submissionManager.load(submissionId, { loadDataIn: config.DATA_DIRECTORY });
     }
   },
   Subscription: {
     evaluation_events: {
       async * subscribe(obj: any, { evaluation_id }: { evaluation_id: string }) {
-        for await(const event of evaluationEvents(evaluation_id)) {
+        for await (const event of evaluationEvents(evaluation_id)) {
           yield {
             evaluation_events: event
           }

@@ -1,8 +1,6 @@
 import { join } from "path";
 import { readFileSync, existsSync } from "fs";
 
-export const CONFIG_DIRECTORY = '../test_site/config';
-export const DATA_DIRECTORY = '../test_site/data';
 
 export interface IdParts {
     [name: string]: string
@@ -35,7 +33,7 @@ export class NodeManager {
         loadDataIn?: string,
     } = {}): Promise<Node & object> {
         let id;
-        if(typeof idOrIdParts === "string") {
+        if (typeof idOrIdParts === "string") {
             id = idOrIdParts;
         } else {
             id = this.formatId(idOrIdParts);
@@ -46,7 +44,7 @@ export class NodeManager {
         let data;
         if (loadDataIn !== undefined) {
             const dataFilePath = join(loadDataIn, path, 'data.json')
-            if(existsSync(dataFilePath)) {
+            if (existsSync(dataFilePath)) {
                 data = JSON.parse(readFileSync(dataFilePath, 'utf8'));
             } else {
                 throw new Error(`id '${id}' not found`);
