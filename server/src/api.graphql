@@ -8,10 +8,10 @@ input PageQuery {
 type Query {
     site(id: ID!): Site!
     user(id: ID!): User!
-    contest(id: ID): Contest!
-    task(id: ID): Task!
-    submission(id: ID): Submission!
-    evaluation(id: ID): Evaluation!
+    contest(id: ID!): Contest!
+    task(id: ID!): Task!
+    submission(id: ID!): Submission!
+    evaluation(id: ID!): Evaluation!
     participation(user_id: ID!, contest_id: ID!): Participation!
     task_participation(user_id: ID!, task_id: ID!): TaskParticipation!
 }
@@ -59,6 +59,7 @@ type TaskParticipation {
 
 type Submission {
     id: ID!
+    cursor: ID!
     task_participation: TaskParticipation!
     official_evaluation: Evaluation!
     timestamp: String!

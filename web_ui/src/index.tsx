@@ -71,25 +71,43 @@ function loadEvents(evaluation_id: string) {
 }
 
 const mainQuery = gql`
-  query Main($user_id: ID!) {
+  query Main($user_id: ID!, $contest_id: ID!) {
     user(id: $user_id) {
       display_name
-      participation_in_default_contest {
-        contest {
+    }
+
+    contest(id: $contest_id) {
+      id
+    }
+
+    participation(user_id: $user_id, contest_id: $contest_id) {
+      task_participations {
+        task {
           id
+          metadata_json
         }
-        task_participations {
-          task {
+        submissions(query: { last: 2 }) {
+          id
+          cursor
+          timestamp
+          official_evaluation {
             id
-            metadata_json
           }
-          submissions(query: { last: 20 }) {
-            id
-            timestamp
-            official_evaluation {
-              id
-            }
-          }
+        }
+      }
+    }
+  }
+`;
+
+const moreSubmissionsQuery = gql`
+  query MoreSubmissions($user_id: ID!, $task_id: ID!, $before: ID) {
+    task_participation(user_id: $user_id, task_id: $task_id) {
+      submissions(query: { last: 2, before: $before }) {
+        id
+        cursor
+        timestamp
+        official_evaluation {
+          id
         }
       }
     }
@@ -113,6 +131,7 @@ function metadata({ metadata_json }: { metadata_json: string }): TaskMetadata {
 
 class App extends React.Component<{}, {
   user_id: string
+  contest_id: string
   current_task_id: null | string
   submissions_modal_open: boolean
   submit_modal_open: boolean
@@ -120,6 +139,7 @@ class App extends React.Component<{}, {
 }> {
   state = {
     user_id: "site1/user1",
+    contest_id: "site1/contest1",
     current_task_id: null,
     submissions_modal_open: false,
     submit_modal_open: false,
@@ -129,6 +149,7 @@ class App extends React.Component<{}, {
   render() {
     const {
       user_id,
+      contest_id,
       current_task_id,
       submissions_modal_open,
       submit_modal_open,
@@ -137,16 +158,13 @@ class App extends React.Component<{}, {
 
     return (
       <ApolloProvider client={client}>
-        <Query query={mainQuery} variables={{ user_id }} fetchPolicy="cache-and-network">
-          {({ loading, error, data, refetch }: QueryResult<Main>) => (
+        <Query query={mainQuery} variables={{ user_id, contest_id }} fetchPolicy="cache-and-network">
+          {({ loading, error, data, fetchMore, refetch }: QueryResult<Main>) => (
             <React.Fragment>
               {
                 data && data.user && (({
-                  user, user: {
-                    participation_in_default_contest: {
-                      contest,
-                      task_participations,
-                    }
+                  user, contest, participation: {
+                    task_participations,
                   }
                 }) => (
                     <React.Fragment>
@@ -235,6 +253,34 @@ class App extends React.Component<{}, {
                                             ))}
                                           </tbody>
                                         </table>
+                                        <a href="#" onClick={async (e) => {
+                                          e.preventDefault();
+                                          await fetchMore({
+                                            query: moreSubmissionsQuery,
+                                            variables: {
+                                              user_id,
+                                              task_id: task.id,
+                                              before: submissions[0].cursor,
+                                            },
+                                            updateQuery(previousResult, { fetchMoreResult }) {
+                                              return {
+                                                ...previousResult,
+                                                participation: {
+                                                  ...previousResult.participation,
+                                                  task_participations: previousResult.participation.task_participations.map(p => (
+                                                    p.task.id === task.id ? {
+                                                      ...p,
+                                                      submissions: [
+                                                        ...fetchMoreResult.task_participation.submissions,
+                                                        ...p.submissions,
+                                                      ]
+                                                    } : p
+                                                  )),
+                                                }
+                                              };
+                                            }
+                                          });
+                                        }}>Load more...</a>
                                       </div>
                                     </ReactModal>
                                     {submissions.map((submission) => (

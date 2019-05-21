@@ -56,13 +56,13 @@ export const resolvers = {
       const { id_parts: { site: site1, user } } = await userManager.load(user_id, { loadDataIn: CONFIG_DIRECTORY });
       const { id_parts: { site: site2, contest } } = await contestManager.load(contest_id, { loadDataIn: CONFIG_DIRECTORY });
       const site = checkSameSite(site1, site2);
-      return await participationManager.load(participationManager.formatId({ site, user, contest }), { loadDataIn: CONFIG_DIRECTORY });
+      return await participationManager.load(participationManager.formatId({ site, user, contest }));
     },
     async task_participation(obj: unknown, { user_id, task_id }: { user_id: string, task_id: string }) {
       const { id_parts: { site: site1, user } } = await userManager.load(user_id, { loadDataIn: CONFIG_DIRECTORY });
       const { id_parts: { site: site2, contest, task } } = await taskManager.load(task_id);
       const site = checkSameSite(site1, site2);
-      return await taskParticipationManager.load({ site, user, contest, task }, { loadDataIn: CONFIG_DIRECTORY });
+      return await taskParticipationManager.load({ site, user, contest, task });
     },
     async submission(obj: unknown, { id }: { id: string }) {
       return await submissionManager.load(id, { loadDataIn: DATA_DIRECTORY });
@@ -150,7 +150,10 @@ export const resolvers = {
           .reverse()
           .filter((_, i) => i < last)
           .reverse()
-          .map(submission => submissionManager.load({ site, contest, user, task, submission }, { loadDataIn: DATA_DIRECTORY }))
+          .map(async submission => ({
+            ...await submissionManager.load({ site, contest, user, task, submission }, { loadDataIn: DATA_DIRECTORY }),
+            cursor: submission,
+          }))
       );
     },
   },
