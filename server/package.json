@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "start": "concurrently npm:build:watch npm:dev-server",
+    "start": "concurrently --kill-others npm:build:watch npm:dev-server",
     "dev-server": "nodemon -x node dist/index.js --sites-dir ../test_site/config --data-dir ../test_site/data",
     "build:watch": "NODE_ENV=development webpack --watch",
     "build": "webpack",
