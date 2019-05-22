@@ -136,14 +136,14 @@ body {
     background-color: #007bff;
 }
 
-.task_badge {
-    @extend .badge, .badge-danger;
+.task_score_badge {
+    @extend .badge, .badge-pill;
 
-    border-radius: 10rem;
-
-    display: block;
     float: right;
-    margin-top: .2rem;
+
+    &.score_full { @extend .badge-success; }
+    &.score_partial { @extend .badge-warning; }
+    &.score_zero { @extend .badge-danger; }
 }
 
 .task_main {
