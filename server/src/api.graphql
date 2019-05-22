@@ -25,7 +25,7 @@ type Contest {
     id: ID!
     site: Site!
     start_time: String!
-    metadata_json: String!
+    end_time: String!
     tasks: [Task!]!
     participation_of_user(user_id: ID!): Participation!
 }

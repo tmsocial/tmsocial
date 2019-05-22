@@ -195,9 +195,8 @@ const users = new NodeManager(
 
 const contests = new NodeManager(
     sites.path.appendPath("contests").appendId("contest"),
-    ({ path, id_parts: { site, contest }, extra: { metadata } }) => ({
+    ({ path, id_parts: { site, contest } }) => ({
         site: () => sites.fromIdParts({ site }),
-        metadata_json: () => JSON.stringify(metadata || {}),
         async tasks() {
             const dir = readdirSync(join(config.SITES_DIRECTORY, path, 'tasks'));
             return await Promise.all(dir.map(task => tasks.fromIdParts({ site, contest, task })));
