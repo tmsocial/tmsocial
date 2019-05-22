@@ -137,13 +137,9 @@ body {
 }
 
 .task_score_badge {
-    @extend .badge;
+    @extend .badge, .badge-pill;
 
-    border-radius: 10rem;
-
-    display: block;
     float: right;
-    margin-top: .2rem;
 
     &.score_full { @extend .badge-success; }
     &.score_partial { @extend .badge-warning; }
