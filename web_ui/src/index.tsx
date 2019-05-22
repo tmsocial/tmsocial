@@ -91,10 +91,18 @@ const mainQuery = gql`
           id
           metadata_json
         }
+        scores {
+          key
+          score
+        }
         submissions(query: { last: 5 }) {
           id
           cursor
           timestamp
+          scores {
+            key
+            score
+          }
           official_evaluation {
             id
           }
@@ -111,6 +119,10 @@ const moreSubmissionsQuery = gql`
         id
         cursor
         timestamp
+        scores {
+          key
+          score
+        }
         official_evaluation {
           id
         }
@@ -220,9 +232,17 @@ class App extends React.Component<{}, {
                           <h2>Score</h2>
                           <div className="contest_score_container">
                             <span className="contest_score_display">
-                              <span className="contest_score">{42}</span>
+                              <span className="contest_score">{
+                                task_participations.map(
+                                  p => p.scores.map(s => s.score).reduce((a, b) => a + b)
+                                ).reduce((a, b) => a + b)
+                              }</span>
                               {" / "}
-                              <span className="contest_max_score">{42}</span>
+                              <span className="contest_max_score">{
+                                task_participations.map(
+                                  p => metadata(p.task).scorables.map(s => s.max_score).reduce((a, b) => a + b)
+                                ).reduce((a, b) => a + b)
+                              }</span>
                             </span>
                           </div>
                           <h2>Remaining Time</h2>
@@ -293,7 +313,11 @@ class App extends React.Component<{}, {
                                                     details
                                                   </a>
                                                 </td>
-                                                <td>42 / 42</td>
+                                                <td>
+                                                  {submission.scores.map(s => s.score).reduce((a, b) => a + b)}
+                                                  {" / "}
+                                                  {metadata(task).scorables.map(s => s.max_score).reduce((a, b) => a + b)}
+                                                </td>
                                               </tr>
                                             ))}
                                             <tr>

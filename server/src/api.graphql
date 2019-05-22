@@ -24,9 +24,10 @@ type Site {
 type Contest {
     id: ID!
     site: Site!
+    start_time: String!
+    end_time: String!
     tasks: [Task!]!
     participation_of_user(user_id: ID!): Participation!
-    max_score: Int
 }
 
 type User {
@@ -40,7 +41,6 @@ type Participation {
     user: User!
     contest: Contest!
     task_participations: [TaskParticipation!]!
-    score: Int
 }
 
 type Task {
@@ -53,6 +53,7 @@ type TaskParticipation {
     user: User!
     task: Task!
     submissions(query: PageQuery): [Submission!]!
+    scores: [Score!]!
 }
 
 type Submission {
@@ -62,6 +63,7 @@ type Submission {
     official_evaluation: Evaluation!
     timestamp: String!
     files: [SubmissionFile!]!
+    scores: [Score!]!
 }
 
 type SubmissionFile {
@@ -73,13 +75,13 @@ type SubmissionFile {
 type Evaluation {
     id: ID!
     total_score: Int!
-    partial_scores: [PartialScore!]!
     events: [EvaluationEvent!]!
+    scores: [Score!]!
 }
 
-type PartialScore {
-    display_name: String!
-    score: Int!
+type Score {
+    key: String!
+    score: Float!
 }
 
 type Mutation {
