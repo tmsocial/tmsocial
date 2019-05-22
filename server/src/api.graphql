@@ -24,9 +24,10 @@ type Site {
 type Contest {
     id: ID!
     site: Site!
+    start_time: String!
+    metadata_json: String!
     tasks: [Task!]!
     participation_of_user(user_id: ID!): Participation!
-    max_score: Int
 }
 
 type User {

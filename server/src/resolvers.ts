@@ -3,11 +3,33 @@ import { execFile, execFileSync } from "child_process";
 import { EventEmitter } from "events";
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "fs";
 import * as jwt from "jsonwebtoken";
-import { DateTime } from "luxon";
+import { DateTime, Duration } from "luxon";
 import { join } from "path";
 import { Tail } from "tail";
 import { config } from './index';
 import { IdParts, PathManager } from "./nodes";
+
+let metadataCache: {
+    [id: string]: string
+} = {};
+
+let scoresCache: {
+    [id: string]: any
+} = {};
+
+let latestSIGINT = DateTime.fromMillis(0);
+
+process.on('SIGINT', async () => {
+    if (DateTime.local().diff(latestSIGINT) < Duration.fromObject({ seconds: 5 })) {
+        process.exit();
+    }
+    latestSIGINT = DateTime.local();
+
+    console.log(`Invalidating caches. Press Ctrl-C within 5 seconds to terminate the server.`)
+
+    metadataCache = {};
+    scoresCache = {};
+});
 
 interface SubmissionFileInput {
     field: string
@@ -28,17 +50,18 @@ class NodeManager<T> {
         /** contains how ID/paths are structured */
         readonly path: PathManager,
         /** construct an instance of type T from ID information */
-        readonly load: (node: { id: string, id_parts: IdParts, path: string }) => T,
+        readonly load: (node: { id: string, id_parts: IdParts, path: string, extra: any }) => T,
         /** loads any extra data to expose via GraphQL, loaded separately so it does not mess up with type inference */
         readonly loadExtra: (node: { id: string, id_parts: IdParts, path: string }) => any = () => ({}),
     ) { }
 
     private async doLoad({ id, id_parts }: { id: string, id_parts: IdParts }) {
         const path = this.path.buildPath(id_parts);
+        const extra = await this.loadExtra({ id, id_parts, path });
         return {
             id, id_parts, path,
-            ...await this.load({ id, id_parts, path } || {}) as T,
-            ...await this.loadExtra({ id, id_parts, path }) as {},
+            ...extra as {}, // for GraphQL default resolvers
+            ...await this.load({ id, id_parts, path, extra } || {}) as T,
         };
     }
 
@@ -172,8 +195,9 @@ const users = new NodeManager(
 
 const contests = new NodeManager(
     sites.path.appendPath("contests").appendId("contest"),
-    ({ path, id_parts: { site, contest } }) => ({
+    ({ path, id_parts: { site, contest }, extra: { metadata } }) => ({
         site: () => sites.fromIdParts({ site }),
+        metadata_json: () => JSON.stringify(metadata || {}),
         async tasks() {
             const dir = readdirSync(join(config.SITES_DIRECTORY, path, 'tasks'));
             return await Promise.all(dir.map(task => tasks.fromIdParts({ site, contest, task })));
@@ -189,13 +213,20 @@ const contests = new NodeManager(
 
 const tasks = new NodeManager(
     contests.path.appendPath("tasks").appendId("task"),
-    ({ path, id_parts: { site, contest } }) => ({
+    ({ path, id, id_parts: { site, contest } }) => ({
         contest: () => contests.fromIdParts({ site, contest }),
-        metadata_json: async () => execFileSync("task-maker", [
-            '--ui', 'tmsocial',
-            '--task-info',
-            '--task-dir', join(config.SITES_DIRECTORY, path)
-        ], { encoding: 'utf8' }),
+        metadata_json: async () => {
+            if (!(id in metadataCache)) {
+                console.log(`Generating metadata...`)
+                metadataCache[id] = await execFileSync("task-maker", [
+                    '--ui', 'tmsocial',
+                    '--task-info',
+                    '--task-dir', join(config.SITES_DIRECTORY, path)
+                ], { encoding: 'utf8' });
+                console.log(`Metadata generated.`)
+            }
+            return metadataCache[id];
+        },
     }),
     ({ path }) => checkSiteDirectoryExists(path),
 );
@@ -275,7 +306,7 @@ const submissions = new NodeManager(
 
 const evaluations = new NodeManager(
     submissions.path.appendPath("evaluations").appendId("evaluation"),
-    ({ path, id_parts: { site, contest, user, task, submission, evaluation } }) => ({
+    ({ path, id, id_parts: { site, contest, user, task, submission, evaluation } }) => ({
         submission: () => submissions.fromIdParts({ site, contest, user, task, submission }),
         async events() {
             const events = [];
@@ -312,30 +343,31 @@ const evaluations = new NodeManager(
             }
         },
         async scores() {
-            const submission = await this.submission();
-            const task_participation = await submission.task_participation();
-            const task = await task_participation.task();
-            const metadata = JSON.parse(await task.metadata_json()) as {
-                scorables: {
-                    key: string,
-                }[],
-            };
+            if (!(id in scoresCache)) {
+                const submission = await this.submission();
+                const task_participation = await submission.task_participation();
+                const task = await task_participation.task();
+                const metadata = JSON.parse(await task.metadata_json()) as {
+                    scorables: {
+                        key: string,
+                    }[],
+                };
 
-            const values: any = {};
-            const events = await this.events();
-            for (const eventNode of events) {
-                const event = JSON.parse(eventNode.json);
-                if (event.type === "value") {
-                    values[event.key] = event.value;
+                const values: any = {};
+                const events = await this.events();
+                for (const eventNode of events) {
+                    const event = JSON.parse(eventNode.json);
+                    if (event.type === "value") {
+                        values[event.key] = event.value;
+                    }
                 }
+
+                scoresCache[id] = metadata.scorables.map(({ key }) => ({
+                    key,
+                    score: values[key] ? values[key].score : 0,
+                }));
             }
-
-            console.log(metadata.scorables, values);
-
-            return metadata.scorables.map(({ key }) => ({
-                key,
-                score: values[key] ? values[key].score : 0,
-            }));
+            return scoresCache[id];
         },
     }),
 );
