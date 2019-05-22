@@ -251,13 +251,25 @@ class App extends React.Component<{}, {
                           </div>
                           <h2>Tasks</h2>
                           <ol className="contest_tasks_nav_container">
-                            {task_participations.map(({ task }, i) => (
+                            {task_participations.map(({ task, scores }, i) => (
                               <li className="task_list_item"><a href="#" onClick={(e) => {
                                 e.preventDefault();
                                 this.setState({ current_task_id: task.id })
                               }} className={task.id === current_task_id ? "task_link active" : "task_link"}>
-                                {localize(metadata(task).title)}
-                                <span className="task_badge">42/42</span>
+                                <span className="task_short_title">{localize(metadata(task).title)}</span>
+                                {(({ score, max_score }) => (
+                                  <span className={`task_score_badge ${
+                                    score <= 0 ? "score_zero" :
+                                      score >= max_score ? "score_full" :
+                                        "score_partial"
+                                    }`}>
+                                    <span className="task_score">{score}</span>/
+                                    <span className="task_max_score">{max_score}</span>
+                                  </span>
+                                ))({
+                                  score: scores.map(s => s.score).reduce((a, b) => a + b),
+                                  max_score: metadata(task).scorables.map(s => s.max_score).reduce((a, b) => a + b),
+                                })}
                               </a></li>
                             ))}
                           </ol>
