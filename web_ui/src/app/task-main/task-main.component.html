@@ -1,0 +1,19 @@
+<main class="task_main">
+  <div class="task_header">
+    <h2 class="task_title">{{ taskMetadata.title | localize }}</h2>
+    <div class="task_submit_container">
+      <a href="#" class="task_submit_start" onClick="">Submit a solution</a>
+    </div>
+    <div *ngIf="lastSubmission as submission" class="task_last_submission_container">
+      <span class="task_last_submission">
+        <span class="task_last_submission_label">Last submission: </span>
+        <app-relative-time [time]="submission.timestamp"></app-relative-time>
+        (<a class="task_explore_submissions" href="#" (click)="openSubmissions()">explore
+          submissions</a>)
+      </span>
+    </div>
+  </div>
+  <a *ngIf="statementPdfUrl as url" download [href]="url">Download PDF</a>
+  <iframe *ngIf="taskMetadata.statement.html as html" class="task_statement_html" [attr.srcDoc]="html" sandbox="allow-scripts">
+  </iframe>
+</main>

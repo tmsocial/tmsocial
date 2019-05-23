@@ -9,6 +9,8 @@ import { RelativeNowPipe } from './relative-now.pipe';
 import { SubmissionsDialogComponent } from './submissions-dialog/submissions-dialog.component';
 import { RelativeTimeComponent } from './relative-time/relative-time.component';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
+import { TaskMainComponent } from './task-main/task-main.component';
+import { TaskLinkComponent } from './task-link/task-link.component';
 
 @NgModule({
   declarations: [
@@ -17,6 +19,8 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
     RelativeNowPipe,
     SubmissionsDialogComponent,
     RelativeTimeComponent,
+    TaskMainComponent,
+    TaskLinkComponent,
   ],
   imports: [
     BrowserModule,

@@ -1,15 +1,15 @@
-<div className="submissions_modal_header">
+<div class="submissions_modal_header">
   Submissions
 </div>
-<div className="submissions_modal_body">
-  <table className="submission_table">
-    <thead className="submission_table_header">
+<div class="submissions_modal_body">
+  <table class="submission_table">
+    <thead class="submission_table_header">
       <tr>
         <th>Time</th>
         <th>Score</th>
       </tr>
     </thead>
-    <tbody className="submission_table_body">
+    <tbody class="submission_table_body">
       <tr *ngFor="let submission of taskParticipation.submissions">
         <td>
           <app-relative-time [time]="submission.timestamp"></app-relative-time>

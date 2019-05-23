@@ -21,38 +21,14 @@
         <h2>Tasks</h2>
         <ol class="contest_tasks_nav_container">
           <li *ngFor="let task_participation of participation.task_participations" class="task_list_item">
-            <ng-container *ngIf="task_participation.task as task">
-              <a href="#" class="task_link">
-                <span class="task_short_title">{{ metadata(task).title | localize }}</span>
-                <span class="task_score_badge">
-                  <span class="task_score">{{
-                    42
-                  }}</span>/<span class="task_max_score">{{
-                    42
-                  }}</span>
-                </span>
-              </a>
-            </ng-container>
+            <app-task-link [taskParticipation]="task_participation"
+              [(selectedTaskParticipation)]="selectedTaskParticipation"></app-task-link>
           </li>
         </ol>
       </nav>
-      <main *ngFor="let task_participation of participation.task_participations">
-        <ng-container *ngIf="task_participation.task as task">
-          <div class="task_header">
-            <h2 class="task_title">{{ metadata(task).title | localize }}</h2>
-            <div class="task_submit_container">
-              <a href="#" class="task_submit_start" onClick="">Submit a solution</a>
-            </div>
-            <div *ngFor="let submission of task_participation.submissions" class="task_last_submission_container">
-              <span class="task_last_submission">
-                <span class="task_last_submission_label">Last submission: </span>
-                <app-relative-time [time]="submission.timestamp"></app-relative-time>
-                (<a className="task_explore_submissions" href="#" (click)="openSubmissions(task_participation)">explore submissions</a>)
-              </span>
-            </div>
-          </div>
-        </ng-container>
-      </main>
+      <app-task-main *ngIf="selectedTaskParticipation as taskParticipation"
+        [taskParticipation]="taskParticipation">
+      </app-task-main>
     </div>
   </ng-container>
 </ng-container>

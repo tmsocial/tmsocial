@@ -1,11 +1,8 @@
 import { Component } from '@angular/core';
 import { Apollo } from 'apollo-angular';
-import { ApolloQueryResult } from 'apollo-client';
-import { Subscription } from 'apollo-client/util/Observable';
 import gql from 'graphql-tag';
-import { AppQuery } from './__generated__/AppQuery';
-import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { SubmissionsDialogComponent } from './submissions-dialog/submissions-dialog.component';
+import { AppQuery } from './__generated__/AppQuery';
 
 @Component({
   selector: 'app-root',
@@ -17,11 +14,11 @@ export class AppComponent {
 
   constructor(
     private apollo: Apollo,
-    private modal: NgbModal,
   ) { }
 
   user_id = 'site1/user1';
   contest_id = 'site1/contest1';
+  selectedTaskParticipation: AppQuery['participation']['task_participations'] | null = null;
 
   queryRef = this.apollo.watchQuery<AppQuery>({
     query: gql`
@@ -62,18 +59,4 @@ export class AppComponent {
     `,
     variables: { user_id: this.user_id, contest_id: this.contest_id },
   });
-
-  metadata(
-    { metadata_json }: AppQuery['participation']['task_participations'][number]['task']
-  ) {
-    return JSON.parse(metadata_json);
-  }
-
-  openSubmissions(taskParticipation: AppQuery['participation']['task_participations'][number]) {
-    const modalRef = this.modal.open(SubmissionsDialogComponent, {
-
-    });
-
-    modalRef.componentInstance.taskParticipation = taskParticipation;
-  }
 }
