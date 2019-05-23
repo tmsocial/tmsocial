@@ -136,7 +136,7 @@ export class SubmissionFormView extends React.Component<{
           const files = await Promise.all(form.fields.map<Promise<SubmissionFile>>(async (field, i) => ({
             field: field.id,
             type: data.get(`${field.id}.type`) as string,
-            content_base64: await fileToBase64(data.get(`${field.id}.file`) as File),
+            contentBase64: await fileToBase64(data.get(`${field.id}.file`) as File),
           })))
           onSubmit(files);
         } catch (e) {

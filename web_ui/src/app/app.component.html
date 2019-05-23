@@ -20,8 +20,8 @@
         </div>
         <h2>Tasks</h2>
         <ol class="contest_tasks_nav_container">
-          <li *ngFor="let task_participation of participation.task_participations" class="task_list_item">
-            <app-task-link [taskParticipation]="task_participation"
+          <li *ngFor="let taskParticipation of participation.taskParticipations" class="task_list_item">
+            <app-task-link [taskParticipation]="taskParticipation"
               [(selectedTaskParticipation)]="selectedTaskParticipation"></app-task-link>
           </li>
         </ol>

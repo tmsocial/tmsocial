@@ -40,11 +40,11 @@ export class PathManager {
         return this.segments.filter(s => s.type === "id").map((segment, i) => parts[(segment as IdSegment).name]).join("/");
     }
 
-    buildPath(id_parts: IdParts) {
+    buildPath(idParts: IdParts) {
         const pathParts = [];
         for (const segment of this.segments) {
             if (segment.type === "id") {
-                pathParts.push(id_parts[segment.name]);
+                pathParts.push(idParts[segment.name]);
             }
             if (segment.type === "path") {
                 pathParts.push(segment.path);

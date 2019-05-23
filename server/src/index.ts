@@ -6,8 +6,8 @@ import { typeDefs } from './api-loader';
 import { resolvers } from './resolvers';
 
 export const config = {
-  SITES_DIRECTORY: '',
-  DATA_DIRECTORY: '',
+  sitesDir: '',
+  dataDir: '',
 };
 
 const apollo = new ApolloServer({
@@ -65,8 +65,8 @@ let opts = require('yargs')
   .help()
   .argv;
 
-config.SITES_DIRECTORY = opts["sites-dir"];
-config.DATA_DIRECTORY = opts["data-dir"];
+config.sitesDir = opts["sites-dir"];
+config.dataDir = opts["data-dir"];
 
 server.listen({ host: opts.host, port: opts.port }, () => {
   console.log('🚀 Server ready at:');

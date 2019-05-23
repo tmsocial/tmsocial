@@ -77,20 +77,20 @@ const evaluationEventsSubscription = gql`
 `
 
 const mainQuery = gql`
-  query Main($user_id: ID!, $contest_id: ID!) {
-    user(id: $user_id) {
-      display_name
+  query Main($userId: ID!, $contestId: ID!) {
+    user(id: $userId) {
+      displayName
     }
 
-    contest(id: $contest_id) {
+    contest(id: $contestId) {
       id
     }
 
-    participation(user_id: $user_id, contest_id: $contest_id) {
-      task_participations {
+    participation(userId: $userId, contestId: $contestId) {
+      taskParticipations {
         task {
           id
-          metadata_json
+          metadataJson
         }
         scores {
           key
@@ -104,7 +104,7 @@ const mainQuery = gql`
             key
             score
           }
-          official_evaluation {
+          scoredEvaluation {
             id
           }
         }
@@ -114,8 +114,8 @@ const mainQuery = gql`
 `;
 
 const moreSubmissionsQuery = gql`
-  query MoreSubmissions($user_id: ID!, $task_id: ID!, $before: ID) {
-    task_participation(user_id: $user_id, task_id: $task_id) {
+  query MoreSubmissions($userId: ID!, $taskId: ID!, $before: ID) {
+    taskParticipation(userId: $userId, taskId: $taskId) {
       submissions(query: { last: 20, before: $before }) {
         id
         cursor
@@ -124,7 +124,7 @@ const moreSubmissionsQuery = gql`
           key
           score
         }
-        official_evaluation {
+        scoredEvaluation {
           id
         }
       }
@@ -133,18 +133,18 @@ const moreSubmissionsQuery = gql`
 `;
 
 const submitQuery = gql`
-  mutation Submit($task_id: ID!, $user_id: ID!, $files: [SubmissionFileInput!]!) {
-    submit(task_id: $task_id, user_id: $user_id, files: $files) {
+  mutation Submit($taskId: ID!, $userId: ID!, $files: [SubmissionFileInput!]!) {
+    submit(taskId: $taskId, userId: $userId, files: $files) {
       id
-      official_evaluation {
+      scoredEvaluation {
         id
       }
     }
   }
 `;
 
-function metadata({ metadata_json }: { metadata_json: string }): TaskMetadata {
-  return JSON.parse(metadata_json);
+function metadata({ metadataJson }: { metadataJson: string }): TaskMetadata {
+  return JSON.parse(metadataJson);
 }
 
 const RelativeTimeView = ({ timestamp, ...props }: { timestamp: DateTime } & React.HTMLAttributes<HTMLElement>) => (
@@ -182,17 +182,17 @@ class LiveEvaluationView extends React.Component<{
 };
 
 class App extends React.Component<{}, {
-  user_id: string
-  contest_id: string
-  current_task_id: null | string
+  userId: string
+  contestId: string
+  current_taskId: null | string
   submissions_modal_open: boolean
   submit_modal_open: boolean
   submission_detail_modal_open_for_id: null | string
 }> {
   state = {
-    user_id: "site1/user1",
-    contest_id: "site1/contest1",
-    current_task_id: null,
+    userId: "site1/user1",
+    contestId: "site1/contest1",
+    current_taskId: null,
     submissions_modal_open: false,
     submit_modal_open: false,
     submission_detail_modal_open_for_id: null,
@@ -200,9 +200,9 @@ class App extends React.Component<{}, {
 
   render() {
     const {
-      user_id,
-      contest_id,
-      current_task_id,
+      userId,
+      contestId,
+      current_taskId,
       submissions_modal_open,
       submit_modal_open,
       submission_detail_modal_open_for_id,
@@ -210,22 +210,22 @@ class App extends React.Component<{}, {
 
     return (
       <ApolloProvider client={client}>
-        <Query query={mainQuery} variables={{ user_id, contest_id }} fetchPolicy="cache-and-network">
+        <Query query={mainQuery} variables={{ userId, contestId }} fetchPolicy="cache-and-network">
           {({ loading, error, data, fetchMore, refetch }: QueryResult<Main>) => (
             <React.Fragment>
               {
                 data && data.user && (({
                   user, contest, participation: {
-                    task_participations,
+                    taskParticipations,
                   }
                 }) => (
                     <React.Fragment>
                       <nav className="nav">
                         <h1 className="contest_title"><a href="#" onClick={(e) => {
                           e.preventDefault();
-                          this.setState({ current_task_id: null });
+                          this.setState({ current_taskId: null });
                         }} >{contest.id}</a></h1>
-                        <span className="user_display_name">{user.display_name}</span>
+                        <span className="user_displayName">{user.displayName}</span>
                         <button className="logout">Logout</button>
                       </nav>
                       <div className="contest_main">
@@ -234,13 +234,13 @@ class App extends React.Component<{}, {
                           <div className="contest_score_container">
                             <span className="contest_score_display">
                               <span className="contest_score">{
-                                task_participations.map(
+                                taskParticipations.map(
                                   p => p.scores.map(s => s.score).reduce((a, b) => a + b)
                                 ).reduce((a, b) => a + b)
                               }</span>
                               {" / "}
                               <span className="contest_max_score">{
-                                task_participations.map(
+                                taskParticipations.map(
                                   p => metadata(p.task).scorables.map(s => s.max_score).reduce((a, b) => a + b)
                                 ).reduce((a, b) => a + b)
                               }</span>
@@ -252,11 +252,11 @@ class App extends React.Component<{}, {
                           </div>
                           <h2>Tasks</h2>
                           <ol className="contest_tasks_nav_container">
-                            {task_participations.map(({ task, scores }, i) => (
+                            {taskParticipations.map(({ task, scores }, i) => (
                               <li className="task_list_item"><a href="#" onClick={(e) => {
                                 e.preventDefault();
-                                this.setState({ current_task_id: task.id })
-                              }} className={task.id === current_task_id ? "task_link active" : "task_link"}>
+                                this.setState({ current_taskId: task.id })
+                              }} className={task.id === current_taskId ? "task_link active" : "task_link"}>
                                 <span className="task_short_title">{localize(metadata(task).title)}</span>
                                 {(({ score, max_score }) => (
                                   <span className={`task_score_badge ${
@@ -275,7 +275,7 @@ class App extends React.Component<{}, {
                             ))}
                           </ol>
                         </nav>
-                        {task_participations.filter(({ task }) => task.id === current_task_id).map(({ task, submissions }, i) => (
+                        {taskParticipations.filter(({ task }) => task.id === current_taskId).map(({ task, submissions }, i) => (
                           <main className="task_main">
                             <div className="task_header">
                               <h2 className="task_title">{localize(metadata(task).title)}</h2>
@@ -340,8 +340,8 @@ class App extends React.Component<{}, {
                                                   await fetchMore({
                                                     query: moreSubmissionsQuery,
                                                     variables: {
-                                                      user_id,
-                                                      task_id: task.id,
+                                                      userId,
+                                                      taskId: task.id,
                                                       before: submissions[0].cursor,
                                                     },
                                                     // fetchMoreResult is typed as Main be default (bug?)
@@ -350,11 +350,11 @@ class App extends React.Component<{}, {
                                                         ...previousResult,
                                                         participation: {
                                                           ...previousResult.participation,
-                                                          task_participations: previousResult.participation.task_participations.map(p => (
+                                                          taskParticipations: previousResult.participation.taskParticipations.map(p => (
                                                             p.task.id === task.id ? {
                                                               ...p,
                                                               submissions: [
-                                                                ...(fetchMoreResult as MoreSubmissions).task_participation.submissions,
+                                                                ...(fetchMoreResult as MoreSubmissions).taskParticipation.submissions,
                                                                 ...p.submissions,
                                                               ]
                                                             } : p
@@ -384,7 +384,7 @@ class App extends React.Component<{}, {
                                         </div>
                                         <div className="evaluation_modal_body">
                                           <LiveEvaluationView
-                                            evaluation_id={submission.official_evaluation.id}
+                                            evaluation_id={submission.scoredEvaluation.id}
                                             metadata={metadata(task)}
                                             live={false}
                                           />
@@ -405,7 +405,7 @@ class App extends React.Component<{}, {
                             <ReactModal isOpen={submit_modal_open} onRequestClose={() => {
                               this.setState({ submit_modal_open: false })
                             }}>
-                              <Mutation mutation={submitQuery} variables={{ task_id: task.id, user_id }}>
+                              <Mutation mutation={submitQuery} variables={{ taskId: task.id, userId }}>
                                 {(submit: MutationFunc<Submit>, { data: submitData }) => (
                                   <div className="modal_container">
                                     {submitData && (
@@ -415,7 +415,7 @@ class App extends React.Component<{}, {
                                         </div>
                                         <div className="evaluation_modal_body">
                                           <LiveEvaluationView
-                                            evaluation_id={submitData.submit.official_evaluation.id}
+                                            evaluation_id={submitData.submit.scoredEvaluation.id}
                                             metadata={metadata(task)}
                                             live={true}
                                           />

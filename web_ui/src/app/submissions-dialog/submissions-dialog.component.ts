@@ -11,6 +11,6 @@ export class SubmissionsDialogComponent {
   constructor() { }
 
   @Input()
-  taskParticipation: AppQuery['participation']['task_participations'][number];
+  taskParticipation: AppQuery['participation']['taskParticipations'][number];
 
 }

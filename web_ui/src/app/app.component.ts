@@ -13,26 +13,26 @@ export class AppComponent {
     private apollo: Apollo,
   ) { }
 
-  user_id = 'site1/user1';
-  contest_id = 'site1/contest1';
-  selectedTaskParticipation: AppQuery['participation']['task_participations'] | null = null;
+  userId = 'site1/user1';
+  contestId = 'site1/contest1';
+  selectedTaskParticipation: AppQuery['participation']['taskParticipations'] | null = null;
 
   queryRef = this.apollo.watchQuery<AppQuery>({
     query: gql`
-      query AppQuery($user_id: ID!, $contest_id: ID!) {
-        user(id: $user_id) {
-          display_name
+      query AppQuery($userId: ID!, $contestId: ID!) {
+        user(id: $userId) {
+          displayName
         }
 
-        contest(id: $contest_id) {
+        contest(id: $contestId) {
           id
         }
 
-        participation(user_id: $user_id, contest_id: $contest_id) {
-          task_participations {
+        participation(userId: $userId, contestId: $contestId) {
+          taskParticipations {
             task {
               id
-              metadata_json
+              metadataJson
             }
             scores {
               key
@@ -46,7 +46,7 @@ export class AppComponent {
                 key
                 score
               }
-              official_evaluation {
+              scoredEvaluation {
                 id
               }
             }
@@ -54,6 +54,6 @@ export class AppComponent {
         }
       }
     `,
-    variables: { user_id: this.user_id, contest_id: this.contest_id },
+    variables: { userId: this.userId, contestId: this.contestId },
   });
 }

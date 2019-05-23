@@ -12,8 +12,8 @@ type Query {
     task(id: ID!): Task!
     submission(id: ID!): Submission!
     evaluation(id: ID!): Evaluation!
-    participation(user_id: ID!, contest_id: ID!): Participation!
-    task_participation(user_id: ID!, task_id: ID!): TaskParticipation!
+    participation(userId: ID!, contestId: ID!): Participation!
+    taskParticipation(userId: ID!, taskId: ID!): TaskParticipation!
 }
 
 type Site {
@@ -24,29 +24,29 @@ type Site {
 type Contest {
     id: ID!
     site: Site!
-    start_time: String!
-    end_time: String!
+    startTime: String!
+    endTime: String!
     tasks: [Task!]!
-    participation_of_user(user_id: ID!): Participation!
+    participationOfUser(userId: ID!): Participation!
 }
 
 type User {
     id: ID!
     site: Site!
-    display_name: String!
-    participation_in_contest(contest_id: ID!): Participation!
+    displayName: String!
+    participationInContest(contestId: ID!): Participation!
 }
 
 type Participation {
     user: User!
     contest: Contest!
-    task_participations: [TaskParticipation!]!
+    taskParticipations: [TaskParticipation!]!
 }
 
 type Task {
     id: ID!
     contest: Contest!
-    metadata_json: String!
+    metadataJson: String!
 }
 
 type TaskParticipation {
@@ -59,8 +59,8 @@ type TaskParticipation {
 type Submission {
     id: ID!
     cursor: ID!
-    task_participation: TaskParticipation!
-    official_evaluation: Evaluation!
+    taskParticipation: TaskParticipation!
+    scoredEvaluation: Evaluation!
     timestamp: String!
     files: [SubmissionFile!]!
     scores: [Score!]!
@@ -69,12 +69,11 @@ type Submission {
 type SubmissionFile {
     field: String!
     type: String!
-    content_base64: String! # Content of the file in base64
+    contentBase64: String! # Content of the file in base64
 }
 
 type Evaluation {
     id: ID!
-    total_score: Int!
     events: [EvaluationEvent!]!
     scores: [Score!]!
 }
@@ -85,14 +84,14 @@ type Score {
 }
 
 type Mutation {
-    login(site_id: ID!, user: String!, password: String!): LoginResponse!
-    submit(task_id: ID!, user_id: ID!, files: [SubmissionFileInput!]!): Submission!
+    login(siteId: ID!, user: String!, password: String!): LoginResponse!
+    submit(taskId: ID!, userId: ID!, files: [SubmissionFileInput!]!): Submission!
 }
 
 input SubmissionFileInput {
     field: String!
     type: String!
-    content_base64: String!
+    contentBase64: String!
 }
 
 type LoginResponse {
@@ -101,7 +100,7 @@ type LoginResponse {
 }
 
 type Subscription {
-    evaluation_events(evaluation_id: ID!): EvaluationEvent!
+    evaluationEvents(evaluation_id: ID!): EvaluationEvent!
 }
 
 type EvaluationEvent {

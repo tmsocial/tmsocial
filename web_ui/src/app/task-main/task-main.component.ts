@@ -18,10 +18,10 @@ export class TaskMainComponent {
   ) { }
 
   @Input()
-  taskParticipation: AppQuery['participation']['task_participations'][number];
+  taskParticipation: AppQuery['participation']['taskParticipations'][number];
 
   get task() { return this.taskParticipation.task; }
-  get taskMetadata(): TaskMetadata { return JSON.parse(this.taskParticipation.task.metadata_json); }
+  get taskMetadata(): TaskMetadata { return JSON.parse(this.taskParticipation.task.metadataJson); }
 
   get lastSubmission() {
     const l = this.taskParticipation.submissions.length;

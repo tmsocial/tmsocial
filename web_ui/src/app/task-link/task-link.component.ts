@@ -11,15 +11,15 @@ export class TaskLinkComponent {
   constructor() { }
 
   @Input()
-  taskParticipation: AppQuery['participation']['task_participations'][number];
+  taskParticipation: AppQuery['participation']['taskParticipations'][number];
 
   @Input()
-  selectedTaskParticipation: AppQuery['participation']['task_participations'][number];
+  selectedTaskParticipation: AppQuery['participation']['taskParticipations'][number];
 
   @Output() selectedTaskParticipationChange = new EventEmitter();
 
   get task() { return this.taskParticipation.task; }
-  get taskMetadata() { return JSON.parse(this.taskParticipation.task.metadata_json); }
+  get taskMetadata() { return JSON.parse(this.taskParticipation.task.metadataJson); }
 
   click() {
     this.selectedTaskParticipationChange.emit(this.taskParticipation);
