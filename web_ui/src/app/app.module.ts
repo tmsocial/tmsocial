@@ -11,6 +11,7 @@ import { RelativeTimeComponent } from './relative-time/relative-time.component';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { TaskMainComponent } from './task-main/task-main.component';
 import { TaskLinkComponent } from './task-link/task-link.component';
+import { SubmitDialogComponent } from './submit-dialog/submit-dialog.component';
 
 @NgModule({
   declarations: [
@@ -21,6 +22,7 @@ import { TaskLinkComponent } from './task-link/task-link.component';
     RelativeTimeComponent,
     TaskMainComponent,
     TaskLinkComponent,
+    SubmitDialogComponent,
   ],
   imports: [
     BrowserModule,

@@ -1,7 +1,6 @@
 import { Component } from '@angular/core';
 import { Apollo } from 'apollo-angular';
 import gql from 'graphql-tag';
-import { SubmissionsDialogComponent } from './submissions-dialog/submissions-dialog.component';
 import { AppQuery } from './__generated__/AppQuery';
 
 @Component({
@@ -10,8 +9,6 @@ import { AppQuery } from './__generated__/AppQuery';
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
-  title = 'angular-web-ui';
-
   constructor(
     private apollo: Apollo,
   ) { }
