@@ -1,3 +1,5 @@
+import { Localized } from './l10n';
+
 export type StatusValue = "done" | "success" | "fail" | "partial" | "skip";
 
 export interface Message {

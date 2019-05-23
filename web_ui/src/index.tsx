@@ -16,6 +16,7 @@ import { TaskMetadata } from "./metadata";
 import { SubmissionFormView } from "./submission_form";
 import { Main } from "./__generated__/Main";
 import { Submit } from "./__generated__/Submit";
+import { MoreSubmissions } from './__generated__/MoreSubmissions';
 
 Object.assign(ReactModal.defaultStyles.overlay, {
   backgroundColor: "rgba(42, 42, 42, 0.75)",
@@ -343,7 +344,8 @@ class App extends React.Component<{}, {
                                                       task_id: task.id,
                                                       before: submissions[0].cursor,
                                                     },
-                                                    updateQuery(previousResult, { fetchMoreResult }) {
+                                                    // fetchMoreResult is typed as Main be default (bug?)
+                                                    updateQuery(previousResult, { fetchMoreResult }: { fetchMoreResult: Main & MoreSubmissions }) {
                                                       return {
                                                         ...previousResult,
                                                         participation: {
@@ -352,7 +354,7 @@ class App extends React.Component<{}, {
                                                             p.task.id === task.id ? {
                                                               ...p,
                                                               submissions: [
-                                                                ...fetchMoreResult.task_participation.submissions,
+                                                                ...(fetchMoreResult as MoreSubmissions).task_participation.submissions,
                                                                 ...p.submissions,
                                                               ]
                                                             } : p
