@@ -19,6 +19,7 @@
       "dom",
       "esnext.asynciterable"
     ],
-    "jsx": "react"
+    "jsx": "react",
+    "strict": true
   }
 }
