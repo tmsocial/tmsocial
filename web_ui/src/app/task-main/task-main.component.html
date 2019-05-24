@@ -2,7 +2,7 @@
   <div class="task_header">
     <h2 class="task_title">{{ taskMetadata.title | localize }}</h2>
     <div class="task_submit_container">
-      <a href="#" class="task_submit_start" onClick="">Submit a solution</a>
+      <a href="#" class="task_submit_start" (click)="this.openSubmitDialog()">Submit a solution</a>
     </div>
     <div *ngIf="lastSubmission as submission" class="task_last_submission_container">
       <span class="task_last_submission">

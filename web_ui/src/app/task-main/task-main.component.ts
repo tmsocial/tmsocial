@@ -4,6 +4,7 @@ import { TaskMetadata } from 'src/metadata';
 import { LocalizeService } from '../localize.service';
 import { SubmissionsDialogComponent } from '../submissions-dialog/submissions-dialog.component';
 import { AppQuery } from '../__generated__/AppQuery';
+import { SubmitDialogComponent } from '../submit-dialog/submit-dialog.component';
 
 @Component({
   selector: 'app-task-main',
@@ -18,7 +19,10 @@ export class TaskMainComponent {
   ) { }
 
   @Input()
-  taskParticipation: AppQuery['participation']['taskParticipations'][number];
+  user!: AppQuery['user'];
+
+  @Input()
+  taskParticipation!: AppQuery['participation']['taskParticipations'][number];
 
   get task() { return this.taskParticipation.task; }
   get taskMetadata(): TaskMetadata { return JSON.parse(this.taskParticipation.task.metadataJson); }
@@ -31,6 +35,13 @@ export class TaskMainComponent {
   openSubmissions() {
     const modalRef = this.modal.open(SubmissionsDialogComponent);
     modalRef.componentInstance.taskParticipation = this.taskParticipation;
+    modalRef.componentInstance.user = this.user;
+  }
+
+  openSubmitDialog() {
+    const modalRef = this.modal.open(SubmitDialogComponent);
+    modalRef.componentInstance.taskParticipation = this.taskParticipation;
+    modalRef.componentInstance.user = this.user;
   }
 
   get statementPdfUrl() {

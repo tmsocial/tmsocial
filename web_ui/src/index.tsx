@@ -70,7 +70,7 @@ const client = new ApolloClient({
 
 const evaluationEventsSubscription = gql`
   subscription EvaluationEvents($evaluation_id: ID!) {
-    evaluation_events(evaluation_id: $evaluation_id) {
+    evaluationEvents(evaluation_id: $evaluation_id) {
       json
     }
   }

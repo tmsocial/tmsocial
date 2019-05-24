@@ -1,3 +1,9 @@
-<p>
-  submit-dialog works!
-</p>
+<form class="submission_form" (submit)="$event.preventDefault(); submit($event)">
+  <div class="submission_form_body">
+    <app-submission-field *ngFor="let field of taskMetadata.submission_form.fields; trackBy: fieldTrackBy"
+      [field]="field"></app-submission-field>
+  </div>
+  <div class="submission_form_footer">
+    <button class="submission_form_submit" [disabled]="submitting" type="submit">Submit</button>
+  </div>
+</form>

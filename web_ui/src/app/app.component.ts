@@ -21,6 +21,7 @@ export class AppComponent {
     query: gql`
       query AppQuery($userId: ID!, $contestId: ID!) {
         user(id: $userId) {
+          id
           displayName
         }
 

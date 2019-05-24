@@ -12,6 +12,8 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { TaskMainComponent } from './task-main/task-main.component';
 import { TaskLinkComponent } from './task-link/task-link.component';
 import { SubmitDialogComponent } from './submit-dialog/submit-dialog.component';
+import { SubmissionFieldComponent } from './submission-field/submission-field.component';
+import { SubmissionDialogComponent } from './submission-dialog/submission-dialog.component';
 
 @NgModule({
   declarations: [
@@ -23,6 +25,8 @@ import { SubmitDialogComponent } from './submit-dialog/submit-dialog.component';
     TaskMainComponent,
     TaskLinkComponent,
     SubmitDialogComponent,
+    SubmissionFieldComponent,
+    SubmissionDialogComponent,
   ],
   imports: [
     BrowserModule,
@@ -33,6 +37,10 @@ import { SubmitDialogComponent } from './submit-dialog/submit-dialog.component';
   ],
   providers: [],
   bootstrap: [AppComponent],
-  entryComponents: [SubmissionsDialogComponent],
+  entryComponents: [
+    SubmissionsDialogComponent,
+    SubmissionDialogComponent,
+    SubmitDialogComponent,
+  ],
 })
 export class AppModule { }
