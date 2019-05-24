@@ -13,7 +13,10 @@ import { TaskMainComponent } from './task-main/task-main.component';
 import { TaskLinkComponent } from './task-link/task-link.component';
 import { SubmitDialogComponent } from './submit-dialog/submit-dialog.component';
 import { SubmissionFieldComponent } from './submission-field/submission-field.component';
-import { SubmissionDialogComponent } from './submission-dialog/submission-dialog.component';
+import { EvaluationLiveDialogComponent } from './evaluation-live-dialog/evaluation-live-dialog.component';
+import { TableComponent } from './evaluation/table/table.component';
+import { NamedColumnHeaderComponent } from './evaluation/named-column-header/named-column-header.component';
+import { ScoreCellComponent } from './evaluation/score-cell/score-cell.component';
 
 @NgModule({
   declarations: [
@@ -26,7 +29,10 @@ import { SubmissionDialogComponent } from './submission-dialog/submission-dialog
     TaskLinkComponent,
     SubmitDialogComponent,
     SubmissionFieldComponent,
-    SubmissionDialogComponent,
+    EvaluationLiveDialogComponent,
+    TableComponent,
+    NamedColumnHeaderComponent,
+    ScoreCellComponent,
   ],
   imports: [
     BrowserModule,
@@ -39,8 +45,9 @@ import { SubmissionDialogComponent } from './submission-dialog/submission-dialog
   bootstrap: [AppComponent],
   entryComponents: [
     SubmissionsDialogComponent,
-    SubmissionDialogComponent,
+    EvaluationLiveDialogComponent,
     SubmitDialogComponent,
+    NamedColumnHeaderComponent,
   ],
 })
 export class AppModule { }

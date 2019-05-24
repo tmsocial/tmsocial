@@ -166,8 +166,8 @@ export const resolvers = {
     },
     Subscription: {
         evaluationEvents: {
-            async * subscribe(root: unknown, { evaluation_id }: { evaluation_id: string }) {
-                const evaluation = await evaluations.fromId(evaluation_id);
+            async * subscribe(root: unknown, { evaluationId }: { evaluationId: string }) {
+                const evaluation = await evaluations.fromId(evaluationId);
                 for await (const event of evaluation.event_stream()) {
                     yield {
                         evaluationEvents: event

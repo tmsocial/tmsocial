@@ -1,20 +1,20 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { SubmissionDialogComponent } from './submission-dialog.component';
+import { NamedColumnHeaderComponent } from './named-column-header.component';
 
-describe('SubmissionDialogComponent', () => {
-  let component: SubmissionDialogComponent;
-  let fixture: ComponentFixture<SubmissionDialogComponent>;
+describe('NamedColumnHeaderComponent', () => {
+  let component: NamedColumnHeaderComponent;
+  let fixture: ComponentFixture<NamedColumnHeaderComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ SubmissionDialogComponent ]
+      declarations: [ NamedColumnHeaderComponent ]
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(SubmissionDialogComponent);
+    fixture = TestBed.createComponent(NamedColumnHeaderComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

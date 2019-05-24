@@ -69,8 +69,8 @@ const client = new ApolloClient({
 });
 
 const evaluationEventsSubscription = gql`
-  subscription EvaluationEvents($evaluation_id: ID!) {
-    evaluationEvents(evaluation_id: $evaluation_id) {
+  subscription EvaluationEvents($evaluationId: ID!) {
+    evaluationEvents(evaluationId: $evaluationId) {
       json
     }
   }
@@ -156,7 +156,7 @@ const RelativeTimeView = ({ timestamp, ...props }: { timestamp: DateTime } & Rea
 
 class LiveEvaluationView extends React.Component<{
   metadata: TaskMetadata,
-  evaluation_id: string,
+  evaluationId: string,
   live: boolean,
 }, {
   done: boolean;
@@ -167,12 +167,12 @@ class LiveEvaluationView extends React.Component<{
   };
 
   render() {
-    const { metadata, evaluation_id, live } = this.props;
+    const { metadata, evaluationId, live } = this.props;
     const { done } = this.state;
     const { reducer } = this;
 
     return (
-      <Subscription fetchPolicy="network-only" subscription={evaluationEventsSubscription} variables={{ evaluation_id }} onSubscriptionData={(
+      <Subscription fetchPolicy="network-only" subscription={evaluationEventsSubscription} variables={{ evaluationId }} onSubscriptionData={(
         { subscriptionData: { data: { evaluation_events: { json } } } }
       ) => reducer.onEvent(JSON.parse(json))} onSubscriptionComplete={() => this.setState({ done: true })}>
         {() => (done || live) ? <EvaluationView metadata={metadata} reducer={reducer} /> : <p>Loading...</p>}
@@ -384,7 +384,7 @@ class App extends React.Component<{}, {
                                         </div>
                                         <div className="evaluation_modal_body">
                                           <LiveEvaluationView
-                                            evaluation_id={submission.scoredEvaluation.id}
+                                            evaluationId={submission.scoredEvaluation.id}
                                             metadata={metadata(task)}
                                             live={false}
                                           />
@@ -415,7 +415,7 @@ class App extends React.Component<{}, {
                                         </div>
                                         <div className="evaluation_modal_body">
                                           <LiveEvaluationView
-                                            evaluation_id={submitData.submit.scoredEvaluation.id}
+                                            evaluationId={submitData.submit.scoredEvaluation.id}
                                             metadata={metadata(task)}
                                             live={true}
                                           />

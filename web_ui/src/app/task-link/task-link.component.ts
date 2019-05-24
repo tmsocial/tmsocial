@@ -1,5 +1,6 @@
 import { Component, OnInit, Input, HostBinding, Output, EventEmitter } from '@angular/core';
 import { AppQuery } from '../__generated__/AppQuery';
+import { TaskMetadata } from 'src/metadata';
 
 @Component({
   selector: 'app-task-link',
@@ -19,7 +20,7 @@ export class TaskLinkComponent {
   @Output() selectedTaskParticipationChange = new EventEmitter();
 
   get task() { return this.taskParticipation.task; }
-  get taskMetadata() { return JSON.parse(this.task.metadataJson); }
+  get taskMetadata(): TaskMetadata { return JSON.parse(this.task.metadataJson); }
 
   click() {
     this.selectedTaskParticipationChange.emit(this.taskParticipation);

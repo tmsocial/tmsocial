@@ -3,7 +3,7 @@ import { SubmissionForm, TaskMetadata, SubmissionFileField } from 'src/metadata'
 import { SubmissionFile } from 'src/submission';
 import { AppQuery } from '../__generated__/AppQuery';
 import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { SubmissionDialogComponent } from '../submission-dialog/submission-dialog.component';
+import { EvaluationLiveDialogComponent } from '../evaluation-live-dialog/evaluation-live-dialog.component';
 import { Apollo } from 'apollo-angular';
 import gql from 'graphql-tag';
 import { SubmitMutation, SubmitMutationVariables } from './__generated__/SubmitMutation';
@@ -95,8 +95,9 @@ export class SubmitDialogComponent {
       }
 
       if (result.data) {
-        const modalRef = this.modal.open(SubmissionDialogComponent);
+        const modalRef = this.modal.open(EvaluationLiveDialogComponent);
         modalRef.componentInstance.submission = result.data.submit;
+        modalRef.componentInstance.taskParticipation = this.taskParticipation;
       }
     } catch (e) {
       console.error(e);
