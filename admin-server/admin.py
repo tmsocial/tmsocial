@@ -39,7 +39,7 @@ class RawFileView(FileAdmin):
 
     def __init__(self):
         super(RawFileView, self).__init__(
-            '/home/wil93/git/tmsocial/test_site/config',
+            app.config["FILES_PATH"],
             name='Files (use caution!)',
             endpoint='raw-files',
             menu_icon_type='glyph',
