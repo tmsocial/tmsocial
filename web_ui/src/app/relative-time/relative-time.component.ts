@@ -8,5 +8,5 @@ export class RelativeTimeComponent {
   constructor() { }
 
   @Input()
-  time: string;
+  time!: string;
 }

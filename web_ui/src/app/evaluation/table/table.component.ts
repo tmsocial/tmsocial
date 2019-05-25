@@ -1,6 +1,6 @@
-import { Component, ComponentFactory, Input } from '@angular/core';
+import { Component, Input } from '@angular/core';
+import { EvaluationReducer } from 'src/evaluation_process';
 import { Column, Table } from 'src/table';
-import { NamedColumnHeaderComponent } from '../named-column-header/named-column-header.component';
 
 @Component({
   selector: 'app-table',
@@ -14,43 +14,10 @@ export class TableComponent {
   @Input()
   table!: Table;
 
-  readonly columnInfo: {
-    [K in Column['type']]: {
-      header: any,
-    }
-  } = {
-      memory_usage: {
-        header: NamedColumnHeaderComponent,
-      },
-      message: {
-        header: NamedColumnHeaderComponent,
-      },
-      percentage: {
-        header: NamedColumnHeaderComponent,
-      },
-      return_code: {
-        header: NamedColumnHeaderComponent,
-      },
-      row_name: {
-        header: NamedColumnHeaderComponent,
-      },
-      row_number: {
-        header: NamedColumnHeaderComponent,
-      },
-      row_status: {
-        header: NamedColumnHeaderComponent,
-      },
-      score: {
-        header: NamedColumnHeaderComponent,
-      },
-      signal: {
-        header: NamedColumnHeaderComponent,
-      },
-      status: {
-        header: NamedColumnHeaderComponent,
-      },
-      time_usage: {
-        header: NamedColumnHeaderComponent,
-      },
-    };
+  @Input()
+  state!: EvaluationReducer;
+
+  columnTrackBy(column: Column, index: number) {
+    return index;
+  }
 }

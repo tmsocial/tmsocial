@@ -5,10 +5,10 @@ export interface ValueReference {
     ref: string;
 }
 
-export interface ConstantValue<T extends EvaluationValue> {
+export interface ConstantValue<T> {
     type: "constant";
     constant: T;
 }
 
-export type ValueExpression<T extends EvaluationValue> = ConstantValue<T> | ValueReference
+export type ValueExpression<T> = ConstantValue<T> | ValueReference
 

@@ -1,28 +1,40 @@
 import { EvaluationEvent, EvaluationValue } from "./evaluation";
 
-export interface EvaluationSummary {
-    readonly values: { readonly [key: string]: EvaluationValue };
+export interface EvaluationState {
+    readonly values: { readonly [key: string]: any };
     readonly textStreams: { readonly [stream: string]: StreamBuffer };
 }
 
-export class EvaluationReducer implements EvaluationSummary {
-    readonly values: { [key: string]: EvaluationValue } = {};
-    readonly textStreams: { [stream: string]: StreamBuffer } = {};
+export class EvaluationReducer implements EvaluationState {
+    private constructor(
+        readonly values: { [key: string]: any },
+        readonly textStreams: { [stream: string]: StreamBuffer },
+    ) { }
+
+    static initial() {
+        return new EvaluationReducer({}, {});
+    }
+
+    copy() {
+        return new EvaluationReducer(this.values, this.textStreams);
+    }
 
     onEvent(event: EvaluationEvent): void {
         switch (event.type) {
-            case "value":
-                if (this.values[event.key]) throw Error("Value already defined");
+            case 'value': {
+                if (this.values[event.key]) { throw Error('Value already defined') };
                 this.values[event.key] = event.value;
-                break;
-            case "text":
+                return;
+            }
+            case 'text': {
                 const stream = event.stream;
                 this.textStreams[stream] = this.textStreams[stream] || {
-                    buffer: "",
+                    buffer: '',
                 };
                 // FIXME: quadratic complexity? Maintain list of chunks and join on-demand?
                 this.textStreams[stream].buffer += event.text;
-                break;
+                return;
+            }
         }
     }
 }

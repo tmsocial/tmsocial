@@ -14,7 +14,7 @@
         <td>
           <app-relative-time [time]="submission.timestamp"></app-relative-time>
           <br />
-          <a href="#" onClick="">
+          <a href="#" (click)="openDetail(submission)">
             details
           </a>
         </td>

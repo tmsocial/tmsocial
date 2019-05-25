@@ -15,15 +15,21 @@
         <input type="hidden" [name]="field.id + '.type'" [value]="choices.recommendedType!.id" />
       </ng-container>
       <ng-container *ngSwitchCase="'manyRecommended'">
-        <label *ngFor="let type of choices.recommendedTypes!; trackBy: typeTrackBy" class="submission_file_type_suggested_option">
+        <label *ngFor="let type of choices.recommendedTypes!; trackBy: typeTrackBy"
+          class="submission_file_type_suggested_option">
           <input type="radio" [name]="field.id + '.type'" [value]="type.id" />
           {{ type.title | localize }}
         </label>
         (<a href="#" class="submission_file_type_more_options" (click)="moreTypes()">more...</a>)
       </ng-container>
       <select *ngSwitchCase="'custom'" [name]="field.id + '.type'" class="submission_file_type_select">
-        <option *ngFor="let type of choices.allTypes; trackBy: typeTrackBy" [value]="type.id">{{ type.title | localize }}</option>
+        <option *ngFor="let type of choices.allTypes; trackBy: typeTrackBy" [value]="type.id">
+          {{ type.title | localize }}</option>
       </select>
+    </dd>
+    <dt>Size:</dt>
+    <dd [ngSwitch]="choices.type">
+      {{ file.size | filesize }}
     </dd>
   </dl>
 </div>

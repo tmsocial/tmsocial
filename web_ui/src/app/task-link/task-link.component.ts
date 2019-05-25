@@ -1,6 +1,6 @@
-import { Component, OnInit, Input, HostBinding, Output, EventEmitter } from '@angular/core';
-import { AppQuery } from '../__generated__/AppQuery';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { TaskMetadata } from 'src/metadata';
+import { ParticipationQuery } from '../__generated__/ParticipationQuery';
 
 @Component({
   selector: 'app-task-link',
@@ -12,10 +12,10 @@ export class TaskLinkComponent {
   constructor() { }
 
   @Input()
-  taskParticipation!: AppQuery['participation']['taskParticipations'][number];
+  taskParticipation!: ParticipationQuery['participation']['taskParticipations'][number];
 
   @Input()
-  selectedTaskParticipation!: AppQuery['participation']['taskParticipations'][number];
+  selectedTaskParticipation!: ParticipationQuery['participation']['taskParticipations'][number];
 
   @Output() selectedTaskParticipationChange = new EventEmitter();
 

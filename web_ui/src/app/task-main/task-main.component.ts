@@ -1,10 +1,10 @@
-import { Component, Input, Output } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { TaskMetadata } from 'src/metadata';
 import { LocalizeService } from '../localize.service';
 import { SubmissionsDialogComponent } from '../submissions-dialog/submissions-dialog.component';
-import { AppQuery } from '../__generated__/AppQuery';
 import { SubmitDialogComponent } from '../submit-dialog/submit-dialog.component';
+import { ParticipationQuery } from '../__generated__/ParticipationQuery';
 
 @Component({
   selector: 'app-task-main',
@@ -19,10 +19,10 @@ export class TaskMainComponent {
   ) { }
 
   @Input()
-  user!: AppQuery['user'];
+  user!: ParticipationQuery['user'];
 
   @Input()
-  taskParticipation!: AppQuery['participation']['taskParticipations'][number];
+  taskParticipation!: ParticipationQuery['participation']['taskParticipations'][number];
 
   get task() { return this.taskParticipation.task; }
   get taskMetadata(): TaskMetadata { return JSON.parse(this.taskParticipation.task.metadataJson); }

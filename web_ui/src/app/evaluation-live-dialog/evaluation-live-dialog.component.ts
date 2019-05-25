@@ -1,28 +1,21 @@
-import { Component, Input, OnInit } from '@angular/core';
-import { SubmitMutation } from '../submit-dialog/__generated__/SubmitMutation';
-import { Apollo } from 'apollo-angular';
+import { Component, Input } from '@angular/core';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
-import { EvaluationEvent } from 'src/evaluation';
-import gql from 'graphql-tag';
-import { EvaluationEventsSubscription } from './__generated__/EvaluationEventsSubscription';
-import { EvaluationEventsVariables } from 'src/__generated__/EvaluationEvents';
-import { AppQuery } from '../__generated__/AppQuery';
+import { EvaluationReducer } from 'src/evaluation_process';
 import { TaskMetadata } from 'src/metadata';
 import { EvaluationSection } from 'src/section';
-import { TableView } from 'src/evaluation_table_view';
 import { TableComponent } from '../evaluation/table/table.component';
+import { ParticipationQuery } from '../__generated__/ParticipationQuery';
+import { SubmitMutation } from '../__generated__/SubmitMutation';
 
 @Component({
   selector: 'app-evaluation-live-dialog',
   templateUrl: './evaluation-live-dialog.component.html',
   styleUrls: ['./evaluation-live-dialog.component.scss']
 })
-export class EvaluationLiveDialogComponent implements OnInit {
+export class EvaluationLiveDialogComponent {
 
   constructor(
-    private apollo: Apollo,
     private activeModal: NgbActiveModal,
   ) { }
 
@@ -30,43 +23,33 @@ export class EvaluationLiveDialogComponent implements OnInit {
   submission!: SubmitMutation['submit'];
 
   @Input()
-  taskParticipation!: AppQuery['participation']['taskParticipations'][number];
+  taskParticipation!: ParticipationQuery['participation']['taskParticipations'][number];
 
-  evaluationEvents!: Observable<EvaluationEvent>;
+  evaluationStateObservable!: Observable<EvaluationReducer>;
 
   get task() { return this.taskParticipation.task; }
-  get taskMetadata(): TaskMetadata { return JSON.parse(this.task.metadataJson); }
+
+  taskMetadataCache?: TaskMetadata;
+  get taskMetadata(): TaskMetadata {
+    if (this.taskMetadataCache === undefined) {
+      this.taskMetadataCache = JSON.parse(this.task.metadataJson);
+      return this.taskMetadata;
+    }
+    return this.taskMetadataCache;
+  }
 
   sectionInfo: {
     [K in EvaluationSection['type']]: {
       component: any
     }
   } = {
-    table: {
-      component: TableComponent,
-    },
-    text_stream: {
-      component: null,
-    },
-  }
-
-  ngOnInit() {
-    this.apollo.subscribe<EvaluationEventsSubscription, EvaluationEventsVariables>({
-      query: gql`
-        subscription EvaluationEventsSubscription($evaluationId: ID!) {
-          evaluationEvents(evaluationId: $evaluationId) {
-            json
-          }
-        }
-      `,
-      variables: {
-        evaluationId: this.submission.scoredEvaluation.id,
+      table: {
+        component: TableComponent,
       },
-    }).pipe(
-      map(e => e as EvaluationEventsSubscription),
-      map(e => JSON.parse(e.evaluationEvents.json)),
-    );
-  }
+      text_stream: {
+        component: null,
+      },
+    };
 
   close() {
     this.activeModal.close();

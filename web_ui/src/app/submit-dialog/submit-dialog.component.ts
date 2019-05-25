@@ -1,14 +1,20 @@
-import { Component, OnInit, Input } from '@angular/core';
-import { SubmissionForm, TaskMetadata, SubmissionFileField } from 'src/metadata';
-import { SubmissionFile } from 'src/submission';
-import { AppQuery } from '../__generated__/AppQuery';
+import { Component, Input } from '@angular/core';
 import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { EvaluationLiveDialogComponent } from '../evaluation-live-dialog/evaluation-live-dialog.component';
-import { Apollo } from 'apollo-angular';
-import gql from 'graphql-tag';
-import { SubmitMutation, SubmitMutationVariables } from './__generated__/SubmitMutation';
 import { FetchResult } from 'apollo-link';
+import gql from 'graphql-tag';
 import { Observable } from 'rxjs';
+import { filter, map, scan } from 'rxjs/operators';
+import { EvaluationEvent } from 'src/evaluation';
+import { EvaluationReducer } from 'src/evaluation_process';
+import { SubmissionFileField, TaskMetadata } from 'src/metadata';
+import { SubmissionFile } from 'src/submission';
+import { EvaluationEventsVariables } from 'src/__generated__/EvaluationEvents';
+import { EvaluationEventSubscriptionService } from '../evaluation-event-subscription.service';
+import { EvaluationLiveDialogComponent } from '../evaluation-live-dialog/evaluation-live-dialog.component';
+import { EvaluationEventsSubscription } from '../evaluation-live-dialog/__generated__/EvaluationEventsSubscription';
+import { SubmitMutationService } from '../submit-mutation.service';
+import { ParticipationQuery } from '../__generated__/ParticipationQuery';
+import { EvaluationObserverService } from '../evaluation-observer.service';
 
 @Component({
   selector: 'app-submit-dialog',
@@ -20,16 +26,17 @@ export class SubmitDialogComponent {
   constructor(
     private activeModal: NgbActiveModal,
     private modal: NgbModal,
-    private apollo: Apollo,
+    private submitMutationService: SubmitMutationService,
+    private evaluationObserverService: EvaluationObserverService,
   ) { }
 
   @Input()
-  taskParticipation!: AppQuery['participation']['taskParticipations'][number];
+  taskParticipation!: ParticipationQuery['participation']['taskParticipations'][number];
 
   @Input()
-  user!: AppQuery['user'];
+  user!: ParticipationQuery['user'];
 
-  submission: Observable<FetchResult<SubmitMutation>> | null = null;
+  submitting = false;
 
   get task() { return this.taskParticipation.task; }
   get taskMetadata(): TaskMetadata { return JSON.parse(this.task.metadataJson); }
@@ -57,53 +64,43 @@ export class SubmitDialogComponent {
 
 
   async submit(event: Event) {
-    const data = new FormData(event.target as HTMLFormElement);
+    const formData = new FormData(event.target as HTMLFormElement);
 
-    if (this.submission) {
+    if (this.submitting) {
       return;
     }
+    this.submitting = true;
 
-    try {
-      const files = await Promise.all(this.taskMetadata.submission_form.fields.map<Promise<SubmissionFile>>(async (field, i) => ({
-        field: field.id,
-        type: data.get(`${field.id}.type`) as string,
-        contentBase64: await this.toBase64(data.get(`${field.id}.file`) as File),
-      })));
+    const files = await Promise.all(this.taskMetadata.submission_form.fields.map<Promise<SubmissionFile>>(async (field, i) => ({
+      field: field.id,
+      type: formData.get(`${field.id}.type`) as string,
+      contentBase64: await this.toBase64(formData.get(`${field.id}.file`) as File),
+    })));
 
-      this.submission = this.apollo.mutate<SubmitMutation, SubmitMutationVariables>({
-        mutation: gql`
-          mutation SubmitMutation($taskId: ID!, $userId: ID!, $files: [SubmissionFileInput!]!) {
-            submit(taskId: $taskId, userId: $userId, files: $files) {
-              id
-              scoredEvaluation {
-                id
-              }
-            }
-          }
-        `,
-        variables: {
-          taskId: this.task.id,
-          userId: this.user.id,
-          files,
-        },
-      });
+    const result = await this.submitMutationService.mutate({
+      taskId: this.task.id,
+      userId: this.user.id,
+      files,
+    }).toPromise();
 
-      const result = await this.submission.toPromise();
+    const data = result.data;
 
-      if (result.errors) {
-        console.error(result.errors);
-      }
-
-      if (result.data) {
-        const modalRef = this.modal.open(EvaluationLiveDialogComponent);
-        modalRef.componentInstance.submission = result.data.submit;
-        modalRef.componentInstance.taskParticipation = this.taskParticipation;
-      }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      this.activeModal.close();
+    if (!data || result.errors) {
+      throw new Error('error in submit');
     }
+
+    const submission = data.submit;
+
+    const modalRef = this.modal.open(EvaluationLiveDialogComponent);
+    const modal = modalRef.componentInstance as EvaluationLiveDialogComponent;
+
+    modal.submission = submission;
+    modal.taskParticipation = this.taskParticipation;
+    modal.evaluationStateObservable = this.evaluationObserverService.observe({
+      evaluationId: submission.scoredEvaluation.id,
+    });
+
+    this.activeModal.close();
   }
 }
 

@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
-import { Apollo } from 'apollo-angular';
-import gql from 'graphql-tag';
-import { AppQuery } from './__generated__/AppQuery';
+import { ParticipationQueryService } from './participation-query.service';
+import { ParticipationQuery } from './__generated__/ParticipationQuery';
+import { NgbModalConfig } from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
   selector: 'app-root',
@@ -10,51 +10,20 @@ import { AppQuery } from './__generated__/AppQuery';
 })
 export class AppComponent {
   constructor(
-    private apollo: Apollo,
-  ) { }
+    private participationQueryService: ParticipationQueryService,
+    modalConfig: NgbModalConfig,
+  ) {
+    Object.assign(modalConfig, {
+      size: 'lg',
+    });
+  }
 
   userId = 'site1/user1';
   contestId = 'site1/contest1';
-  selectedTaskParticipation: AppQuery['participation']['taskParticipations'] | null = null;
+  selectedTaskParticipation: ParticipationQuery['participation']['taskParticipations'] | null = null;
 
-  queryRef = this.apollo.watchQuery<AppQuery>({
-    query: gql`
-      query AppQuery($userId: ID!, $contestId: ID!) {
-        user(id: $userId) {
-          id
-          displayName
-        }
-
-        contest(id: $contestId) {
-          id
-        }
-
-        participation(userId: $userId, contestId: $contestId) {
-          taskParticipations {
-            task {
-              id
-              metadataJson
-            }
-            scores {
-              key
-              score
-            }
-            submissions(query: { last: 5 }) {
-              id
-              cursor
-              timestamp
-              scores {
-                key
-                score
-              }
-              scoredEvaluation {
-                id
-              }
-            }
-          }
-        }
-      }
-    `,
-    variables: { userId: this.userId, contestId: this.contestId },
+  queryRef = this.participationQueryService.watch({
+    userId: this.userId,
+    contestId: this.contestId,
   });
 }

@@ -16,7 +16,7 @@ export const EvaluationView = ({ metadata, reducer }: { metadata: TaskMetadata, 
     <React.Fragment>
         {metadata.evaluation_sections.map((section, i) => (
             React.createElement(sectionViews[section.type], {
-                section, summary: reducer
+                section, state: reducer
             })
         ))}
     </React.Fragment>

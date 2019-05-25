@@ -1,6 +1,6 @@
 import * as React from "react";
 import { EvaluationValue, MemoryUsage, TimeUsage, Fraction, Status, Message } from "./evaluation";
-import { EvaluationSummary } from "./evaluation_process";
+import { EvaluationState } from "./evaluation_process";
 import { EvaluationSection } from "./section";
 import { evaluateExpression } from "./section_view";
 import { Cell, Column, MemoryUsageColumn, PercentageColumn, RowGroup, RowNameCell, RowNameColumn, RowNumberCell, RowNumberColumn, ScoreCell, ScoreColumn, Table, TimeUsageColumn, ValueCell, StatusColumn, MessageColumn, NamedColumn, RowStatusColumn } from "./table";
@@ -8,7 +8,7 @@ import { localize } from "./l10n";
 
 export interface EvaluationSectionViewProps<T extends EvaluationSection> {
     section: T,
-    summary: EvaluationSummary,
+    state: EvaluationState,
 }
 
 interface ColumnViewProps<T> {
@@ -17,7 +17,7 @@ interface ColumnViewProps<T> {
 
 interface CellViewProps<T extends Column, U extends Cell> extends ColumnViewProps<T> {
     cell: U;
-    summary: EvaluationSummary;
+    state: EvaluationState;
 }
 
 const wrapValue = <T extends EvaluationValue, U>(value: T | null, mapper: (value: T) => U): U | null => (
@@ -40,41 +40,41 @@ const RowNumberCellView = ({ cell }: CellViewProps<RowNumberColumn, RowNumberCel
     <th className="row_number_cell" scope="row">{cell.number}</th>
 )
 
-const StatusCellView = ({ cell, summary }: CellViewProps<StatusColumn, ValueCell<Status>>) => (
+const StatusCellView = ({ cell, state }: CellViewProps<StatusColumn, ValueCell<Status>>) => (
     <td className="status_cell">
-        {wrapValue(evaluateExpression(summary, cell.value), v => (
+        {wrapValue(evaluateExpression(state, cell.value), v => (
             <React.Fragment>{v.status}</React.Fragment>
         ))}
     </td>
 )
 
-const MessageCellView = ({ cell, summary }: CellViewProps<MessageColumn, ValueCell<Message>>) => (
+const MessageCellView = ({ cell, state }: CellViewProps<MessageColumn, ValueCell<Message>>) => (
     <td className="message_cell">
-        {wrapValue(evaluateExpression(summary, cell.value), v => (
+        {wrapValue(evaluateExpression(state, cell.value), v => (
             <React.Fragment>{localize(v.message)}</React.Fragment>
         ))}
     </td>
 )
 
-const TimeUsageCellView = ({ cell, summary }: CellViewProps<TimeUsageColumn, ValueCell<TimeUsage>>) => (
+const TimeUsageCellView = ({ cell, state }: CellViewProps<TimeUsageColumn, ValueCell<TimeUsage>>) => (
     <td className="time_usage_cell">
-        {wrapValue(evaluateExpression(summary, cell.value), v => (
+        {wrapValue(evaluateExpression(state, cell.value), v => (
             <React.Fragment>{v.time_usage_seconds.toFixed(3)} s</React.Fragment>
         ))}
     </td>
 )
 
-const MemoryUsageCellView = ({ cell, summary }: CellViewProps<MemoryUsageColumn, ValueCell<MemoryUsage>>) => (
+const MemoryUsageCellView = ({ cell, state }: CellViewProps<MemoryUsageColumn, ValueCell<MemoryUsage>>) => (
     <td className="memory_usage_cell">
-        {wrapValue(evaluateExpression(summary, cell.value), v => (
+        {wrapValue(evaluateExpression(state, cell.value), v => (
             <React.Fragment>{(v.memory_usage_bytes / 1e3).toFixed()} KB</React.Fragment>
         ))}
     </td>
 )
 
-const ScoreCellView = ({ column, cell, summary }: CellViewProps<ScoreColumn, ScoreCell>) => (
+const ScoreCellView = ({ column, cell, state }: CellViewProps<ScoreColumn, ScoreCell>) => (
     <td className="score_cell">
-        {wrapValue(evaluateExpression(summary, cell.value), v => (
+        {wrapValue(evaluateExpression(state, cell.value), v => (
             <React.Fragment>{v.score.toFixed("score_precision" in column ? column.score_precision : 0)}</React.Fragment>
         ))}{
             "max_score" in cell
@@ -92,20 +92,20 @@ const ScoreCellView = ({ column, cell, summary }: CellViewProps<ScoreColumn, Sco
     </td>
 )
 
-const DummyCellView = ({ column, cell, summary }: CellViewProps<Column, Cell>) => (
+const DummyCellView = ({ column, cell, state }: CellViewProps<Column, Cell>) => (
     <td>?</td>
 )
 
-const PercentageCellView = ({ column, cell, summary }: CellViewProps<PercentageColumn, ValueCell<Fraction>>) => (
+const PercentageCellView = ({ column, cell, state }: CellViewProps<PercentageColumn, ValueCell<Fraction>>) => (
     <td className="percentage_cell">
-        {wrapValue(evaluateExpression(summary, cell.value), v => (
+        {wrapValue(evaluateExpression(state, cell.value), v => (
             <React.Fragment>{(v.fraction * 100).toFixed(column.precision || 0)}%</React.Fragment>
         ))}
     </td>
 )
 
-const RowStatusClasses = ({ summary, cell }: CellViewProps<RowStatusColumn, ValueCell<Status>>) => {
-    const value = evaluateExpression(summary, cell.value);
+const RowStatusClasses = ({ state, cell }: CellViewProps<RowStatusColumn, ValueCell<Status>>) => {
+    const value = evaluateExpression(state, cell.value);
     if (value !== null) return ["row_status", value.status];
     else return ["row_status"];
 }
@@ -145,7 +145,7 @@ const GroupHeaderView = ({ section, group }: { section: Table, group: RowGroup }
     </React.Fragment>
 )
 
-export const TableView = ({ section, summary }: EvaluationSectionViewProps<Table>) => (
+export const TableView = ({ section, state }: EvaluationSectionViewProps<Table>) => (
     <table className="evaluation_table">
         {section.groups.map((group, i) => (
             <tbody key={i} className="evaluation_group">
@@ -153,10 +153,10 @@ export const TableView = ({ section, summary }: EvaluationSectionViewProps<Table
                 {group.rows.map((row, j) => (
                     <tr key={j} className={["evaluation_row", ...row.cells.map((cell, k) => {
                         const row_classes = columnViews[section.columns[k].type].row_classes;
-                        return row_classes && row_classes({ column: section.columns[k], cell, summary }).join(" ");
+                        return row_classes && row_classes({ column: section.columns[k], cell, state }).join(" ");
                     }).filter(c => c)].join(" ")}>
                         {row.cells.map((cell, k) => (
-                            React.createElement(columnViews[section.columns[k].type].cell, { key: k, column: section.columns[k], cell, summary })
+                            React.createElement(columnViews[section.columns[k].type].cell, { key: k, column: section.columns[k], cell, state })
                         ))}
                     </tr>
                 ))}
