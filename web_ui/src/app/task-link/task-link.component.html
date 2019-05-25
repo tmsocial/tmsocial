@@ -1,4 +1,4 @@
-<a href="#" class="task_link" (click)="click()">
+<a href="#" class="task_link" [class.active]="active" (click)="click()">
   <span class="task_short_title">{{ taskMetadata.title | localize }}</span>
   <span class="task_score_badge score" [class.score_zero]="scoreInfo.score <= 0"
     [class.score_partial]="0 < scoreInfo.score && scoreInfo.score < scoreInfo.maxScore"

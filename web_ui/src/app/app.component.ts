@@ -4,7 +4,7 @@ import { ParticipationQuery } from './__generated__/ParticipationQuery';
 import { NgbModalConfig } from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
-  selector: 'app-root',
+  selector: '#app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })

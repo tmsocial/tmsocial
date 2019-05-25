@@ -8,7 +8,7 @@ import { ParticipationQuery, ParticipationQueryVariables } from '../__generated_
 import { QueryRef } from 'apollo-angular';
 
 @Component({
-  selector: 'app-task-main',
+  selector: '.task_main',
   templateUrl: './task-main.component.html',
   styleUrls: ['./task-main.component.scss']
 })

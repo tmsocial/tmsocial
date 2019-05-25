@@ -3,7 +3,7 @@ import { TaskMetadata } from 'src/metadata';
 import { ParticipationQuery } from '../__generated__/ParticipationQuery';
 
 @Component({
-  selector: 'app-task-link',
+  selector: '.task_list_item',
   templateUrl: './task-link.component.html',
   styleUrls: ['./task-link.component.scss']
 })
@@ -29,6 +29,8 @@ export class TaskLinkComponent {
       precision: this.taskMetadata.scorables.map(s => s.precision || 0).reduce((a, b) => Math.max(a, b)),
     };
   }
+
+  get active() { return this.selectedTaskParticipation && this.selectedTaskParticipation.task.id === this.taskParticipation.task.id; }
 
   click() {
     this.selectedTaskParticipationChange.emit(this.taskParticipation);
