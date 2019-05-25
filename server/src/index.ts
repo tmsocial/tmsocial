@@ -19,6 +19,14 @@ const apollo = new ApolloServer({
       return { token: connectionParams.token };
     }
   },
+  formatResponse: (response: any) => {
+    // https://github.com/apollographql/apollo-server/issues/1433#issuecomment-410330808
+    try {
+      JSON.stringify(response);
+    } catch (e) {
+      response.errors = `Non JSON-serializable errors: ${response.errors}`;
+    }
+  },
   context: ({ req }) => {
     if (req) {
       const token = req.headers.authorization || '';
