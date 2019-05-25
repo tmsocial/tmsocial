@@ -25,5 +25,7 @@ export class AppComponent {
   queryRef = this.participationQueryService.watch({
     userId: this.userId,
     contestId: this.contestId,
+  }, {
+    pollInterval: 10000,
   });
 }

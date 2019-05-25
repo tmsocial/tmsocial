@@ -22,6 +22,14 @@ export class TaskLinkComponent {
   get task() { return this.taskParticipation.task; }
   get taskMetadata(): TaskMetadata { return JSON.parse(this.task.metadataJson); }
 
+  get scoreInfo(): ScoreInfo {
+    return {
+      score: this.taskParticipation.scores.map(s => s.score).reduce((a, b) => a + b, 0),
+      maxScore: this.taskMetadata.scorables.map(s => s.max_score).reduce((a, b) => a + b, 0),
+      precision: this.taskMetadata.scorables.map(s => s.precision || 0).reduce((a, b) => Math.max(a, b)),
+    };
+  }
+
   click() {
     this.selectedTaskParticipationChange.emit(this.taskParticipation);
   }

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { SubscriptionResult } from 'apollo-angular';
-import { debounceTime, filter, map, scan, tap, auditTime, exhaust, throttleTime } from 'rxjs/operators';
+import { debounceTime, filter, map, scan, tap, auditTime, exhaust, throttleTime, shareReplay } from 'rxjs/operators';
 import { EvaluationEvent } from 'src/evaluation';
 import { EvaluationReducer } from 'src/evaluation_process';
 import { EvaluationEventSubscriptionService } from './evaluation-event-subscription.service';
@@ -26,6 +26,7 @@ export class EvaluationObserverService {
       }, EvaluationReducer.initial()),
       throttleTime(100, undefined, { trailing: true }),
       map(s => s.copy()), // make sure components notice it has changed
+      shareReplay(1),
     );
   }
 }

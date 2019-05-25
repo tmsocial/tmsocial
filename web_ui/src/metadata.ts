@@ -41,6 +41,7 @@ export interface TaskScorable {
     key: string
     title: Localized<string>
     max_score: number
+    precision: number
 }
 
 export interface TaskMetadata {

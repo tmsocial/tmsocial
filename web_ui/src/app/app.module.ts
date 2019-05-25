@@ -18,7 +18,7 @@ import { SubmissionsDialogComponent } from './submissions-dialog/submissions-dia
 import { SubmitDialogComponent } from './submit-dialog/submit-dialog.component';
 import { TaskLinkComponent } from './task-link/task-link.component';
 import { TaskMainComponent } from './task-main/task-main.component';
- 
+
 @NgModule({
   declarations: [
     AppComponent,
