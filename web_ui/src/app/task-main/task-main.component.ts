@@ -38,12 +38,14 @@ export class TaskMainComponent {
 
   openSubmissions() {
     const modalRef = this.modal.open(SubmissionsDialogComponent);
+    modalRef.componentInstance.queryRef = this.queryRef;
     modalRef.componentInstance.taskParticipation = this.taskParticipation;
     modalRef.componentInstance.user = this.user;
   }
 
   async openSubmitDialog() {
     const modalRef = this.modal.open(SubmitDialogComponent);
+    modalRef.componentInstance.queryRef = this.queryRef;
     modalRef.componentInstance.taskParticipation = this.taskParticipation;
     modalRef.componentInstance.user = this.user;
 

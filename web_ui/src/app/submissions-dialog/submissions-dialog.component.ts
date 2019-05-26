@@ -1,8 +1,11 @@
 import { Component, Input } from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { ParticipationQuery } from '../__generated__/ParticipationQuery';
+import { QueryRef } from 'apollo-angular';
+import { MoreSubmissions } from 'src/__generated__/MoreSubmissions';
 import { EvaluationLiveDialogComponent } from '../evaluation-live-dialog/evaluation-live-dialog.component';
 import { EvaluationObserverService } from '../evaluation-observer.service';
+import { MoreSubmissionsQueryService } from '../more-submissions-query.service';
+import { ParticipationQuery } from '../__generated__/ParticipationQuery';
 
 @Component({
   selector: 'app-submissions-dialog',
@@ -14,7 +17,14 @@ export class SubmissionsDialogComponent {
   constructor(
     private modal: NgbModal,
     private evaluationObserverService: EvaluationObserverService,
+    private moreSubmissionsQueryService: MoreSubmissionsQueryService,
   ) { }
+
+  @Input()
+  queryRef!: QueryRef<ParticipationQuery>;
+
+  @Input()
+  user!: ParticipationQuery['user'];
 
   @Input()
   taskParticipation!: ParticipationQuery['participation']['taskParticipations'][number];
@@ -34,4 +44,29 @@ export class SubmissionsDialogComponent {
     });
   }
 
+  async loadMore() {
+    const fetchMoreResult = await this.moreSubmissionsQueryService.fetch({
+      userId: this.user.id,
+      taskId: this.taskParticipation.task.id,
+      before: this.submissions[0].cursor,
+    }, {
+        fetchPolicy: 'network-only',
+      }).toPromise();
+
+    this.queryRef.updateQuery((previousResult: ParticipationQuery) => ({
+      ...previousResult,
+      participation: {
+        ...previousResult.participation,
+        taskParticipations: previousResult.participation.taskParticipations.map(p => (
+          p.task.id === this.taskParticipation.task.id ? {
+            ...p,
+            submissions: [
+              ...fetchMoreResult.data.taskParticipation.submissions,
+              ...p.submissions,
+            ],
+          } : p
+        )),
+      },
+    }));
+  }
 }
