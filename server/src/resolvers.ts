@@ -8,6 +8,8 @@ import { join } from "path";
 import { Tail } from "tail";
 import { config } from './index';
 import { IdParts, PathManager } from "./nodes";
+import { fromEvent } from "rxjs";
+import { bufferTime, takeUntil, map, takeWhile, tap } from "rxjs/operators";
 
 let metadataCache: {
     [id: string]: string
@@ -309,8 +311,10 @@ const evaluations = new NodeManager(
         submission: () => submissions.fromIdParts({ site, contest, user, task, submission }),
         async events() {
             const events = [];
-            for await (const e of this.event_stream()) {
-                events.push(e);
+            for await (const chunk of this.event_stream()) {
+                for (const e of chunk) {
+                    events.push(e);
+                }
             }
             return events;
         },
@@ -322,23 +326,31 @@ const evaluations = new NodeManager(
             // Tail extends EventEmitter but it is not typed as such in @types/tail :(
 
             const pubSub = new PubSub();
-            const listener = (line: string) => pubSub.publish("line", line);
 
-            tail.on("line", listener);
+            const bufferTimeSpan = 100;
+            const bufferMaxSize = 100;
+
+            const subscription = fromEvent<string>(tail, 'line').pipe(
+                takeWhile(json => JSON.parse(json).type !== 'end'),
+                map(json => ({ json })),
+                bufferTime(bufferTimeSpan, undefined, bufferMaxSize),
+                tap((events) => console.log(events)),
+            ).subscribe({
+                next: (events) => pubSub.publish("events", events),
+                complete: () => pubSub.publish("events", "complete")
+            })
+
             try {
-                const iterator = pubSub.asyncIterator<string>("line");
+                const iterator = pubSub.asyncIterator<'complete' | { json: string }[]>("events");
                 while (true) {
-                    const { value: line } = await iterator.next();
-                    const event = JSON.parse(line);
-                    if (event.type === "end") {
-                        iterator.return!();
-                        break;
-                    }
-                    yield { json: JSON.stringify(event) };
+                    const { value } = await iterator.next();
+                    console.log(value);
+                    if (value === 'complete') { break; }
+                    yield value;
                 }
             } finally {
-                tail.off("line", listener);
                 tail.unwatch();
+                subscription.unsubscribe();
             }
         },
         async scores() {

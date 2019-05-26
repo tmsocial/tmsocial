@@ -1,11 +1,12 @@
 import { Injectable } from '@angular/core';
 import { SubscriptionResult } from 'apollo-angular';
-import { debounceTime, filter, map, scan, tap, auditTime, exhaust, throttleTime, shareReplay } from 'rxjs/operators';
+import { debounceTime, filter, map, scan, tap, auditTime, exhaust, throttleTime, shareReplay, flatMap, concatMap } from 'rxjs/operators';
 import { EvaluationEvent } from 'src/evaluation';
 import { EvaluationReducer } from 'src/evaluation-process';
 import { EvaluationEventSubscriptionService } from './evaluation-event-subscription.service';
 import { EvaluationEventsSubscription } from './submit-dialog/__generated__/EvaluationEventsSubscription';
 import { EvaluationEventSubscriptionVariables } from './__generated__/EvaluationEventSubscription';
+import { from } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -18,10 +19,10 @@ export class EvaluationObserverService {
 
   observe(variables: EvaluationEventSubscriptionVariables) {
     return this.evaluationEventSubscriptionService.subscribe(variables).pipe(
-      scan((state, result) => {
-        if (result.data !== undefined) {
-          state.onEvent(JSON.parse(result.data.evaluationEvents.json));
-        }
+      map(result => result.data),
+      concatMap(data => from(data === undefined ? [] : data.evaluationEvents)),
+      scan((state, { json }) => {
+        state.onEvent(JSON.parse(json));
         return state;
       }, EvaluationReducer.initial()),
       throttleTime(100, undefined, { trailing: true }),

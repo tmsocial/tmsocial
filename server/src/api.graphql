@@ -100,7 +100,7 @@ type LoginResponse {
 }
 
 type Subscription {
-    evaluationEvents(evaluationId: ID!): EvaluationEvent!
+    evaluationEvents(evaluationId: ID!): [EvaluationEvent!]!
 }
 
 type EvaluationEvent {

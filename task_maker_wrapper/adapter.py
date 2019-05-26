@@ -10,11 +10,12 @@ def evaluate_submission(*, task_dir, files, evaluation_dir):
     stderr_file = os.path.join(evaluation_dir, "stderr.log")
     events_file = os.path.join(evaluation_dir, "events.jsonl")
     with open(events_file, "w") as out, open(stderr_file, "w") as stderr, open(events_file, "w") as stdout:
-        return_code = subprocess.check_call([
+        return_code = subprocess.call([
             TASK_MAKER_EXE,
             "--ui", "tmsocial",
             "--task-dir", task_dir,
             "--dry-run",
+            "--no-statement",
             "--no-sanity-checks",
             "--cache", "reevaluate",
             *files
