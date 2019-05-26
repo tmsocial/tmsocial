@@ -34,7 +34,7 @@ process.on('SIGINT', async () => {
 interface SubmissionFileInput {
     field: string
     type: string
-    content_base64: string
+    contentBase64: string
 }
 
 interface PageQueryInput {
@@ -50,23 +50,23 @@ class NodeManager<T> {
         /** contains how ID/paths are structured */
         readonly path: PathManager,
         /** construct an instance of type T from ID information */
-        readonly load: (node: { id: string, id_parts: IdParts, path: string, extra: any }) => T,
+        readonly load: (node: { id: string, idParts: IdParts, path: string, extra: any }) => T,
         /** loads any extra data to expose via GraphQL, loaded separately so it does not mess up with type inference */
-        readonly loadExtra: (node: { id: string, id_parts: IdParts, path: string }) => any = () => ({}),
+        readonly loadExtra: (node: { id: string, idParts: IdParts, path: string }) => any = () => ({}),
     ) { }
 
-    private async doLoad({ id, id_parts }: { id: string, id_parts: IdParts }) {
-        const path = this.path.buildPath(id_parts);
-        const extra = await this.loadExtra({ id, id_parts, path });
+    private async doLoad({ id, idParts }: { id: string, idParts: IdParts }) {
+        const path = this.path.buildPath(idParts);
+        const extra = await this.loadExtra({ id, idParts, path });
         return {
-            id, id_parts, path,
+            id, idParts, path,
             ...extra as {}, // for GraphQL default resolvers
-            ...await this.load({ id, id_parts, path, extra } || {}) as T,
+            ...await this.load({ id, idParts, path, extra } || {}) as T,
         };
     }
 
-    fromId(id: string) { return this.doLoad({ id, id_parts: this.path.parseId(id) }); }
-    fromIdParts(id_parts: IdParts) { return this.doLoad({ id: this.path.buildId(id_parts), id_parts }); }
+    fromId(id: string) { return this.doLoad({ id, idParts: this.path.parseId(id) }); }
+    fromIdParts(idParts: IdParts) { return this.doLoad({ id: this.path.buildId(idParts), idParts }); }
 }
 
 const loadDataOrConfig = async (root: string, path: string) => {
@@ -78,11 +78,11 @@ const loadDataOrConfig = async (root: string, path: string) => {
     }
 }
 
-const loadSiteConfig = async (path: string) => loadDataOrConfig(config.SITES_DIRECTORY, path);
-const loadData = async (path: string) => loadDataOrConfig(config.DATA_DIRECTORY, path);
+const loadSiteConfig = async (path: string) => loadDataOrConfig(config.sitesDir, path);
+const loadData = async (path: string) => loadDataOrConfig(config.dataDir, path);
 
 const checkSiteDirectoryExists = async (path: string) => {
-    readdirSync(join(config.SITES_DIRECTORY, path));
+    readdirSync(join(config.sitesDir, path));
 };
 
 const rootPath = new PathManager([]);
@@ -96,67 +96,67 @@ export const resolvers = {
         submission: (root: unknown, { id }: { id: string }) => submissions.fromId(id),
         evaluation: (root: unknown, { id }: { id: string }) => evaluations.fromId(id),
 
-        async participation(root: unknown, { user_id, contest_id }: { user_id: string, contest_id: string }) {
-            const { id_parts: { site: site1, user } } = await users.fromId(user_id);
-            const { id_parts: { site: site2, contest } } = await contests.fromId(contest_id);
+        async participation(root: unknown, { userId, contestId }: { userId: string, contestId: string }) {
+            const { idParts: { site: site1, user } } = await users.fromId(userId);
+            const { idParts: { site: site2, contest } } = await contests.fromId(contestId);
             const site = checkSameSite(site1, site2);
             return await participations.fromIdParts({ site, user, contest });
         },
-        async task_participation(root: unknown, { user_id, task_id }: { user_id: string, task_id: string }) {
-            const { id_parts: { site: site1, user } } = await users.fromId(user_id);
-            const { id_parts: { site: site2, contest, task } } = await tasks.fromId(task_id);
+        async taskParticipation(root: unknown, { userId, taskId }: { userId: string, taskId: string }) {
+            const { idParts: { site: site1, user } } = await users.fromId(userId);
+            const { idParts: { site: site2, contest, task } } = await tasks.fromId(taskId);
             const site = checkSameSite(site1, site2);
             return await taskParticipations.fromIdParts({ site, user, contest, task });
         },
 
     },
     Mutation: {
-        async login(root: unknown, { site_id, user, password }: { site_id: string, user: string, password: string }) {
-            console.log(await sites.fromId(site_id));
-            const { id_parts: { site } } = await sites.fromId(site_id);
+        async login(root: unknown, { siteId, user, password }: { siteId: string, user: string, password: string }) {
+            console.log(await sites.fromId(siteId));
+            const { idParts: { site } } = await sites.fromId(siteId);
             const userNode = await users.fromIdParts({ site, user });
-            const { id: user_id } = userNode;
+            const { id: userId } = userNode;
 
             console.log(`Logging on ${site} with username ${user} and password: ${password}`);
 
-            const token = jwt.sign({ user_id }, "SecretKey!");
+            const token = jwt.sign({ userId }, "SecretKey!");
             return { user: userNode, token };
         },
 
-        async submit(root: unknown, { task_id, user_id, files }: { task_id: string, user_id: string, files: SubmissionFileInput[] }) {
-            const { id_parts: { site: site1, contest, task } } = await tasks.fromId(task_id);
-            const { id_parts: { site: site2, user } } = await users.fromId(user_id);
+        async submit(root: unknown, { taskId, userId, files }: { taskId: string, userId: string, files: SubmissionFileInput[] }) {
+            const { idParts: { site: site1, contest, task } } = await tasks.fromId(taskId);
+            const { idParts: { site: site2, user } } = await users.fromId(userId);
 
             const site = checkSameSite(site1, site2);
 
             const submission = DateTime.utc().toISO();
             const submissionPath = submissions.path.buildPath({ site, contest, user, task, submission });
 
-            mkdirSync(join(config.DATA_DIRECTORY, submissionPath), { recursive: true });
+            mkdirSync(join(config.dataDir, submissionPath), { recursive: true });
             writeFileSync(
-                join(config.DATA_DIRECTORY, submissionPath, "data.json"),
+                join(config.dataDir, submissionPath, "data.json"),
                 JSON.stringify({
                     timestamp: submission,
                 }), { encoding: 'utf8' },
             )
 
-            mkdirSync(join(config.DATA_DIRECTORY, submissionPath, "files"), { recursive: true });
+            mkdirSync(join(config.dataDir, submissionPath, "files"), { recursive: true });
 
             const submittedFiles: string[] = [];
-            files.forEach(({ field, type, content_base64 }) => {
-                const file = join(config.DATA_DIRECTORY, submissionPath, 'files', `${field}.${type}`);
+            files.forEach(({ field, type, contentBase64 }) => {
+                const file = join(config.dataDir, submissionPath, 'files', `${field}.${type}`);
                 submittedFiles.push(file);
-                writeFileSync(file, Buffer.from(content_base64, 'base64'));
+                writeFileSync(file, Buffer.from(contentBase64, 'base64'));
             })
 
             const evaluation = DateTime.utc().toISO();
-            mkdirSync(join(config.DATA_DIRECTORY, submissionPath, 'evaluations', evaluation), { recursive: true });
-            writeFileSync(join(config.DATA_DIRECTORY, submissionPath, 'evaluations', evaluation, 'events.jsonl'), Buffer.from([]));
+            mkdirSync(join(config.dataDir, submissionPath, 'evaluations', evaluation), { recursive: true });
+            writeFileSync(join(config.dataDir, submissionPath, 'evaluations', evaluation, 'events.jsonl'), Buffer.from([]));
 
             const process = execFile("../task_maker_wrapper/cli.py", [
                 'evaluate',
-                '--task-dir', join(config.SITES_DIRECTORY, site, 'contests', contest, 'tasks', task),
-                '--evaluation-dir', join(config.DATA_DIRECTORY, submissionPath, 'evaluations', evaluation),
+                '--task-dir', join(config.sitesDir, site, 'contests', contest, 'tasks', task),
+                '--evaluation-dir', join(config.dataDir, submissionPath, 'evaluations', evaluation),
                 ...submittedFiles.flatMap(file => ["--file", file]),
             ]);
             process.unref();
@@ -165,12 +165,12 @@ export const resolvers = {
         },
     },
     Subscription: {
-        evaluation_events: {
-            async * subscribe(root: unknown, { evaluation_id }: { evaluation_id: string }) {
-                const evaluation = await evaluations.fromId(evaluation_id);
+        evaluationEvents: {
+            async * subscribe(root: unknown, { evaluationId }: { evaluationId: string }) {
+                const evaluation = await evaluations.fromId(evaluationId);
                 for await (const event of evaluation.event_stream()) {
                     yield {
-                        evaluation_events: event
+                        evaluationEvents: event
                     }
                 };
             },
@@ -182,10 +182,10 @@ const sites = new NodeManager(rootPath.appendId("site"), () => ({}));
 
 const users = new NodeManager(
     sites.path.appendPath("users").appendId("user"),
-    ({ id_parts: { site, user } }) => ({
+    ({ idParts: { site, user } }) => ({
         site: () => sites.fromIdParts({ site }),
-        async participation_in_contest({ contest_id }: { contest_id: string }) {
-            const { id_parts: { site: site2, contest } } = await contests.fromId(contest_id);
+        async participationInContest({ contestId }: { contestId: string }) {
+            const { idParts: { site: site2, contest } } = await contests.fromId(contestId);
             checkSameSite(site, site2);
             return await participations.fromIdParts({ site, contest, user });
         },
@@ -195,14 +195,14 @@ const users = new NodeManager(
 
 const contests = new NodeManager(
     sites.path.appendPath("contests").appendId("contest"),
-    ({ path, id_parts: { site, contest } }) => ({
+    ({ path, idParts: { site, contest } }) => ({
         site: () => sites.fromIdParts({ site }),
         async tasks() {
-            const dir = readdirSync(join(config.SITES_DIRECTORY, path, 'tasks'));
+            const dir = readdirSync(join(config.sitesDir, path, 'tasks'));
             return await Promise.all(dir.map(task => tasks.fromIdParts({ site, contest, task })));
         },
-        async participation_of_user({ user_id }: { user_id: string }) {
-            const { id_parts: { site: site2, user } } = await users.fromId(user_id);
+        async participationOfUser({ userId }: { userId: string }) {
+            const { idParts: { site: site2, user } } = await users.fromId(userId);
             checkSameSite(site, site2);
             return await participations.fromIdParts({ site, contest, user });
         },
@@ -212,15 +212,15 @@ const contests = new NodeManager(
 
 const tasks = new NodeManager(
     contests.path.appendPath("tasks").appendId("task"),
-    ({ path, id, id_parts: { site, contest } }) => ({
+    ({ path, id, idParts: { site, contest } }) => ({
         contest: () => contests.fromIdParts({ site, contest }),
-        metadata_json: async () => {
+        metadataJson: async () => {
             if (!(id in metadataCache)) {
                 console.log(`Generating metadata...`)
                 metadataCache[id] = await execFileSync("task-maker", [
                     '--ui', 'tmsocial',
                     '--task-info',
-                    '--task-dir', join(config.SITES_DIRECTORY, path)
+                    '--task-dir', join(config.sitesDir, path)
                 ], { encoding: 'utf8' });
                 console.log(`Metadata generated.`)
             }
@@ -232,12 +232,12 @@ const tasks = new NodeManager(
 
 const participations = new NodeManager(
     contests.path.appendPath("participations").appendId("user"),
-    ({ id_parts: { site, user, contest } }) => ({
+    ({ idParts: { site, user, contest } }) => ({
         user: () => users.fromIdParts({ site, user }),
         contest: () => contests.fromIdParts({ site, contest }),
-        async task_participations() {
+        async taskParticipations() {
             const { path } = await contests.fromIdParts({ site, contest });
-            const dir = readdirSync(join(config.SITES_DIRECTORY, path, 'tasks'));
+            const dir = readdirSync(join(config.sitesDir, path, 'tasks'));
             return await Promise.all(dir.map(task => taskParticipations.fromIdParts({ site, contest, user, task })));
         },
     })
@@ -245,14 +245,14 @@ const participations = new NodeManager(
 
 const taskParticipations = new NodeManager(
     participations.path.appendPath("tasks").appendId("task"),
-    ({ path, id_parts: { site, contest, user, task } }) => ({
+    ({ path, idParts: { site, contest, user, task } }) => ({
         user: () => users.fromIdParts({ site, user }),
         task: () => tasks.fromIdParts({ site, contest, task }),
         async submissions(
             { query: { before = "9999", after = "0000", last = 1e9, first = 1e9 } = {} }: { query?: PageQueryInput } = {}
         ) {
-            mkdirSync(join(config.DATA_DIRECTORY, path, 'submissions'), { recursive: true });
-            const dir = readdirSync(join(config.DATA_DIRECTORY, path, 'submissions')).sort();
+            mkdirSync(join(config.dataDir, path, 'submissions'), { recursive: true });
+            const dir = readdirSync(join(config.dataDir, path, 'submissions')).sort();
             return await Promise.all(
                 dir
                     .filter(submission => submission > after && submission < before)
@@ -270,7 +270,7 @@ const taskParticipations = new NodeManager(
             const submissions = await this.submissions();
 
             const task = await this.task();
-            const metadata = JSON.parse(await task.metadata_json()) as {
+            const metadata = JSON.parse(await task.metadataJson()) as {
                 scorables: {
                     key: string,
                 }[],
@@ -288,15 +288,15 @@ const taskParticipations = new NodeManager(
 
 const submissions = new NodeManager(
     taskParticipations.path.appendPath("submissions").appendId("submission"),
-    ({ path, id_parts: { site, contest, user, task, submission } }) => ({
-        task_participation: () => taskParticipations.fromIdParts({ site, contest, user, task }),
-        async official_evaluation() {
-            const dir = readdirSync(join(config.DATA_DIRECTORY, path, 'evaluations')).sort();
+    ({ path, idParts: { site, contest, user, task, submission } }) => ({
+        taskParticipation: () => taskParticipations.fromIdParts({ site, contest, user, task }),
+        async scoredEvaluation() {
+            const dir = readdirSync(join(config.dataDir, path, 'evaluations')).sort();
             const evaluation = dir[dir.length - 1];
             return await evaluations.fromIdParts({ site, contest, user, task, submission, evaluation });
         },
         async scores() {
-            const evaluation = await this.official_evaluation();
+            const evaluation = await this.scoredEvaluation();
             return await evaluation.scores();
         }
     }),
@@ -305,7 +305,7 @@ const submissions = new NodeManager(
 
 const evaluations = new NodeManager(
     submissions.path.appendPath("evaluations").appendId("evaluation"),
-    ({ path, id, id_parts: { site, contest, user, task, submission, evaluation } }) => ({
+    ({ path, id, idParts: { site, contest, user, task, submission, evaluation } }) => ({
         submission: () => submissions.fromIdParts({ site, contest, user, task, submission }),
         async events() {
             const events = [];
@@ -315,7 +315,7 @@ const evaluations = new NodeManager(
             return events;
         },
         async * event_stream() {
-            const tail = new Tail(join(config.DATA_DIRECTORY, path, "events.jsonl"), {
+            const tail = new Tail(join(config.dataDir, path, "events.jsonl"), {
                 encoding: 'utf-8',
                 fromBeginning: true,
             }) as Tail & EventEmitter;
@@ -344,9 +344,9 @@ const evaluations = new NodeManager(
         async scores() {
             if (!(id in scoresCache)) {
                 const submission = await this.submission();
-                const task_participation = await submission.task_participation();
-                const task = await task_participation.task();
-                const metadata = JSON.parse(await task.metadata_json()) as {
+                const taskParticipation = await submission.taskParticipation();
+                const task = await taskParticipation.task();
+                const metadata = JSON.parse(await task.metadataJson()) as {
                     scorables: {
                         key: string,
                     }[],

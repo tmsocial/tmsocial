@@ -1,0 +1,34 @@
+<ng-container *ngIf="queryRef.valueChanges | async as queryResult">
+  <ng-container *ngIf="queryResult.data as data">
+    <nav class="nav">
+      <h1 class="contest_title"><a href="#" (click)="$event.preventDefault()">{{data.contest.id}}</a></h1>
+      <span class="user_display_name">{{data.user.display_name}}</span>
+      <button class="logout">Logout</button>
+    </nav>
+    <div class="contest_main" *ngIf="data.participation as participation">
+      <nav class="contest_nav">
+        <h2>Score</h2>
+        <div class="contest_score_container">
+          <span class="contest_score_display">
+            <span class="contest_score">{{ 42 }}</span> /
+            <span class="contest_max_score">{{ 42 }}</span>
+          </span>
+        </div>
+        <h2>Remaining Time</h2>
+        <div class="contest_remaining_time">
+          02:49:53
+        </div>
+        <h2>Tasks</h2>
+        <ol class="contest_tasks_nav_container">
+          <li *ngFor="let taskParticipation of participation.taskParticipations" class="task_list_item"
+            [taskParticipation]="taskParticipation" [(selectedTaskParticipation)]="selectedTaskParticipation">
+          </li>
+        </ol>
+      </nav>
+      <main class="task_main" *ngIf="selectedTaskParticipation as taskParticipation" [taskParticipation]="taskParticipation"
+        [user]="data.user" [queryRef]="queryRef">
+      </main>
+    </div>
+  </ng-container>
+</ng-container>
+<router-outlet></router-outlet>

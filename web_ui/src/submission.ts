@@ -1,5 +1,5 @@
 export interface SubmissionFile {
     field: string;
     type: string;
-    content_base64: string;
+    contentBase64: string;
 }

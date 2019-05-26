@@ -1,0 +1,12 @@
+<a href="#" class="task_link" [class.active]="active" (click)="click()">
+  <span class="task_short_title">{{ taskMetadata.title | localize }}</span>
+  <span class="task_score_badge score" [class.score_zero]="scoreInfo.score <= 0"
+    [class.score_partial]="0 < scoreInfo.score && scoreInfo.score < scoreInfo.maxScore"
+    [class.score_full]="scoreInfo.maxScore <= scoreInfo.score">
+    <span class="task_score">
+      {{ scoreInfo.score.toFixed(scoreInfo.precision) }}
+    </span>/<span class="task_max_score">
+      {{ scoreInfo.maxScore.toFixed(scoreInfo.precision) }}
+    </span>
+  </span>
+</a>

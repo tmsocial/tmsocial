@@ -6,8 +6,8 @@ import { typeDefs } from './api-loader';
 import { resolvers } from './resolvers';
 
 export const config = {
-  SITES_DIRECTORY: '',
-  DATA_DIRECTORY: '',
+  sitesDir: '',
+  dataDir: '',
 };
 
 const apollo = new ApolloServer({
@@ -17,6 +17,14 @@ const apollo = new ApolloServer({
   subscriptions: {
     onConnect(connectionParams: any) {
       return { token: connectionParams.token };
+    }
+  },
+  formatResponse: (response: any) => {
+    // https://github.com/apollographql/apollo-server/issues/1433#issuecomment-410330808
+    try {
+      JSON.stringify(response);
+    } catch (e) {
+      response.errors = `Non JSON-serializable errors: ${response.errors}`;
     }
   },
   context: ({ req }) => {
@@ -65,8 +73,8 @@ let opts = require('yargs')
   .help()
   .argv;
 
-config.SITES_DIRECTORY = opts["sites-dir"];
-config.DATA_DIRECTORY = opts["data-dir"];
+config.sitesDir = opts["sites-dir"];
+config.dataDir = opts["data-dir"];
 
 server.listen({ host: opts.host, port: opts.port }, () => {
   console.log('🚀 Server ready at:');

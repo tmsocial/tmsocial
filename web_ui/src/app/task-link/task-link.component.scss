@@ -1,0 +1,24 @@
+@import "node_modules/bootstrap/scss/bootstrap";
+
+.task_link {
+    display: block;
+    text-transform: uppercase;
+    margin: 0 -16px;
+    padding: .5rem 16px; 
+}
+
+.task_link.active {
+    color: #fff;
+    background-color: #007bff;
+}
+
+.task_score_badge {
+    @extend .badge, .badge-pill;
+
+    margin-top: .2rem;
+    float: right;
+
+    &.score_full { @extend .badge-success; }
+    &.score_partial { @extend .badge-warning; }
+    &.score_zero { @extend .badge-danger; }
+}
