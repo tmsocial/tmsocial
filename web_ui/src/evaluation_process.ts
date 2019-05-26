@@ -22,7 +22,7 @@ export class EvaluationReducer implements EvaluationState {
     onEvent(event: EvaluationEvent): void {
         switch (event.type) {
             case 'value': {
-                if (this.values[event.key]) { throw Error('Value already defined') };
+                if (this.values[event.key]) { throw Error('Value already defined'); }
                 this.values[event.key] = event.value;
                 return;
             }
