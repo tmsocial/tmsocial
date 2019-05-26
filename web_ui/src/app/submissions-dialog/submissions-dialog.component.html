@@ -10,7 +10,7 @@
       </tr>
     </thead>
     <tbody class="submission_table_body">
-      <tr *ngFor="let submission of taskParticipation.submissions">
+      <tr *ngFor="let submission of submissions; index as i">
         <td>
           <app-relative-time [time]="submission.timestamp"></app-relative-time>
           <br />

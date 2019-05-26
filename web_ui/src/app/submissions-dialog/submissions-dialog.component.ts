@@ -19,6 +19,10 @@ export class SubmissionsDialogComponent {
   @Input()
   taskParticipation!: ParticipationQuery['participation']['taskParticipations'][number];
 
+  get submissions() {
+    return this.taskParticipation.submissions.slice().reverse();
+  }
+
   openDetail(submission: ParticipationQuery['participation']['taskParticipations'][number]['submissions'][number]) {
     const modalRef = this.modal.open(EvaluationLiveDialogComponent);
     const modal = modalRef.componentInstance as EvaluationLiveDialogComponent;
