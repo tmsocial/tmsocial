@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { SubscriptionResult } from 'apollo-angular';
 import { debounceTime, filter, map, scan, tap, auditTime, exhaust, throttleTime, shareReplay } from 'rxjs/operators';
 import { EvaluationEvent } from 'src/evaluation';
-import { EvaluationReducer } from 'src/evaluation_process';
+import { EvaluationReducer } from 'src/evaluation-process';
 import { EvaluationEventSubscriptionService } from './evaluation-event-subscription.service';
 import { EvaluationEventsSubscription } from './submit-dialog/__generated__/EvaluationEventsSubscription';
 import { EvaluationEventSubscriptionVariables } from './__generated__/EvaluationEventSubscription';

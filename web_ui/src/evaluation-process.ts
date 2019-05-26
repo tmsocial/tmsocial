@@ -1,4 +1,4 @@
-import { EvaluationEvent, EvaluationValue } from "./evaluation";
+import { EvaluationEvent, EvaluationValue } from './evaluation';
 
 export interface EvaluationState {
     readonly values: { readonly [key: string]: any };

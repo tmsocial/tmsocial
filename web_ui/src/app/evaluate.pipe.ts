@@ -1,6 +1,6 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { ValueExpression } from 'src/evaluation_model';
-import { EvaluationState } from 'src/evaluation_process';
+import { ValueExpression } from 'src/evaluation-model';
+import { EvaluationState } from 'src/evaluation-process';
 
 @Pipe({
   name: 'evaluate'

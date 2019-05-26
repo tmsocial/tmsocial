@@ -1,5 +1,5 @@
 import { Component, Input } from '@angular/core';
-import { EvaluationReducer } from 'src/evaluation_process';
+import { EvaluationReducer } from 'src/evaluation-process';
 import { Column, Table } from 'src/table';
 
 @Component({

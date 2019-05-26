@@ -1,7 +1,7 @@
 import { Component, Input } from '@angular/core';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { Observable } from 'rxjs';
-import { EvaluationReducer } from 'src/evaluation_process';
+import { EvaluationReducer } from 'src/evaluation-process';
 import { TaskMetadata } from 'src/metadata';
 import { EvaluationSection } from 'src/section';
 import { TableComponent } from '../evaluation/table/table.component';

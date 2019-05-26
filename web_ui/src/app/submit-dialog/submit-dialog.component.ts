@@ -5,7 +5,7 @@ import gql from 'graphql-tag';
 import { Observable } from 'rxjs';
 import { filter, map, scan } from 'rxjs/operators';
 import { EvaluationEvent } from 'src/evaluation';
-import { EvaluationReducer } from 'src/evaluation_process';
+import { EvaluationReducer } from 'src/evaluation-process';
 import { SubmissionFileField, TaskMetadata } from 'src/metadata';
 import { SubmissionFile } from 'src/submission';
 import { EvaluationEventsVariables } from 'src/__generated__/EvaluationEvents';

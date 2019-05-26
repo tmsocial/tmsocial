@@ -1,16 +1,16 @@
-import { EvaluationValue, Score } from "./evaluation";
-import { ValueExpression } from "./evaluation_model";
-import { Localized } from "./l10n";
+import { EvaluationValue, Score } from './evaluation';
+import { ValueExpression } from './evaluation-model';
+import { Localized } from './l10n';
 
 export interface Table {
-    type: "table";
+    type: 'table';
     columns: Column[];
     groups: RowGroup[];
 }
 
 export interface HeaderColumn {
     name: Localized<string>;
-};
+}
 
 export type Column =
     | RowNameColumn
@@ -39,7 +39,7 @@ export interface RowGroup {
 }
 
 export interface Row {
-    cells: Cell[],
+    cells: Cell[];
 }
 
 export type Cell = ValueCell<any> | RowNameCell | RowNumberCell | ScoreCell;
@@ -49,51 +49,51 @@ export interface NamedColumn {
 }
 
 export interface RowNameColumn extends NamedColumn {
-    type: "row_name";
+    type: 'row_name';
 }
 
 export interface RowNumberColumn extends NamedColumn {
-    type: "row_number";
+    type: 'row_number';
 }
 
 export interface RowStatusColumn {
-    type: "row_status";
+    type: 'row_status';
 }
 
 export interface MemoryUsageColumn extends NamedColumn {
-    type: "memory_usage";
+    type: 'memory_usage';
 }
 
 export interface TimeUsageColumn extends NamedColumn {
-    type: "time_usage";
+    type: 'time_usage';
 }
 
 export interface StatusColumn extends NamedColumn {
-    type: "status";
+    type: 'status';
 }
 
 export interface MessageColumn extends NamedColumn {
-    type: "message";
+    type: 'message';
 }
 
 export interface ScoreColumn extends NamedColumn {
-    type: "score";
-    score_precision?: number,
-    max_score_precision?: number,
+    type: 'score';
+    score_precision?: number;
+    max_score_precision?: number;
 }
 
 export interface PercentageColumn extends NamedColumn {
-    type: "percentage";
-    precision?: number,
+    type: 'percentage';
+    precision?: number;
 }
 
 export interface UnsupportedColumn extends NamedColumn {
-    type: "signal" | "return_code";
+    type: 'signal' | 'return_code';
 }
 
 export interface ValueCell<T extends EvaluationValue> {
     value: ValueExpression<T>;
-};
+}
 
 export interface RowNameCell {
     name: Localized<string>;

@@ -1,5 +1,5 @@
 export interface TextStream {
-    type: "text_stream"
+    type: 'text_stream';
     stream: string;
 }
 
