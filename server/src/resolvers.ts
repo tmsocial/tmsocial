@@ -1,15 +1,15 @@
-import { PubSub } from "apollo-server";
-import { execFile, execFileSync } from "child_process";
-import { EventEmitter } from "events";
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "fs";
-import * as jwt from "jsonwebtoken";
-import { DateTime, Duration } from "luxon";
-import { join } from "path";
-import { Tail } from "tail";
+import { PubSub } from 'apollo-server';
+import { execFile, execFileSync } from 'child_process';
+import { EventEmitter } from 'events';
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'fs';
+import * as jwt from 'jsonwebtoken';
+import { DateTime, Duration } from 'luxon';
+import { join } from 'path';
+import { Tail } from 'tail';
 import { config } from './index';
-import { IdParts, PathManager } from "./nodes";
-import { fromEvent } from "rxjs";
-import { bufferTime, takeUntil, map, takeWhile, tap } from "rxjs/operators";
+import { IdParts, PathManager } from './nodes';
+import { fromEvent } from 'rxjs';
+import { bufferTime, takeUntil, map, takeWhile, tap } from 'rxjs/operators';
 
 let metadataCache: {
     [id: string]: string
@@ -27,24 +27,24 @@ process.on('SIGINT', async () => {
     }
     latestSIGINT = DateTime.local();
 
-    console.log(`Invalidating caches. Press Ctrl-C within 5 seconds to terminate the server.`)
+    console.log(`Invalidating caches. Press Ctrl-C within 5 seconds to terminate the server.`);
 
     metadataCache = {};
     scoresCache = {};
 });
 
 interface SubmissionFileInput {
-    field: string
-    type: string
-    contentBase64: string
+    field: string;
+    type: string;
+    contentBase64: string;
 }
 
 interface PageQueryInput {
     // TODO: may be generated using graphqlgen
-    before?: string
-    after?: string
-    first?: number
-    last?: number
+    before?: string;
+    after?: string;
+    first?: number;
+    last?: number;
 }
 
 class NodeManager<T> {
@@ -72,13 +72,13 @@ class NodeManager<T> {
 }
 
 const loadDataOrConfig = async (root: string, path: string) => {
-    const dataFilePath = join(root, path, 'data.json')
+    const dataFilePath = join(root, path, 'data.json');
     if (existsSync(dataFilePath)) {
         return JSON.parse(readFileSync(dataFilePath, 'utf8')) as {};
     } else {
         throw new Error(`config/data not found in path ${path}`);
     }
-}
+};
 
 const loadSiteConfig = async (path: string) => loadDataOrConfig(config.sitesDir, path);
 const loadData = async (path: string) => loadDataOrConfig(config.dataDir, path);
@@ -121,7 +121,7 @@ export const resolvers = {
 
             console.log(`Logging on ${site} with username ${user} and password: ${password}`);
 
-            const token = jwt.sign({ userId }, "SecretKey!");
+            const token = jwt.sign({ userId }, 'SecretKey!');
             return { user: userNode, token };
         },
 
@@ -136,30 +136,30 @@ export const resolvers = {
 
             mkdirSync(join(config.dataDir, submissionPath), { recursive: true });
             writeFileSync(
-                join(config.dataDir, submissionPath, "data.json"),
+                join(config.dataDir, submissionPath, 'data.json'),
                 JSON.stringify({
                     timestamp: submission,
                 }), { encoding: 'utf8' },
-            )
+            );
 
-            mkdirSync(join(config.dataDir, submissionPath, "files"), { recursive: true });
+            mkdirSync(join(config.dataDir, submissionPath, 'files'), { recursive: true });
 
             const submittedFiles: string[] = [];
             files.forEach(({ field, type, contentBase64 }) => {
                 const file = join(config.dataDir, submissionPath, 'files', `${field}.${type}`);
                 submittedFiles.push(file);
                 writeFileSync(file, Buffer.from(contentBase64, 'base64'));
-            })
+            });
 
             const evaluation = DateTime.utc().toISO();
             mkdirSync(join(config.dataDir, submissionPath, 'evaluations', evaluation), { recursive: true });
             writeFileSync(join(config.dataDir, submissionPath, 'evaluations', evaluation, 'events.jsonl'), Buffer.from([]));
 
-            const process = execFile("../task_maker_wrapper/cli.py", [
+            const process = execFile('../task_maker_wrapper/cli.py', [
                 'evaluate',
                 '--task-dir', join(config.sitesDir, site, 'contests', contest, 'tasks', task),
                 '--evaluation-dir', join(config.dataDir, submissionPath, 'evaluations', evaluation),
-                ...submittedFiles.flatMap(file => ["--file", file]),
+                ...submittedFiles.flatMap(file => ['--file', file]),
             ]);
             process.unref();
 
@@ -173,17 +173,17 @@ export const resolvers = {
                 for await (const event of evaluation.event_stream()) {
                     yield {
                         evaluationEvents: event
-                    }
-                };
+                    };
+                }
             },
         },
     },
 };
 
-const sites = new NodeManager(rootPath.appendId("site"), () => ({}));
+const sites = new NodeManager(rootPath.appendId('site'), () => ({}));
 
 const users = new NodeManager(
-    sites.path.appendPath("users").appendId("user"),
+    sites.path.appendPath('users').appendId('user'),
     ({ idParts: { site, user } }) => ({
         site: () => sites.fromIdParts({ site }),
         async participationInContest({ contestId }: { contestId: string }) {
@@ -196,7 +196,7 @@ const users = new NodeManager(
 );
 
 const contests = new NodeManager(
-    sites.path.appendPath("contests").appendId("contest"),
+    sites.path.appendPath('contests').appendId('contest'),
     ({ path, idParts: { site, contest } }) => ({
         site: () => sites.fromIdParts({ site }),
         async tasks() {
@@ -213,18 +213,18 @@ const contests = new NodeManager(
 );
 
 const tasks = new NodeManager(
-    contests.path.appendPath("tasks").appendId("task"),
+    contests.path.appendPath('tasks').appendId('task'),
     ({ path, id, idParts: { site, contest } }) => ({
         contest: () => contests.fromIdParts({ site, contest }),
         metadataJson: async () => {
             if (!(id in metadataCache)) {
-                console.log(`Generating metadata...`)
-                metadataCache[id] = await execFileSync("task-maker", [
+                console.log(`Generating metadata...`);
+                metadataCache[id] = await execFileSync('task-maker', [
                     '--ui', 'tmsocial',
                     '--task-info',
                     '--task-dir', join(config.sitesDir, path)
                 ], { encoding: 'utf8' });
-                console.log(`Metadata generated.`)
+                console.log(`Metadata generated.`);
             }
             return metadataCache[id];
         },
@@ -233,7 +233,7 @@ const tasks = new NodeManager(
 );
 
 const participations = new NodeManager(
-    contests.path.appendPath("participations").appendId("user"),
+    contests.path.appendPath('participations').appendId('user'),
     ({ idParts: { site, user, contest } }) => ({
         user: () => users.fromIdParts({ site, user }),
         contest: () => contests.fromIdParts({ site, contest }),
@@ -246,12 +246,12 @@ const participations = new NodeManager(
 );
 
 const taskParticipations = new NodeManager(
-    participations.path.appendPath("tasks").appendId("task"),
+    participations.path.appendPath('tasks').appendId('task'),
     ({ path, idParts: { site, contest, user, task } }) => ({
         user: () => users.fromIdParts({ site, user }),
         task: () => tasks.fromIdParts({ site, contest, task }),
         async submissions(
-            { query: { before = "9999", after = "0000", last = 1e9, first = 1e9 } = {} }: { query?: PageQueryInput } = {}
+            { query: { before = '9999', after = '0000', last = 1e9, first = 1e9 } = {} }: { query?: PageQueryInput } = {}
         ) {
             mkdirSync(join(config.dataDir, path, 'submissions'), { recursive: true });
             const dir = readdirSync(join(config.dataDir, path, 'submissions')).sort();
@@ -289,7 +289,7 @@ const taskParticipations = new NodeManager(
 );
 
 const submissions = new NodeManager(
-    taskParticipations.path.appendPath("submissions").appendId("submission"),
+    taskParticipations.path.appendPath('submissions').appendId('submission'),
     ({ path, idParts: { site, contest, user, task, submission } }) => ({
         taskParticipation: () => taskParticipations.fromIdParts({ site, contest, user, task }),
         async scoredEvaluation() {
@@ -306,7 +306,7 @@ const submissions = new NodeManager(
 );
 
 const evaluations = new NodeManager(
-    submissions.path.appendPath("evaluations").appendId("evaluation"),
+    submissions.path.appendPath('evaluations').appendId('evaluation'),
     ({ path, id, idParts: { site, contest, user, task, submission, evaluation } }) => ({
         submission: () => submissions.fromIdParts({ site, contest, user, task, submission }),
         async events() {
@@ -319,7 +319,7 @@ const evaluations = new NodeManager(
             return events;
         },
         async * event_stream() {
-            const tail = new Tail(join(config.dataDir, path, "events.jsonl"), {
+            const tail = new Tail(join(config.dataDir, path, 'events.jsonl'), {
                 encoding: 'utf-8',
                 fromBeginning: true,
             }) as Tail & EventEmitter;
@@ -336,12 +336,12 @@ const evaluations = new NodeManager(
                 bufferTime(bufferTimeSpan, undefined, bufferMaxSize),
                 tap((events) => console.log(events)),
             ).subscribe({
-                next: (events) => pubSub.publish("events", events),
-                complete: () => pubSub.publish("events", "complete")
-            })
+                next: (events) => pubSub.publish('events', events),
+                complete: () => pubSub.publish('events', 'complete')
+            });
 
             try {
-                const iterator = pubSub.asyncIterator<'complete' | { json: string }[]>("events");
+                const iterator = pubSub.asyncIterator<'complete' | { json: string }[]>('events');
                 while (true) {
                     const { value } = await iterator.next();
                     console.log(value);
@@ -368,7 +368,7 @@ const evaluations = new NodeManager(
                 const events = await this.events();
                 for (const eventNode of events) {
                     const event = JSON.parse(eventNode.json);
-                    if (event.type === "value") {
+                    if (event.type === 'value') {
                         values[event.key] = event.value;
                     }
                 }
@@ -385,7 +385,7 @@ const evaluations = new NodeManager(
 
 function checkSameSite(site1: string, site2: string) {
     if (site1 !== site2) {
-        throw new Error(`Sites do not match: '${site1}', '${site2}'`)
+        throw new Error(`Sites do not match: '${site1}', '${site2}'`);
     }
     return site1;
 }
