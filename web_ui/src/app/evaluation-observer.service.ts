@@ -4,7 +4,6 @@ import { debounceTime, filter, map, scan, tap, auditTime, exhaust, throttleTime,
 import { EvaluationEvent } from 'src/evaluation';
 import { EvaluationReducer } from 'src/evaluation-process';
 import { EvaluationEventSubscriptionService } from './evaluation-event-subscription.service';
-import { EvaluationEventsSubscription } from './submit-dialog/__generated__/EvaluationEventsSubscription';
 import { EvaluationEventSubscriptionVariables } from './__generated__/EvaluationEventSubscription';
 import { from } from 'rxjs';
 
