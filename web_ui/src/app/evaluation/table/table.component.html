@@ -46,7 +46,7 @@
         </ng-template>
       </ng-container>
     </tr>
-    <tr *ngFor="let row of group.rows" class="evaluation_row">
+    <tr *ngFor="let row of group.rows" class="evaluation_row" [classList]="getRowClasses(table, row, state)">
       <ng-container *ngFor="let column of table.columns; index as i; trackBy: columnTrackBy">
         <ng-container *ngIf="row.cells[i] as cell" [ngSwitch]="column.type">
           <td *ngSwitchCase="'memory_usage'" class="memory_usage_cell">
