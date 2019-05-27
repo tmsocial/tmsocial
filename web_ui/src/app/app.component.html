@@ -6,26 +6,10 @@
       <button class="logout">Logout</button>
     </nav>
     <div class="contest_main" *ngIf="data.participation as participation">
-      <nav class="contest_nav">
-        <h2>Score</h2>
-        <div class="contest_score_container">
-          <span class="contest_score_display">
-            <span class="contest_score">{{ 42 }}</span> /
-            <span class="contest_max_score">{{ 42 }}</span>
-          </span>
-        </div>
-        <h2>Remaining Time</h2>
-        <div class="contest_remaining_time">
-          02:49:53
-        </div>
-        <h2>Tasks</h2>
-        <ol class="contest_tasks_nav_container">
-          <li *ngFor="let taskParticipation of participation.taskParticipations; trackBy: taskParticipationTrackBy" class="task_list_item"
-            [taskParticipation]="taskParticipation" [appComponent]="this">
-          </li>
-        </ol>
+      <nav class="contest_nav" [appComponent]="this" [participation]="participation">
       </nav>
-      <ng-container *ngFor="let taskParticipation of participation.taskParticipations; trackBy: taskParticipationTrackBy">
+      <ng-container
+        *ngFor="let taskParticipation of participation.taskParticipations; trackBy: taskParticipationTrackBy">
         <main class="task_main" *ngIf="selectedTaskParticipationId === taskParticipation.task.id"
           [taskParticipation]="taskParticipation" [appComponent]="this">
         </main>

@@ -18,6 +18,7 @@ import { SubmissionsDialogComponent } from './submissions-dialog/submissions-dia
 import { SubmitDialogComponent } from './submit-dialog/submit-dialog.component';
 import { TaskLinkComponent } from './task-link/task-link.component';
 import { TaskMainComponent } from './task-main/task-main.component';
+import { ContestNavComponent } from './contest-nav/contest-nav.component';
 
 @NgModule({
   declarations: [
@@ -34,6 +35,7 @@ import { TaskMainComponent } from './task-main/task-main.component';
     TableComponent,
     ScoreCellComponent,
     EvaluatePipe,
+    ContestNavComponent,
   ],
   imports: [
     BrowserModule,
