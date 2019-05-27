@@ -1,0 +1,25 @@
+<td>
+  <app-relative-time [time]="submission.timestamp"></app-relative-time>
+  <br />
+  <a href="#" (click)="submissionDialogComponent.openDetail(submission)">
+    details
+  </a>
+</td>
+<td *ngFor="let score of scores" class="submission_score score" [class.score_zero]="score.value <= 0"
+  [class.score_partial]="0 < score.value && score.value < score.scorable.max_score"
+  [class.score_full]="score.scorable.max_score <= score.value">
+  <span class="submission_score">
+    {{ score.value.toFixed(score.scorable.precision) }}
+  </span>/<span class="submission_max_score">
+    {{ score.scorable.max_score.toFixed(score.scorable.precision) }}
+  </span>
+</td>
+<td class="submission_total_score score" [class.score_zero]="totalScoreInfo.score <= 0"
+  [class.score_partial]="0 < totalScoreInfo.score && totalScoreInfo.score < totalScoreInfo.maxScore"
+  [class.score_full]="totalScoreInfo.maxScore <= totalScoreInfo.score">
+  <span class="submission_total_score">
+    {{ totalScoreInfo.score.toFixed(totalScoreInfo.precision) }}
+  </span>/<span class="submission_total_max_score">
+    {{ totalScoreInfo.maxScore.toFixed(totalScoreInfo.precision) }}
+  </span>
+</td>

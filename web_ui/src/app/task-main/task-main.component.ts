@@ -1,6 +1,6 @@
 import { Component, Input, OnChanges } from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { TaskMetadata } from 'src/metadata';
+import { TaskMetadata, TaskScorable } from 'src/metadata';
 import { AppComponent } from '../app.component';
 import { LocalizeService } from '../localize.service';
 import { SubmissionsDialogComponent } from '../submissions-dialog/submissions-dialog.component';
@@ -32,6 +32,20 @@ export class TaskMainComponent implements OnChanges {
   ngOnChanges() {
     this.taskMetadata = JSON.parse(this.task.metadataJson);
   }
+
+  getScore(scorable: TaskScorable) {
+    return this.taskParticipation.scores.filter(s => s.key === scorable.key)[0].score;
+  }
+
+  // FIXME: not DRY, also in TaskLinkComponent
+  get totalScoreInfo(): ScoreInfo {
+    return {
+      score: this.taskParticipation.scores.map(s => s.score).reduce((a, b) => a + b, 0),
+      maxScore: this.taskMetadata.scorables.map(s => s.max_score).reduce((a, b) => a + b, 0),
+      precision: this.taskMetadata.scorables.map(s => s.precision || 0).reduce((a, b) => Math.max(a, b)),
+    };
+  }
+
 
   get lastSubmission() {
     const l = this.taskParticipation.submissions.length;

@@ -5,28 +5,43 @@
   <table class="submission_table">
     <thead class="submission_table_header">
       <tr>
-        <th>Time</th>
-        <th>Score</th>
+        <th rowspan="2">Time</th>
+        <th [colSpan]="taskMainComponent.taskMetadata.scorables.length">Score</th>
+        <th rowspan="2">Total score</th>
+      </tr>
+      <tr>
+        <th *ngFor="let scorable of taskMainComponent.taskMetadata.scorables">
+          {{ scorable.title | localize }}
+        </th>
+      </tr>
+      <tr>
+        <th scope="row">Best submission</th>
+        <td *ngFor="let scorable of taskMainComponent.taskMetadata.scorables" class="submission_best_score score"
+          [class.score_zero]="taskMainComponent.getScore(scorable) <= 0"
+          [class.score_partial]="0 < taskMainComponent.getScore(scorable) && taskMainComponent.getScore(scorable) < scorable.max_score"
+          [class.score_full]="scorable.max_score <= taskMainComponent.getScore(scorable)">
+          <span>
+            {{ taskMainComponent.getScore(scorable).toFixed(scorable.precision) }}
+          </span>/<span>
+            {{ scorable.max_score.toFixed(scorable.precision) }}
+          </span>
+        </td>
+        <td class="submission_best_total_score score" [class.score_zero]="taskMainComponent.totalScoreInfo.score <= 0"
+          [class.score_partial]="0 < taskMainComponent.totalScoreInfo.score && taskMainComponent.totalScoreInfo.score < taskMainComponent.totalScoreInfo.maxScore"
+          [class.score_full]="taskMainComponent.totalScoreInfo.maxScore <= taskMainComponent.totalScoreInfo.score">
+          <span>
+            {{ taskMainComponent.totalScoreInfo.score.toFixed(taskMainComponent.totalScoreInfo.precision) }}
+          </span>/<span>
+            {{ taskMainComponent.totalScoreInfo.maxScore.toFixed(taskMainComponent.totalScoreInfo.precision) }}
+          </span>
+        </td>
       </tr>
     </thead>
     <tbody class="submission_table_body">
-      <tr *ngFor="let submission of submissions; index as i">
-        <td>
-          <app-relative-time [time]="submission.timestamp"></app-relative-time>
-          <br />
-          <a href="#" (click)="openDetail(submission)">
-            details
-          </a>
-        </td>
-        <td>
-          {{ score }} / {{ max_score }}
-        </td>
-      </tr>
-      <tr>
-        <td colSpan="2">
-          <a href="#" (click)="loadMore()">Load more...</a>
-        </td>
+      <tr class="submission_row" *ngFor="let submission of submissions; index as i" [submissionDialogComponent]="this"
+        [submission]="submission">
       </tr>
     </tbody>
   </table>
+  <a href="#" (click)="loadMore()">Load more...</a>
 </div>

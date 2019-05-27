@@ -294,3 +294,14 @@ body {
 .row_status.skip {
     @extend .table-secondary;
 }
+
+.submission_score, .submission_total_score, .submission_best_score, .submission_best_total_score {
+    &.score_zero { @extend .table-danger; }
+    &.score_partial { @extend .table-warning; }
+    &.score_full { @extend .table-success; }
+    &.score_zero.score_full { @extend .table-light; }
+}
+
+.submission_table_header {
+    @extend .thead-light;
+}
