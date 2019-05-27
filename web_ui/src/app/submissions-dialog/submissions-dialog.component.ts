@@ -1,7 +1,6 @@
 import { Component, Input } from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { QueryRef } from 'apollo-angular';
-import { MoreSubmissions } from 'src/__generated__/MoreSubmissions';
+import { AppComponent } from '../app.component';
 import { EvaluationLiveDialogComponent } from '../evaluation-live-dialog/evaluation-live-dialog.component';
 import { EvaluationObserverService } from '../evaluation-observer.service';
 import { MoreSubmissionsQueryService } from '../more-submissions-query.service';
@@ -21,7 +20,7 @@ export class SubmissionsDialogComponent {
   ) { }
 
   @Input()
-  queryRef!: QueryRef<ParticipationQuery>;
+  appComponent!: AppComponent;
 
   @Input()
   user!: ParticipationQuery['user'];

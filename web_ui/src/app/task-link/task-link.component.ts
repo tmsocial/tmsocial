@@ -1,6 +1,7 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { TaskMetadata } from 'src/metadata';
 import { ParticipationQuery } from '../__generated__/ParticipationQuery';
+import { AppComponent } from '../app.component';
 
 @Component({
   selector: '.task_list_item',
@@ -15,9 +16,7 @@ export class TaskLinkComponent {
   taskParticipation!: ParticipationQuery['participation']['taskParticipations'][number];
 
   @Input()
-  selectedTaskParticipation!: ParticipationQuery['participation']['taskParticipations'][number];
-
-  @Output() selectedTaskParticipationChange = new EventEmitter();
+  appComponent!: AppComponent;
 
   get task() { return this.taskParticipation.task; }
   get taskMetadata(): TaskMetadata { return JSON.parse(this.task.metadataJson); }
@@ -30,9 +29,12 @@ export class TaskLinkComponent {
     };
   }
 
-  get active() { return this.selectedTaskParticipation && this.selectedTaskParticipation.task.id === this.taskParticipation.task.id; }
+  get active() {
+    if (this.appComponent.selectedTaskParticipation === null) { return false; }
+    return this.appComponent.selectedTaskParticipation.task.id === this.taskParticipation.task.id;
+  }
 
   click() {
-    this.selectedTaskParticipationChange.emit(this.taskParticipation);
+    this.appComponent.selectedTaskParticipation = this.taskParticipation;
   }
 }

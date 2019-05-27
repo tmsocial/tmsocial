@@ -21,12 +21,12 @@
         <h2>Tasks</h2>
         <ol class="contest_tasks_nav_container">
           <li *ngFor="let taskParticipation of participation.taskParticipations" class="task_list_item"
-            [taskParticipation]="taskParticipation" [(selectedTaskParticipation)]="selectedTaskParticipation">
+            [taskParticipation]="taskParticipation" [appComponent]="this">
           </li>
         </ol>
       </nav>
-      <main class="task_main" *ngIf="selectedTaskParticipation as taskParticipation" [taskParticipation]="taskParticipation"
-        [user]="data.user" [queryRef]="queryRef">
+      <main class="task_main" *ngIf="selectedTaskParticipation as taskParticipation"
+        [taskParticipation]="taskParticipation" [appComponent]="this">
       </main>
     </div>
   </ng-container>

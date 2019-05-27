@@ -4,7 +4,7 @@ import { ParticipationQuery } from './__generated__/ParticipationQuery';
 import { NgbModalConfig } from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
-  selector: '#app-root',
+  selector: 'body',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
@@ -20,7 +20,7 @@ export class AppComponent {
 
   userId = 'site1/user1';
   contestId = 'site1/contest1';
-  selectedTaskParticipation: ParticipationQuery['participation']['taskParticipations'] | null = null;
+  selectedTaskParticipation: ParticipationQuery['participation']['taskParticipations'][number] | null = null;
 
   queryRef = this.participationQueryService.watch({
     userId: this.userId,

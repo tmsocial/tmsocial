@@ -1,20 +1,12 @@
 import { Component, Input } from '@angular/core';
 import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { FetchResult } from 'apollo-link';
-import gql from 'graphql-tag';
-import { Observable } from 'rxjs';
-import { filter, map, scan } from 'rxjs/operators';
-import { EvaluationEvent } from 'src/evaluation';
-import { EvaluationReducer } from 'src/evaluation-process';
 import { SubmissionFileField, TaskMetadata } from 'src/metadata';
 import { SubmissionFile } from 'src/submission';
-import { EvaluationEventsVariables } from 'src/__generated__/EvaluationEvents';
-import { EvaluationEventSubscriptionService } from '../evaluation-event-subscription.service';
+import { AppComponent } from '../app.component';
 import { EvaluationLiveDialogComponent } from '../evaluation-live-dialog/evaluation-live-dialog.component';
-import { EvaluationEventsSubscription } from '../evaluation-live-dialog/__generated__/EvaluationEventsSubscription';
+import { EvaluationObserverService } from '../evaluation-observer.service';
 import { SubmitMutationService } from '../submit-mutation.service';
 import { ParticipationQuery } from '../__generated__/ParticipationQuery';
-import { EvaluationObserverService } from '../evaluation-observer.service';
 
 @Component({
   selector: 'app-submit-dialog',
@@ -31,10 +23,10 @@ export class SubmitDialogComponent {
   ) { }
 
   @Input()
-  taskParticipation!: ParticipationQuery['participation']['taskParticipations'][number];
+  appComponent!: AppComponent;
 
   @Input()
-  user!: ParticipationQuery['user'];
+  taskParticipation!: ParticipationQuery['participation']['taskParticipations'][number];
 
   submitting = false;
 
@@ -62,7 +54,6 @@ export class SubmitDialogComponent {
     return field.id;
   }
 
-
   async submit(event: Event) {
     const formData = new FormData(event.target as HTMLFormElement);
 
@@ -79,7 +70,7 @@ export class SubmitDialogComponent {
 
     const result = await this.submitMutationService.mutate({
       taskId: this.task.id,
-      userId: this.user.id,
+      userId: this.appComponent.userId,
       files,
     }).toPromise();
 

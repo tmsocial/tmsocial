@@ -39,11 +39,11 @@ html {
     min-height: 100%;
 }
 
-#app-root, body, html {
+body, html {
     flex-direction: column;
 }
 
-#app-root, .contest_main, body, html {
+.contest_main, body, html {
     flex: 1 0 100%;
     display: flex;
 }
