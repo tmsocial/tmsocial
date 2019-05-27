@@ -48,7 +48,7 @@ var server = http.createServer(app);
 apollo.applyMiddleware({ app });
 apollo.installSubscriptionHandlers(server);
 
-app.use(express.static('../web_ui/dist'));
+app.use(express.static('../web_ui/dist/web-ui/'));
 
 let opts = require('yargs')
   .usage('$0 [options]')

@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "angular-web-ui": {
+    "web-ui": {
       "root": "",
       "sourceRoot": "src",
       "projectType": "application",
@@ -17,7 +17,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:browser",
           "options": {
-            "outputPath": "dist/angular-web-ui",
+            "outputPath": "dist/web-ui",
             "index": "src/index.html",
             "main": "src/main.ts",
             "polyfills": "src/polyfills.ts",
@@ -62,18 +62,18 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "browserTarget": "angular-web-ui:build"
+            "browserTarget": "web-ui:build"
           },
           "configurations": {
             "production": {
-              "browserTarget": "angular-web-ui:build:production"
+              "browserTarget": "web-ui:build:production"
             }
           }
         },
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "angular-web-ui:build"
+            "browserTarget": "web-ui:build"
           }
         },
         "test": {
@@ -107,7 +107,7 @@
         }
       }
     },
-    "angular-web-ui-e2e": {
+    "web-ui-e2e": {
       "root": "e2e/",
       "projectType": "application",
       "prefix": "",
@@ -116,11 +116,11 @@
           "builder": "@angular-devkit/build-angular:protractor",
           "options": {
             "protractorConfig": "e2e/protractor.conf.js",
-            "devServerTarget": "angular-web-ui:serve"
+            "devServerTarget": "web-ui:serve"
           },
           "configurations": {
             "production": {
-              "devServerTarget": "angular-web-ui:serve:production"
+              "devServerTarget": "web-ui:serve:production"
             }
           }
         },
@@ -136,5 +136,5 @@
       }
     }
   },
-  "defaultProject": "angular-web-ui"
+  "defaultProject": "web-ui"
 }
