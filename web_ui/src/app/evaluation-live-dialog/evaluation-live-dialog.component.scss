@@ -1,0 +1,20 @@
+@import "node_modules/bootstrap/scss/bootstrap";
+
+.evaluation_modal_header {
+    @extend .modal-header;
+}
+
+.evaluation_modal_body {
+    @extend .modal-body;
+    padding: 0;
+    max-height: calc(100vh - 260px);
+    overflow-y: auto;
+}
+
+.evaluation_modal_footer {
+    @extend .modal-footer;
+}
+
+.evaluation_modal_close_button {
+    @extend .btn, .btn-primary;
+}

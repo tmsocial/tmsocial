@@ -1,12 +1,10 @@
 import { Component, Input } from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { AppComponent } from '../app.component';
 import { EvaluationLiveDialogComponent } from '../evaluation-live-dialog/evaluation-live-dialog.component';
 import { EvaluationObserverService } from '../evaluation-observer.service';
 import { MoreSubmissionsQueryService } from '../more-submissions-query.service';
-import { ParticipationQuery } from '../__generated__/ParticipationQuery';
 import { TaskMainComponent } from '../task-main/task-main.component';
-import { logging } from 'src/logging';
+import { ParticipationQuery } from '../__generated__/ParticipationQuery';
 
 @Component({
   selector: 'app-submissions-dialog',
@@ -37,6 +35,11 @@ export class SubmissionsDialogComponent {
     modal.evaluationStateObservable = this.evaluationObserverService.observe({
       evaluationId: submission.scoredEvaluation.id,
     });
+  }
+
+  hasMore() {
+    const taskParticipation = this.taskMainComponent.taskParticipation;
+    return taskParticipation.firstSubmission[0].cursor < taskParticipation.submissions[0].cursor;
   }
 
   async loadMore() {

@@ -1,0 +1,25 @@
+@import "node_modules/bootstrap/scss/bootstrap";
+
+.evaluation_table {
+    @extend .table;
+}
+
+.message_cell {
+    font-size: small;
+}
+
+.score_cell {
+    font-weight: bold;
+}
+
+.row_status.success {
+    @extend .table-success;
+}
+
+.row_status.fail {
+    @extend .table-danger;
+}
+
+.row_status.skip {
+    @extend .table-secondary;
+}

@@ -28,6 +28,9 @@ export class ParticipationQueryService extends Query<ParticipationQuery, Partici
             key
             score
           }
+          firstSubmission: submissions(query: { first: 1}) {
+            cursor
+          }
           submissions(query: { last: 5 }) {
             id
             cursor
