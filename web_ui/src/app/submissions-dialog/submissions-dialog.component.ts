@@ -5,6 +5,7 @@ import { EvaluationLiveDialogComponent } from '../evaluation-live-dialog/evaluat
 import { EvaluationObserverService } from '../evaluation-observer.service';
 import { MoreSubmissionsQueryService } from '../more-submissions-query.service';
 import { ParticipationQuery } from '../__generated__/ParticipationQuery';
+import { TaskMainComponent } from '../task-main/task-main.component';
 
 @Component({
   selector: 'app-submissions-dialog',
@@ -20,16 +21,10 @@ export class SubmissionsDialogComponent {
   ) { }
 
   @Input()
-  appComponent!: AppComponent;
-
-  @Input()
-  user!: ParticipationQuery['user'];
-
-  @Input()
-  taskParticipation!: ParticipationQuery['participation']['taskParticipations'][number];
+  taskMainComponent!: TaskMainComponent;
 
   get submissions() {
-    return this.taskParticipation.submissions.slice().reverse();
+    return this.taskMainComponent.taskParticipation.submissions.slice().reverse();
   }
 
   openDetail(submission: ParticipationQuery['participation']['taskParticipations'][number]['submissions'][number]) {
@@ -37,7 +32,7 @@ export class SubmissionsDialogComponent {
     const modal = modalRef.componentInstance as EvaluationLiveDialogComponent;
 
     modal.submission = submission;
-    modal.taskParticipation = this.taskParticipation;
+    modal.taskMainComponent = this.taskMainComponent;
     modal.evaluationStateObservable = this.evaluationObserverService.observe({
       evaluationId: submission.scoredEvaluation.id,
     });
@@ -45,8 +40,8 @@ export class SubmissionsDialogComponent {
 
   async loadMore() {
     const fetchMoreResult = await this.moreSubmissionsQueryService.fetch({
-      userId: this.user.id,
-      taskId: this.taskParticipation.task.id,
+      userId: this.taskMainComponent.appComponent.userId,
+      taskId: this.taskMainComponent.taskParticipation.task.id,
       before: this.submissions[0].cursor,
     }, {
         fetchPolicy: 'network-only',

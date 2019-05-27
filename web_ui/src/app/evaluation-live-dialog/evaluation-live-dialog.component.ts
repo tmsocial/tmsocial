@@ -7,6 +7,7 @@ import { EvaluationSection } from 'src/section';
 import { TableComponent } from '../evaluation/table/table.component';
 import { ParticipationQuery } from '../__generated__/ParticipationQuery';
 import { SubmitMutation } from '../__generated__/SubmitMutation';
+import { TaskMainComponent } from '../task-main/task-main.component';
 
 @Component({
   selector: 'app-evaluation-live-dialog',
@@ -23,20 +24,9 @@ export class EvaluationLiveDialogComponent {
   submission!: SubmitMutation['submit'];
 
   @Input()
-  taskParticipation!: ParticipationQuery['participation']['taskParticipations'][number];
+  taskMainComponent!: TaskMainComponent;
 
   evaluationStateObservable!: Observable<EvaluationReducer>;
-
-  get task() { return this.taskParticipation.task; }
-
-  taskMetadataCache?: TaskMetadata;
-  get taskMetadata(): TaskMetadata {
-    if (this.taskMetadataCache === undefined) {
-      this.taskMetadataCache = JSON.parse(this.task.metadataJson);
-      return this.taskMetadata;
-    }
-    return this.taskMetadataCache;
-  }
 
   sectionInfo: {
     [K in EvaluationSection['type']]: {

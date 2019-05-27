@@ -7,6 +7,7 @@ import { EvaluationLiveDialogComponent } from '../evaluation-live-dialog/evaluat
 import { EvaluationObserverService } from '../evaluation-observer.service';
 import { SubmitMutationService } from '../submit-mutation.service';
 import { ParticipationQuery } from '../__generated__/ParticipationQuery';
+import { TaskMainComponent } from '../task-main/task-main.component';
 
 @Component({
   selector: 'app-submit-dialog',
@@ -23,15 +24,9 @@ export class SubmitDialogComponent {
   ) { }
 
   @Input()
-  appComponent!: AppComponent;
-
-  @Input()
-  taskParticipation!: ParticipationQuery['participation']['taskParticipations'][number];
+  taskMainComponent!: TaskMainComponent;
 
   submitting = false;
-
-  get task() { return this.taskParticipation.task; }
-  get taskMetadata(): TaskMetadata { return JSON.parse(this.task.metadataJson); }
 
   private toBase64(file: File): Promise<string> {
     return new Promise((resolve, reject) => {
@@ -62,15 +57,17 @@ export class SubmitDialogComponent {
     }
     this.submitting = true;
 
-    const files = await Promise.all(this.taskMetadata.submission_form.fields.map<Promise<SubmissionFile>>(async (field, i) => ({
-      field: field.id,
-      type: formData.get(`${field.id}.type`) as string,
-      contentBase64: await this.toBase64(formData.get(`${field.id}.file`) as File),
-    })));
+    const files = await Promise.all(
+      this.taskMainComponent.taskMetadata.submission_form.fields.map<Promise<SubmissionFile>>(async (field, i) => ({
+        field: field.id,
+        type: formData.get(`${field.id}.type`) as string,
+        contentBase64: await this.toBase64(formData.get(`${field.id}.file`) as File),
+      }))
+    );
 
     const result = await this.submitMutationService.mutate({
-      taskId: this.task.id,
-      userId: this.appComponent.userId,
+      taskId: this.taskMainComponent.task.id,
+      userId: this.taskMainComponent.appComponent.userId,
       files,
     }).toPromise();
 
@@ -86,7 +83,7 @@ export class SubmitDialogComponent {
     const modal = modalRef.componentInstance as EvaluationLiveDialogComponent;
 
     modal.submission = submission;
-    modal.taskParticipation = this.taskParticipation;
+    modal.taskMainComponent = this.taskMainComponent;
     modal.evaluationStateObservable = this.evaluationObserverService.observe({
       evaluationId: submission.scoredEvaluation.id,
     });

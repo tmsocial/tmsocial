@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { TaskMetadata } from 'src/metadata';
 import { AppComponent } from '../app.component';
@@ -12,7 +12,7 @@ import { ParticipationQuery } from '../__generated__/ParticipationQuery';
   templateUrl: './task-main.component.html',
   styleUrls: ['./task-main.component.scss']
 })
-export class TaskMainComponent {
+export class TaskMainComponent implements OnInit {
 
   constructor(
     private modal: NgbModal,
@@ -26,7 +26,12 @@ export class TaskMainComponent {
   taskParticipation!: ParticipationQuery['participation']['taskParticipations'][number];
 
   get task() { return this.taskParticipation.task; }
-  get taskMetadata(): TaskMetadata { return JSON.parse(this.taskParticipation.task.metadataJson); }
+
+  taskMetadata!: TaskMetadata;
+
+  ngOnInit() {
+    this.taskMetadata = JSON.parse(this.task.metadataJson);
+  }
 
   get lastSubmission() {
     const l = this.taskParticipation.submissions.length;
@@ -35,14 +40,14 @@ export class TaskMainComponent {
 
   openSubmissions() {
     const modalRef = this.modal.open(SubmissionsDialogComponent);
-    modalRef.componentInstance.appComponent = this.appComponent;
-    modalRef.componentInstance.taskParticipation = this.taskParticipation;
+    const modal = modalRef.componentInstance as SubmissionsDialogComponent;
+    modal.taskMainComponent = this;
   }
 
   async openSubmitDialog() {
     const modalRef = this.modal.open(SubmitDialogComponent);
-    modalRef.componentInstance.appComponent = this.appComponent;
-    modalRef.componentInstance.taskParticipation = this.taskParticipation;
+    const modal = modalRef.componentInstance as SubmitDialogComponent;
+    modal.taskMainComponent = this;
 
     await modalRef.result;
 

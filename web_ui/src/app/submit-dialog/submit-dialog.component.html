@@ -1,6 +1,6 @@
 <form class="submission_form" (submit)="$event.preventDefault(); submit($event)">
   <div class="submission_form_body">
-    <app-submission-field *ngFor="let field of taskMetadata.submission_form.fields; trackBy: fieldTrackBy"
+    <app-submission-field *ngFor="let field of taskMainComponent.taskMetadata.submission_form.fields; trackBy: fieldTrackBy"
       [field]="field"></app-submission-field>
   </div>
   <div class="submission_form_footer">

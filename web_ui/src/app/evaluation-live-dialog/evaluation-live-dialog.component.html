@@ -2,7 +2,7 @@
   Evaluation
 </div>
 <div class="evaluation_modal_body">
-  <ng-container *ngFor="let section of taskMetadata.evaluation_sections">
+  <ng-container *ngFor="let section of taskMainComponent.taskMetadata.evaluation_sections">
     <ng-container [ngSwitch]="section.type">
       <app-table *ngSwitchCase="'table'" [table]="section" [state]="evaluationStateObservable | async"></app-table>
     </ng-container>
