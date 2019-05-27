@@ -20,14 +20,16 @@
         </div>
         <h2>Tasks</h2>
         <ol class="contest_tasks_nav_container">
-          <li *ngFor="let taskParticipation of participation.taskParticipations" class="task_list_item"
+          <li *ngFor="let taskParticipation of participation.taskParticipations; trackBy: taskParticipationTrackBy" class="task_list_item"
             [taskParticipation]="taskParticipation" [appComponent]="this">
           </li>
         </ol>
       </nav>
-      <main class="task_main" *ngIf="selectedTaskParticipation as taskParticipation"
-        [taskParticipation]="taskParticipation" [appComponent]="this">
-      </main>
+      <ng-container *ngFor="let taskParticipation of participation.taskParticipations; trackBy: taskParticipationTrackBy">
+        <main class="task_main" *ngIf="selectedTaskParticipationId === taskParticipation.task.id"
+          [taskParticipation]="taskParticipation" [appComponent]="this">
+        </main>
+      </ng-container>
     </div>
   </ng-container>
 </ng-container>

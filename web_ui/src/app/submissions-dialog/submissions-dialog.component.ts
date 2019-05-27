@@ -6,6 +6,7 @@ import { EvaluationObserverService } from '../evaluation-observer.service';
 import { MoreSubmissionsQueryService } from '../more-submissions-query.service';
 import { ParticipationQuery } from '../__generated__/ParticipationQuery';
 import { TaskMainComponent } from '../task-main/task-main.component';
+import { logging } from 'src/logging';
 
 @Component({
   selector: 'app-submissions-dialog',
@@ -39,20 +40,22 @@ export class SubmissionsDialogComponent {
   }
 
   async loadMore() {
+    const taskId = this.taskMainComponent.taskParticipation.task.id;
+
     const fetchMoreResult = await this.moreSubmissionsQueryService.fetch({
       userId: this.taskMainComponent.appComponent.userId,
-      taskId: this.taskMainComponent.taskParticipation.task.id,
-      before: this.submissions[0].cursor,
+      taskId,
+      before: this.taskMainComponent.taskParticipation.submissions[0].cursor,
     }, {
         fetchPolicy: 'network-only',
       }).toPromise();
 
-    this.queryRef.updateQuery((previousResult: ParticipationQuery) => ({
+    this.taskMainComponent.appComponent.queryRef.updateQuery((previousResult: ParticipationQuery) => ({
       ...previousResult,
       participation: {
         ...previousResult.participation,
         taskParticipations: previousResult.participation.taskParticipations.map(p => (
-          p.task.id === this.taskParticipation.task.id ? {
+          p.task.id === taskId ? {
             ...p,
             submissions: [
               ...fetchMoreResult.data.taskParticipation.submissions,

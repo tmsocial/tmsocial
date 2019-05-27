@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { ParticipationQueryService } from './participation-query.service';
 import { ParticipationQuery } from './__generated__/ParticipationQuery';
 import { NgbModalConfig } from '@ng-bootstrap/ng-bootstrap';
+import { logging } from 'src/logging';
 
 @Component({
   selector: 'body',
@@ -20,7 +21,7 @@ export class AppComponent {
 
   userId = 'site1/user1';
   contestId = 'site1/contest1';
-  selectedTaskParticipation: ParticipationQuery['participation']['taskParticipations'][number] | null = null;
+  selectedTaskParticipationId: string | null = null;
 
   queryRef = this.participationQueryService.watch({
     userId: this.userId,
@@ -28,4 +29,8 @@ export class AppComponent {
   }, {
     pollInterval: 10000,
   });
+
+  taskParticipationTrackBy(index: number, taskParticipation: ParticipationQuery['participation']['taskParticipations'][number]) {
+    return taskParticipation.task.id;
+  }
 }

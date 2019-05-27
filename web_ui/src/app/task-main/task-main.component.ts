@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnChanges } from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { TaskMetadata } from 'src/metadata';
 import { AppComponent } from '../app.component';
@@ -10,9 +10,9 @@ import { ParticipationQuery } from '../__generated__/ParticipationQuery';
 @Component({
   selector: '.task_main',
   templateUrl: './task-main.component.html',
-  styleUrls: ['./task-main.component.scss']
+  styleUrls: ['./task-main.component.scss'],
 })
-export class TaskMainComponent implements OnInit {
+export class TaskMainComponent implements OnChanges {
 
   constructor(
     private modal: NgbModal,
@@ -29,7 +29,7 @@ export class TaskMainComponent implements OnInit {
 
   taskMetadata!: TaskMetadata;
 
-  ngOnInit() {
+  ngOnChanges() {
     this.taskMetadata = JSON.parse(this.task.metadataJson);
   }
 

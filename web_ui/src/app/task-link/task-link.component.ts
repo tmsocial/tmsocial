@@ -30,11 +30,11 @@ export class TaskLinkComponent {
   }
 
   get active() {
-    if (this.appComponent.selectedTaskParticipation === null) { return false; }
-    return this.appComponent.selectedTaskParticipation.task.id === this.taskParticipation.task.id;
+    if (this.appComponent.selectedTaskParticipationId === null) { return false; }
+    return this.appComponent.selectedTaskParticipationId === this.taskParticipation.task.id;
   }
 
   click() {
-    this.appComponent.selectedTaskParticipation = this.taskParticipation;
+    this.appComponent.selectedTaskParticipationId = this.taskParticipation.task.id;
   }
 }
