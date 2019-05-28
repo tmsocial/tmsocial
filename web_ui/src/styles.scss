@@ -39,11 +39,11 @@ html {
     min-height: 100%;
 }
 
-#container, body, html {
+body, html {
     flex-direction: column;
 }
 
-#container, .contest_main, body, html {
+.contest_main, body, html {
     flex: 1 0 100%;
     display: flex;
 }
@@ -122,28 +122,6 @@ body {
     font-size: large;
     text-align: right;
     margin-bottom: 1rem;
-}
-
-.task_link {
-    display: block;
-    text-transform: uppercase;
-    margin: 0 -16px;
-    padding: .5rem 16px; 
-}
-
-.task_link.active {
-    color: #fff;
-    background-color: #007bff;
-}
-
-.task_score_badge {
-    @extend .badge, .badge-pill;
-
-    float: right;
-
-    &.score_full { @extend .badge-success; }
-    &.score_partial { @extend .badge-warning; }
-    &.score_zero { @extend .badge-danger; }
 }
 
 .task_main {
@@ -255,64 +233,6 @@ body {
     @extend .btn, .btn-success;
 }
 
-.submissions_modal_header {
-    @extend .modal-header;
-}
-
-.submissions_modal_body {
-    @extend .modal-body;
-    padding: 0;
-}
-
-.submissions_modal_footer {
-    @extend .modal-footer;
-}
-
 .submissions_modal_close_button {
     @extend .btn, .btn-primary;
-}
-
-.submission_table {
-    @extend .table;
-}
-
-.evaluation_modal_header {
-    @extend .modal-header;
-}
-
-.evaluation_modal_body {
-    @extend .modal-body;
-    padding: 0;
-}
-
-.evaluation_modal_footer {
-    @extend .modal-footer;
-}
-
-.evaluation_modal_close_button {
-    @extend .btn, .btn-primary;
-}
-
-.evaluation_table {
-    @extend .table;
-}
-
-.message_cell {
-    font-size: small;
-}
-
-.score_cell {
-    font-weight: bold;
-}
-
-.row_status.success {
-    @extend .table-success;
-}
-
-.row_status.fail {
-    @extend .table-danger;
-}
-
-.row_status.skip {
-    @extend .table-secondary;
 }

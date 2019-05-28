@@ -1,6 +1,6 @@
-import { EvaluationSection } from "./section";
-import { Localized } from "./l10n";
-import { ValueExpression } from "./evaluation_model";
+import { EvaluationSection } from './section';
+import { Localized } from './l10n';
+import { ValueExpression } from './evaluation-model';
 
 export interface Statement {
     pdf_base64?: Localized<string>;
@@ -17,7 +17,7 @@ export interface Attachment {
     title: string;
     file: FileInfo & {
         url: string;
-    }
+    };
 }
 
 export interface SubmissionFileType {
@@ -38,9 +38,10 @@ export interface SubmissionForm {
 }
 
 export interface TaskScorable {
-    key: string
-    title: Localized<string>
-    max_score: number
+    key: string;
+    title: Localized<string>;
+    max_score: number;
+    precision: number;
 }
 
 export interface TaskMetadata {

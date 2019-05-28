@@ -1,0 +1,22 @@
+<h2>Score</h2>
+<div class="contest_score_container">
+  <span class="contest_score_display score" [class.score_zero]="scoreInfo.score <= 0"
+    [class.score_partial]="0 < scoreInfo.score && scoreInfo.score < scoreInfo.maxScore"
+    [class.score_full]="scoreInfo.maxScore <= scoreInfo.score">
+    <span class="contest_score">
+      {{ scoreInfo.score.toFixed(scoreInfo.precision) }}
+    </span>/<span class="contest_max_score">
+      {{ scoreInfo.maxScore.toFixed(scoreInfo.precision) }}
+    </span>
+  </span>
+</div>
+<h2>Remaining Time</h2>
+<div class="contest_remaining_time">
+  02:49:53
+</div>
+<h2>Tasks</h2>
+<ol class="contest_tasks_nav_container">
+  <li *ngFor="let taskParticipation of participation.taskParticipations; trackBy: appComponent.taskParticipationTrackBy"
+    class="task_list_item" [taskParticipation]="taskParticipation" [appComponent]="appComponent">
+  </li>
+</ol>

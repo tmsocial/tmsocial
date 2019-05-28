@@ -1,0 +1,13 @@
+<div class="evaluation_modal_header">
+  Evaluation
+</div>
+<div class="evaluation_modal_body">
+  <ng-container *ngFor="let section of taskMainComponent.taskMetadata.evaluation_sections">
+    <ng-container [ngSwitch]="section.type">
+      <app-table *ngSwitchCase="'table'" [table]="section" [state]="evaluationStateObservable | async"></app-table>
+    </ng-container>
+  </ng-container>
+</div>
+<div class="evaluation_modal_footer">
+  <button (click)="close()" class="evaluation_modal_close_button">Close</button>
+</div>

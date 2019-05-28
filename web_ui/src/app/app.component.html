@@ -1,0 +1,20 @@
+<ng-container *ngIf="queryRef.valueChanges | async as queryResult">
+  <ng-container *ngIf="queryResult.data as data">
+    <nav class="nav">
+      <h1 class="contest_title"><a href="#" (click)="$event.preventDefault()">{{data.contest.id}}</a></h1>
+      <span class="user_display_name">{{data.user.display_name}}</span>
+      <button class="logout">Logout</button>
+    </nav>
+    <div class="contest_main" *ngIf="data.participation as participation">
+      <nav class="contest_nav" [appComponent]="this" [participation]="participation">
+      </nav>
+      <ng-container
+        *ngFor="let taskParticipation of participation.taskParticipations; trackBy: taskParticipationTrackBy">
+        <main class="task_main" *ngIf="selectedTaskParticipationId === taskParticipation.task.id"
+          [taskParticipation]="taskParticipation" [appComponent]="this">
+        </main>
+      </ng-container>
+    </div>
+  </ng-container>
+</ng-container>
+<router-outlet></router-outlet>
