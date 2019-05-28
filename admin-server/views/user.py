@@ -36,7 +36,7 @@ class UserModel:
         os.mkdir(new_user_path)
         with open(os.path.join(new_user_path, "data.json"), "w") as f:
             f.write(json.dumps({
-                'display_name': display_name
+                'displayName': display_name
             }))
 
         return u
@@ -100,7 +100,7 @@ class UsersView(BaseModelView):
 
         if os.path.isdir(os.path.join(users_path, key)):
             data = json.loads(open(os.path.join(users_path, key, "data.json")).read())
-            return UserModel(key, data["display_name"])
+            return UserModel(key, data["displayName"])
 
     def create_model(self, form):
         return UserModel.create_new(form.name.data, form.display_name.data)
